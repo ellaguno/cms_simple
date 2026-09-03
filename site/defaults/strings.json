@@ -1,0 +1,182 @@
+{
+  "hero_title": {
+    "es": "Bienvenido a tu nuevo sitio",
+    "en": "Welcome to your new site",
+    "help": "Título de la portada"
+  },
+  "hero_text": {
+    "es": "Este es el tema de ejemplo de cms_simple. Edita estos textos en Admin → Textos del sitio y sustituye el CSS por tu diseño.",
+    "en": "This is the cms_simple starter theme. Edit these texts in Admin → Site texts and replace the CSS with your design.",
+    "help": ""
+  },
+  "hero_button": {
+    "es": "Contáctanos",
+    "en": "Contact us",
+    "help": ""
+  },
+  "latest_posts": {
+    "es": "Últimas entradas",
+    "en": "Latest posts",
+    "help": ""
+  },
+  "posts_title": {
+    "es": "Blog",
+    "en": "Blog",
+    "help": ""
+  },
+  "read_more": {
+    "es": "Leer más",
+    "en": "Read more",
+    "help": ""
+  },
+  "categories": {
+    "es": "Categorías",
+    "en": "Categories",
+    "help": ""
+  },
+  "recent_posts": {
+    "es": "También te puede interesar",
+    "en": "You may also like",
+    "help": ""
+  },
+  "tags_label": {
+    "es": "Etiquetas",
+    "en": "Tags",
+    "help": ""
+  },
+  "search_label": {
+    "es": "Buscar",
+    "en": "Search",
+    "help": ""
+  },
+  "search_placeholder": {
+    "es": "Buscar…",
+    "en": "Search…",
+    "help": ""
+  },
+  "blog_empty": {
+    "es": "Aún no hay entradas.",
+    "en": "No posts yet.",
+    "help": ""
+  },
+  "blog_filter_results": {
+    "es": "Resultados para",
+    "en": "Results for",
+    "help": ""
+  },
+  "blog_filter_clear": {
+    "es": "ver todo",
+    "en": "view all",
+    "help": ""
+  },
+  "contact_title": {
+    "es": "Contacto",
+    "en": "Contact",
+    "help": ""
+  },
+  "contact_intro": {
+    "es": "Cuéntanos de tu proyecto y te respondemos pronto.",
+    "en": "Tell us about your project and we will get back to you soon.",
+    "help": ""
+  },
+  "f_name": {
+    "es": "Nombre",
+    "en": "Name",
+    "help": ""
+  },
+  "f_email": {
+    "es": "Correo electrónico",
+    "en": "Email",
+    "help": ""
+  },
+  "f_message": {
+    "es": "Mensaje",
+    "en": "Message",
+    "help": ""
+  },
+  "f_send": {
+    "es": "Enviar",
+    "en": "Send",
+    "help": ""
+  },
+  "f_sending": {
+    "es": "Enviando…",
+    "en": "Sending…",
+    "help": ""
+  },
+  "f_ok": {
+    "es": "¡Gracias! Recibimos tu mensaje.",
+    "en": "Thank you! We received your message.",
+    "help": ""
+  },
+  "f_err": {
+    "es": "No se pudo enviar desde el sitio; abrimos tu correo.",
+    "en": "We could not send from the site; opening your email client.",
+    "help": ""
+  },
+  "f_invalid": {
+    "es": "Escribe tu nombre y un correo válido.",
+    "en": "Please enter your name and a valid email.",
+    "help": ""
+  },
+  "crumb_home": {
+    "es": "Inicio",
+    "en": "Home",
+    "help": ""
+  },
+  "footer_copy": {
+    "es": "© {year} Mi sitio. Todos los derechos reservados.",
+    "en": "© {year} My site. All rights reserved.",
+    "help": ""
+  },
+  "lang_switch": {
+    "es": "EN",
+    "en": "ES",
+    "help": ""
+  },
+  "not_found_title": {
+    "es": "Página no encontrada",
+    "en": "Page not found",
+    "help": ""
+  },
+  "not_found_text": {
+    "es": "La página que buscas no existe o cambió de lugar.",
+    "en": "The page you are looking for does not exist or has moved.",
+    "help": ""
+  },
+  "go_home": {
+    "es": "Ir al inicio",
+    "en": "Go to home",
+    "help": ""
+  },
+  "home_meta_title": {
+    "es": "Mi sitio · Inicio",
+    "en": "My site · Home",
+    "help": "Título de la pestaña en la portada"
+  },
+  "home_meta_desc": {
+    "es": "Descripción del sitio para buscadores.",
+    "en": "Site description for search engines.",
+    "help": ""
+  },
+  "posts_meta_title": {
+    "es": "Blog",
+    "en": "Blog",
+    "help": ""
+  },
+  "posts_meta_desc": {
+    "es": "Artículos y novedades.",
+    "en": "Articles and news.",
+    "help": ""
+  },
+  "contact_meta_title": {
+    "es": "Contacto",
+    "en": "Contact",
+    "help": ""
+  },
+  "contact_meta_desc": {
+    "es": "Escríbenos.",
+    "en": "Write to us.",
+    "help": ""
+  }
+}

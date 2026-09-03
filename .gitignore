@@ -1,0 +1,12 @@
+# Datos de cada instalación (se generan al usar el panel)
+data/users.json
+data/login-attempts.json
+data/mensajes.log
+data/*.tmp
+data/**/*.tmp
+uploads/*
+!uploads/.htaccess
+!uploads/index.html
+# Sistema
+.DS_Store
+Thumbs.db

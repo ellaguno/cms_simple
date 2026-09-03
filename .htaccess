@@ -1,0 +1,29 @@
+# cms_simple — URLs limpias y protección de carpetas
+Options -Indexes
+DirectoryIndex index.php
+AddDefaultCharset UTF-8
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+  RewriteRule ^(.*)$ index.php?p=$1 [QSA,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType video/mp4 "access plus 30 days"
+  ExpiresByType video/webm "access plus 30 days"
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+  ExpiresByType font/woff2 "access plus 365 days"
+</IfModule>

@@ -1,0 +1,30 @@
+{
+  "es": [
+    {
+      "label": "Inicio",
+      "url": "/"
+    },
+    {
+      "label": "Blog",
+      "url": "/blog"
+    },
+    {
+      "label": "Contacto",
+      "url": "/contacto"
+    }
+  ],
+  "en": [
+    {
+      "label": "Home",
+      "url": "/"
+    },
+    {
+      "label": "Blog",
+      "url": "/blog"
+    },
+    {
+      "label": "Contact",
+      "url": "/contact"
+    }
+  ]
+}

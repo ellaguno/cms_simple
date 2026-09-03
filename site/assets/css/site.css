@@ -1,0 +1,38 @@
+/* Tema starter de cms_simple — sustituye este CSS por el de tu diseño. */
+:root { --ink: #111; --muted: #666; --line: #e5e5e5; --bg: #fff; --accent: #111; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.6 Inter, system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+img, video { max-width: 100%; height: auto; }
+a { color: inherit; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+.narrow { max-width: 720px; }
+.center { text-align: center; }
+.muted, small { color: var(--muted); }
+h1 { font-size: clamp(32px, 5vw, 52px); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 16px; }
+h2 { font-size: 28px; margin: 48px 0 20px; }
+h3 { font-size: 20px; margin: 8px 0; }
+.lead { font-size: 20px; color: var(--muted); }
+.btn { display: inline-block; background: var(--accent); color: #fff; padding: 12px 24px; border-radius: 30px; text-decoration: none; font-weight: 500; border: 0; cursor: pointer; font: inherit; }
+.hdr { border-bottom: 1px solid var(--line); }
+.hdr-in { display: flex; align-items: center; justify-content: space-between; height: 72px; gap: 20px; }
+.brand { font-weight: 700; text-decoration: none; font-size: 20px; } .brand img { height: 36px; }
+.nav { display: flex; gap: 22px; flex-wrap: wrap; } .nav a { text-decoration: none; font-weight: 500; } .nav a.on { text-decoration: underline; } .nav .lang { border: 1px solid var(--line); border-radius: 20px; padding: 2px 10px; font-size: 13px; }
+.hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; padding: 70px 20px; }
+.hero-img img { border-radius: 16px; width: 100%; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; margin-bottom: 60px; }
+.card { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #fff; }
+.card img { display: block; width: 100%; aspect-ratio: 16/10; object-fit: cover; }
+.card-b { padding: 18px 20px 22px; } .card-b p { color: var(--muted); font-size: 15px; } .card h3 a { text-decoration: none; }
+.more { font-weight: 500; text-decoration: none; }
+.search { display: flex; gap: 8px; margin: 0 0 24px; } .search input { flex: 1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 30px; font: inherit; } .search button { border: 0; background: var(--accent); color: #fff; border-radius: 30px; padding: 10px 18px; font: inherit; cursor: pointer; }
+.pager { display: flex; gap: 6px; margin: 0 0 60px; } .pager a { border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; text-decoration: none; } .pager a.on { background: var(--accent); color: #fff; }
+.post { padding: 50px 20px 60px; max-width: 800px; } .post-img img { border-radius: 16px; width: 100%; margin: 10px 0 30px; }
+.content { font-size: 18px; } .content img { border-radius: 12px; margin: 10px 0 20px; } .content video, .content iframe.ql-video { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: 12px; margin: 10px 0 20px; } .content h2 { margin: 36px 0 12px; } .content blockquote { border-left: 3px solid var(--ink); margin: 20px 0; padding-left: 18px; color: var(--muted); }
+.content .ql-align-center { text-align: center; } .content .ql-align-right { text-align: right; }
+.tags a { border: 1px solid var(--line); border-radius: 20px; padding: 2px 10px; text-decoration: none; font-size: 14px; }
+.form { display: grid; gap: 16px; margin: 30px 0 60px; } .form label { display: grid; gap: 6px; font-weight: 500; } .form input, .form textarea { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; font: inherit; } .hp { display: none; }
+.form-msg:empty { display: none; } .form-msg { padding: 12px 16px; border-radius: 12px; } .form-msg.ok { background: #e6f6f0; color: #0b6b3a; } .form-msg.err { background: #fdecec; color: #a11212; }
+.ftr { border-top: 1px solid var(--line); margin-top: 40px; padding: 40px 0 20px; font-size: 15px; } .ftr-in { display: flex; justify-content: space-between; gap: 30px; flex-wrap: wrap; } .ftr a { text-decoration: none; color: var(--muted); }
+.cms-social { display: flex; gap: 10px; margin-bottom: 10px; } .cms-social a { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; } .cms-social svg { width: 16px; height: 16px; fill: currentColor; }
+.copy { color: var(--muted); font-size: 13px; margin-top: 20px; }
+@media (max-width: 800px) { .hero { grid-template-columns: 1fr; padding: 40px 20px; } .hdr-in { height: auto; padding: 14px 0; flex-direction: column; align-items: flex-start; } }

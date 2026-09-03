@@ -1,0 +1,40 @@
+{
+  "slug": "hola-mundo",
+  "status": "published",
+  "title": {
+    "es": "Hola, mundo",
+    "en": "Hello, world"
+  },
+  "excerpt": {
+    "es": "Primera entrada de ejemplo. Edítala o bórrala desde el panel.",
+    "en": "First sample post. Edit or delete it from the admin."
+  },
+  "body": {
+    "es": "<p>Este contenido se edita con el <strong>editor visual</strong> del panel. Puedes insertar imágenes, PDF y video desde la Biblioteca.</p><h2>Subtítulo</h2><p>Y seguir escribiendo.</p>",
+    "en": "<p>This content is edited with the admin <strong>visual editor</strong>. You can insert images, PDFs and videos from the Library.</p><h2>Subheading</h2><p>And keep writing.</p>"
+  },
+  "date": "2026-01-15",
+  "image": "",
+  "category": {
+    "es": "General",
+    "en": "General"
+  },
+  "tags": {
+    "es": [
+      "ejemplo"
+    ],
+    "en": [
+      "sample"
+    ]
+  },
+  "seo_title": {
+    "es": "",
+    "en": ""
+  },
+  "seo_desc": {
+    "es": "",
+    "en": ""
+  },
+  "created": "2026-01-15",
+  "updated": "2026-01-15"
+}

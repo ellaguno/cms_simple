@@ -2,6 +2,7 @@
 data/users.json
 data/login-attempts.json
 data/mensajes.log
+data/backups/
 data/*.tmp
 data/**/*.tmp
 uploads/*

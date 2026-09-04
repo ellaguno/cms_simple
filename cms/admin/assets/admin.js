@@ -275,6 +275,22 @@
     el.addEventListener("input", upd); upd();
   });
 
+  /* ---------------- editor de código (CodeMirror) ---------------- */
+  document.querySelectorAll("textarea[data-code]").forEach(function (ta) {
+    if (!window.CodeMirror) return;
+    var mode = ta.getAttribute("data-mode") || "text/plain";
+    var cm = CodeMirror.fromTextArea(ta, {
+      mode: mode, theme: "eclipse", lineNumbers: true, lineWrapping: true, indentUnit: 4, tabSize: 4, indentWithTabs: false,
+      matchBrackets: true, autoCloseBrackets: true, autoCloseTags: mode !== "text/css" && mode !== "text/javascript", styleActiveLine: true, viewportMargin: 50,
+      extraKeys: { "Ctrl-S": function () { cm.save(); ta.form.requestSubmit(); }, "Cmd-S": function () { cm.save(); ta.form.requestSubmit(); }, Tab: function (c) { c.replaceSelection("    ", "end"); } }
+    });
+    cm.setSize("100%", "70vh");
+    var dirty = false;
+    cm.on("change", function () { dirty = true; });
+    ta.form.addEventListener("submit", function () { cm.save(); dirty = false; });
+    window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+  });
+
   /* ---------------- confirmaciones ---------------- */
   document.querySelectorAll("form[data-confirm]").forEach(function (f) {
     f.addEventListener("submit", function (e) { if (!window.confirm(f.getAttribute("data-confirm"))) e.preventDefault(); });

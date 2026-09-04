@@ -64,4 +64,5 @@ return [
     // Formulario de contacto (POST a /_cms/form)
     'form' => ['required' => ['nombre', 'correo'], 'email_field' => 'correo', 'name_field' => 'nombre', 'honeypot' => 'empresa_web2'],
     'max_image_width' => 1800,
+    'code_editor' => true,   // sección "Código del tema" en el panel (false para desactivarla)
 ];

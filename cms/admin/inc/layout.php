@@ -15,6 +15,7 @@ function admin_nav(): array
         'users'     => ['Usuarios', admin_url('users')],
         'password'  => ['Contraseña', admin_url('password')],
     ];
+    if (cms_config('code_editor', true) !== false) $nav['code'] = ['Código del tema', admin_url('code')];
     return $nav;
 }
 
@@ -32,10 +33,13 @@ function admin_header(string $title, string $active = ''): void
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title><?= cms_e($title) ?> · Admin <?= cms_e($site) ?></title>
-<?php if (!empty($S['favicon'])): ?><link rel="icon" href="<?= cms_e(cms_img($S['favicon'])) ?>">
-<?php endif; ?>
+<link rel="icon" href="<?= !empty($S['favicon']) ? cms_e(cms_img($S['favicon'])) : 'data:,' ?>">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
+<?php if ($active === 'code'): ?>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
+<?php endif; ?>
 <link rel="stylesheet" href="<?= $assets ?>/admin.css?v=<?= CMS_VERSION ?>">
 </head>
 <body>
@@ -69,11 +73,15 @@ function admin_header(string $title, string $active = ''): void
 function admin_footer(): void
 {
     $assets = CMS_BASE . '/cms/admin/assets';
+    $code = ($_GET['p'] ?? '') === 'code';
     ?>
   </main>
 </div>
 <script>window.CMS_ADMIN = {base: <?= json_encode(CMS_BASE) ?>, upload: <?= json_encode(admin_url('upload')) ?>, media: <?= json_encode(admin_url('media', ['json' => 1])) ?>, csrf: <?= json_encode(admin_csrf()) ?>, langs: <?= json_encode(cms_langs()) ?>, defaultLang: <?= json_encode(cms_default_lang()) ?>};</script>
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<?php if ($code): $cm = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16'; foreach (['codemirror.min.js', 'mode/xml/xml.min.js', 'mode/javascript/javascript.min.js', 'mode/css/css.min.js', 'mode/htmlmixed/htmlmixed.min.js', 'mode/clike/clike.min.js', 'mode/php/php.min.js', 'mode/markdown/markdown.min.js', 'addon/edit/matchbrackets.min.js', 'addon/edit/closebrackets.min.js', 'addon/edit/closetag.min.js', 'addon/selection/active-line.min.js'] as $f): ?>
+<script src="<?= $cm . '/' . $f ?>"></script>
+<?php endforeach; endif; ?>
 <script src="<?= $assets ?>/admin.js?v=<?= CMS_VERSION ?>"></script>
 </body>
 </html>

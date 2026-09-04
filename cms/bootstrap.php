@@ -51,6 +51,7 @@ function cms_config(?string $key = null, $default = null)
             'form' => ['required' => ['nombre', 'correo'], 'email_field' => 'correo', 'name_field' => 'nombre', 'honeypot' => 'empresa_web2'],
             'admin_logo' => '',
             'max_image_width' => 1800,
+            'code_editor' => true,
         ], $user);
         if (!in_array($cfg['default_lang'], $cfg['langs'], true)) array_unshift($cfg['langs'], $cfg['default_lang']);
     }

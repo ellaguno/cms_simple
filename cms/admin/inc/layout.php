@@ -2,10 +2,22 @@
 /** cms_simple admin — layout (cabecera con navegación, pie con scripts). */
 declare(strict_types=1);
 
+/**
+ * Entradas del menú lateral. Cada entrada es [label, href] o, para un grupo de tipos de contenido,
+ * ['group' => label, 'items' => [clave => [label, href], …]]. Un tipo entra en un grupo con 'group' => 'Nombre'
+ * en site/config.php; los tipos sin grupo se listan sueltos, en el orden de la configuración.
+ */
 function admin_nav(): array
 {
     $nav = ['dashboard' => ['Inicio', admin_url('dashboard')]];
-    foreach (cms_config('types') as $k => $def) $nav['content:' . $k] = [$def['label'] ?? $k, admin_url('content', ['type' => $k])];
+    foreach (cms_config('types') as $k => $def) {
+        $entry = [$def['label'] ?? $k, admin_url('content', ['type' => $k])];
+        $g = trim((string) ($def['group'] ?? ''));
+        if ($g === '') { $nav['content:' . $k] = $entry; continue; }
+        $gk = 'group:' . cms_slugify($g);
+        if (!isset($nav[$gk])) $nav[$gk] = ['group' => $g, 'items' => []];
+        $nav[$gk]['items']['content:' . $k] = $entry;
+    }
     $nav += [
         'media'     => ['Medios', admin_url('media')],
         'menu'      => ['Menú', admin_url('menu')],
@@ -48,9 +60,16 @@ function admin_header(string $title, string $active = ''): void
   <aside class="ad-side">
     <a class="ad-brand" href="<?= admin_url() ?>"><?php if ($logo): ?><img src="<?= cms_e(cms_img($logo)) ?>" alt="<?= cms_e($site) ?>"><?php else: ?><strong><?= cms_e($site) ?></strong><?php endif; ?><span>Admin</span></a>
     <nav class="ad-nav">
-<?php foreach (admin_nav() as $k => [$label, $href]): ?>
-      <a href="<?= cms_e($href) ?>"<?= $active === $k ? ' class="on"' : '' ?>><?= cms_e($label) ?></a>
+<?php foreach (admin_nav() as $k => $entry): if (isset($entry['group'])): $inside = isset($entry['items'][$active]); ?>
+      <details class="ad-nav-group" data-nav-group="<?= cms_e($k) ?>"<?= $inside ? ' open data-active' : '' ?>>
+        <summary><?= cms_e($entry['group']) ?></summary>
+<?php foreach ($entry['items'] as $ik => [$label, $href]): ?>
+        <a href="<?= cms_e($href) ?>"<?= $active === $ik ? ' class="on"' : '' ?>><?= cms_e($label) ?></a>
 <?php endforeach; ?>
+      </details>
+<?php else: [$label, $href] = $entry; ?>
+      <a href="<?= cms_e($href) ?>"<?= $active === $k ? ' class="on"' : '' ?>><?= cms_e($label) ?></a>
+<?php endif; endforeach; ?>
     </nav>
     <div class="ad-side-foot">
 <?php foreach (cms_active_langs() as $l): ?>

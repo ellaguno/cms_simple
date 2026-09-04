@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-$all = cms_json_read(CMS_DATA . '/strings.json', []);
+$all = cms_strings_all(true);   // incluye claves nuevas de site/defaults/strings.json; al guardar quedan en data/
 
 if (admin_is_post()) {
     admin_csrf_check();

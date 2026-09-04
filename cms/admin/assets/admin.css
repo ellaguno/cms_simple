@@ -13,6 +13,13 @@ code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 12px; 
 .ad-nav a { text-decoration: none; padding: 9px 12px; border-radius: 10px; color: var(--ink); font-weight: 500; }
 .ad-nav a:hover { background: var(--bg); }
 .ad-nav a.on { background: #000; color: #fff; }
+.ad-nav-group { display: block; }
+.ad-nav-group summary { list-style: none; cursor: pointer; padding: 9px 12px; border-radius: 10px; font-weight: 600; color: var(--ink); display: flex; align-items: center; justify-content: space-between; user-select: none; }
+.ad-nav-group summary::-webkit-details-marker { display: none; }
+.ad-nav-group summary::after { content: ""; width: 7px; height: 7px; border-right: 1.5px solid var(--grey); border-bottom: 1.5px solid var(--grey); transform: rotate(-45deg); transition: transform .15s; }
+.ad-nav-group[open] summary::after { transform: rotate(45deg); }
+.ad-nav-group summary:hover { background: var(--bg); }
+.ad-nav-group a { display: block; margin: 4px 0 0 12px; padding: 7px 12px; font-size: 14px; }
 .ad-side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--grey); }
 .ad-user { font-weight: 600; color: var(--ink); margin-top: 6px; }
 .ad-main { flex: 1; padding: 32px 40px 80px; max-width: 1400px; }
@@ -57,6 +64,7 @@ code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 12px; 
 .ad-btn:hover { background: #222; }
 .ad-btn[disabled] { opacity: .5; cursor: default; }
 .ad-btn-light { background: #fff; color: #000; }
+.ad-quick { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
 .ad-btn-light:hover { background: var(--bg); }
 .ad-btn-danger { background: #fff; color: var(--errt); border-color: #f1c4c4; }
 .ad-btn-danger:hover { background: var(--err); }
@@ -123,6 +131,7 @@ form[data-edit-lang] .ad-lang-tag { display: none; }
   .ad-shell { flex-direction: column; }
   .ad-side { width: auto; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; }
   .ad-nav { flex-direction: row; flex-wrap: wrap; }
+  .ad-nav-group a { display: inline-block; margin: 4px 4px 0 0; }
   .ad-side-foot { margin: 0; flex-direction: row; flex-wrap: wrap; gap: 12px; width: 100%; }
   .ad-main { padding: 20px 16px 60px; }
   .ad-grid-main, .ad-grid2, .ad-two, .ad-three, .ad-langs { grid-template-columns: 1fr; }

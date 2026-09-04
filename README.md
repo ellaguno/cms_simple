@@ -150,6 +150,21 @@ Advertencia: es edición de código en producción. Un error lógico en `config.
 sitio o el propio panel fuera de servicio (la verificación evita errores de sintaxis, no errores de lógica).
 En ese caso, restaura el respaldo desde `data/backups/` por FTP. Úsalo con cuentas de administrador de confianza.
 
+## Opciones del núcleo añadidas en 1.3 (todas opcionales)
+
+- **Grupos en el menú del panel**: `'group' => 'Páginas'` en un tipo lo agrupa bajo ese encabezado plegable
+  (recuerda si está abierto o cerrado). Los tipos sin grupo se listan sueltos como siempre.
+- **`'noindex' => true` en un tipo**: sus detalles llevan `<meta name="robots" content="noindex">` y no entran al
+  sitemap. Útil para elementos que solo se muestran embebidos en otras páginas (planes, preguntas, equipo).
+- **URL canónica fija**: `'site_url' => 'https://midominio.com'` en `site/config.php` (o Ajustes → SEO → URL
+  canónica, que tiene prioridad) fija el dominio en canonical, sitemap y JSON-LD aunque el sitio se abra por
+  `www` u otro alias. Sin definir, se usa el host de la petición como antes.
+- **`/llms.txt`**: si existe `site/llms.txt` se sirve como texto plano; `{{site}}` se sustituye por la URL del sitio.
+- **Textos por defecto**: `cms_strings_all()` completa las claves que falten en `data/strings.json` con las de
+  `site/defaults/strings.json`, así un tema puede añadir textos nuevos sin tocar `data/` en producción; al guardar
+  desde el panel quedan en `data/`.
+- `cms_jsonld_graph()` acepta `null` (páginas de `pages` sin `schema` ya no fallan).
+
 ## Actualizar el núcleo en un sitio existente
 
 Sustituye la carpeta `cms/` por la nueva versión. `site/`, `data/` y `uploads/` no cambian.

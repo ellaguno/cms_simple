@@ -3,6 +3,16 @@
   "use strict";
   var A = window.CMS_ADMIN || { base: "", upload: "/admin/?p=upload", media: "/admin/?p=media&json=1", csrf: "", langs: ["es"], defaultLang: "es" };
 
+  /* ---------------- menú lateral: grupos plegables (recuerda abierto/cerrado) ---------------- */
+  document.querySelectorAll(".ad-nav-group").forEach(function (d) {
+    var key = "adnav:" + d.getAttribute("data-nav-group");
+    try {
+      var saved = localStorage.getItem(key);
+      if (!d.hasAttribute("data-active")) d.open = saved === null ? true : saved === "1";
+    } catch (e) {}
+    d.addEventListener("toggle", function () { try { localStorage.setItem(key, d.open ? "1" : "0"); } catch (e) {} });
+  });
+
   /* ---------------- utilidades ---------------- */
   function upload(file) {
     var fd = new FormData();

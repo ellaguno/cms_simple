@@ -32,12 +32,13 @@ function cms_settings(bool $reload = false): array
     return $s;
 }
 
+/** Textos fijos: data/strings.json completado con las claves que falten de site/defaults/strings.json (textos nuevos del tema). */
 function cms_strings_all(bool $reload = false): array
 {
     static $t = null;
     if ($t === null || $reload) {
         $t = cms_json_read(CMS_DATA . '/strings.json');
-        if (!$t && is_file(CMS_SITE . '/defaults/strings.json')) $t = cms_json_read(CMS_SITE . '/defaults/strings.json');
+        if (is_file(CMS_SITE . '/defaults/strings.json')) $t += cms_json_read(CMS_SITE . '/defaults/strings.json');
     }
     return $t;
 }

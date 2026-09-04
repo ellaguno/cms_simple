@@ -73,19 +73,27 @@ function cms_local_path(string $path): ?string
     return CMS_SITE . '/assets/img/' . ltrim($path, '/');
 }
 
+/** Origen canónico (esquema + host): Ajustes → "URL canónica", si no config 'site_url', si no el de la petición. */
+function cms_origin(): string
+{
+    static $o = null;
+    if ($o !== null) return $o;
+    $fixed = trim((string) (cms_settings()['site_url'] ?? '')) ?: trim((string) cms_config('site_url', ''));
+    if ($fixed !== '' && preg_match('#^https?://[^/]+#i', $fixed, $m)) return $o = $m[0];
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+    return $o = ($https ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+}
+
 function cms_site_url(): string
 {
-    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    return ($https ? 'https' : 'http') . '://' . $host . CMS_BASE;
+    return cms_origin() . CMS_BASE;
 }
 
 /** URL absoluta de una ruta que ya incluye CMS_BASE. */
 function cms_abs_url(string $path): string
 {
     if (preg_match('#^https?://#i', $path)) return $path;
-    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
-    return ($https ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . $path;
+    return cms_origin() . $path;
 }
 
 /** Redirecciones 301 administradas (data/redirects.json). */

@@ -20,7 +20,7 @@ admin_header('Inicio', 'dashboard');
 <div class="ad-grid2">
   <section class="ad-box">
     <h2>Acciones rápidas</h2>
-    <p><?php foreach ($types as $k => $def): ?><a class="ad-btn" href="<?= admin_url('edit', ['type' => $k]) ?>">+ <?= cms_e($def['label_singular'] ?? ('Nuevo en ' . ($def['label'] ?? $k))) ?></a> <?php endforeach; ?></p>
+    <div class="ad-quick"><?php foreach ($types as $k => $def): ?><a class="ad-btn" href="<?= admin_url('edit', ['type' => $k]) ?>">+ <?= cms_e($def['label_singular'] ?? ('Nuevo en ' . ($def['label'] ?? $k))) ?></a><?php endforeach; ?></div>
     <ul class="ad-list">
       <li><a href="<?= admin_url('settings') ?>">Cambiar correo, teléfono, WhatsApp y redes sociales</a></li>
       <li><a href="<?= admin_url('menu') ?>">Editar los enlaces del menú</a></li>

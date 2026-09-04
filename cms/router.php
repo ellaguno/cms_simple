@@ -6,7 +6,7 @@
  *   /{segmento-tipo}/          → plantilla de listado del tipo (template_list)
  *   /{segmento-tipo}/{slug}    → plantilla de detalle (template_single)
  *   /{segmento-página}         → páginas estáticas de config 'pages'
- *   /sitemap.xml  /robots.txt  /_cms/form (POST del formulario de contacto)
+ *   /sitemap.xml  /robots.txt  /llms.txt (site/llms.txt, si existe)  /_cms/form (POST del formulario de contacto)
  */
 declare(strict_types=1);
 
@@ -26,6 +26,7 @@ $path = trim(rawurldecode($path), '/');
 if ($path !== '' && ($to = cms_redirect_for($path)) !== null) { header('Location: ' . $to, true, 301); exit; }
 if ($path === 'robots.txt') { cms_robots(); exit; }
 if ($path === 'sitemap.xml') { cms_sitemap(); exit; }
+if ($path === 'llms.txt' && is_file(CMS_SITE . '/llms.txt')) { header('Content-Type: text/plain; charset=utf-8'); echo str_replace('{{site}}', cms_site_url(), (string) file_get_contents(CMS_SITE . '/llms.txt')); exit; }
 if ($path === '_cms/form') { require CMS_DIR . '/form.php'; exit; }
 
 // ---- idioma
@@ -86,7 +87,8 @@ if ($seg === []) {
                 'desc' => cms_f($item, 'seo_desc', $lang) ?: (string) cms_f($item, $d['excerpt_field'] ?? 'excerpt', $lang),
                 'alt' => $alt('item:' . $k, $item['slug']),
                 'og_image' => $item[$d['image_field'] ?? 'image'] ?? '',
-                'og_type' => in_array($d['schema'] ?? '', ['Article', 'BlogPosting', 'NewsArticle'], true) ? 'article' : 'website'];
+                'og_type' => in_array($d['schema'] ?? '', ['Article', 'BlogPosting', 'NewsArticle'], true) ? 'article' : 'website',
+                'noindex' => !empty($d['noindex'])];
             $page['route'] = 'item:' . $k;
             $page['jsonld'] = [cms_jsonld_graph(cms_jsonld_org(), cms_jsonld_breadcrumbs([$home_crumb, [$label, cms_url('list:' . $k, $lang)], [$title, $url]]), cms_jsonld_item($d, $item, $lang, $url))];
         }

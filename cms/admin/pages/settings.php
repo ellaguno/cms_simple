@@ -30,6 +30,7 @@ if (admin_is_post()) {
     $S['author_name'] = admin_post('author_name');
     $S['country'] = admin_post('country');
     $S['google_verification'] = admin_post('google_verification');
+    $S['site_url'] = rtrim(trim(admin_post('site_url')), '/');
     foreach (['logo', 'favicon', 'og_image'] as $k) $S[$k] = admin_post($k);
     $S['languages'] = [];
     foreach (cms_langs() as $l) if ($l !== cms_default_lang()) $S['languages'][$l] = !empty($_POST['lang_' . $l]);
@@ -77,6 +78,7 @@ admin_header('Ajustes', 'settings');
 <?php foreach (cms_langs() as $l): if ($l === cms_default_lang()) continue; ?>
       <div class="ad-field"><label class="ad-check"><input type="checkbox" name="lang_<?= $l ?>" value="1"<?= !empty($S['languages'][$l]) ? ' checked' : '' ?>> Activar la versión en <?= cms_e($langNames[$l] ?? strtoupper($l)) ?> (/<?= $l ?>/)</label></div>
 <?php endforeach; ?>
+      <div class="ad-field"><label>URL canónica del sitio (con https y sin barra final; fija el dominio en canonical, sitemap y datos estructurados aunque entren por www)</label><input type="url" name="site_url" value="<?= cms_e($S['site_url'] ?? '') ?>" placeholder="https://midominio.com"></div>
       <div class="ad-field"><label>Código de verificación de Google Search Console</label><input type="text" name="google_verification" value="<?= cms_e($S['google_verification'] ?? '') ?>"></div>
       <div class="ad-field"><label>Otros sitios (enlaces del footer): una por línea, "Texto | URL"</label><textarea name="other_sites" rows="4"><?= cms_e(implode("\n", array_map(fn($o) => ($o['label'] ?? '') . ' | ' . ($o['url'] ?? ''), (array) ($S['other_sites'] ?? [])))) ?></textarea></div>
     </section>

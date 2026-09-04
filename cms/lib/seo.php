@@ -11,7 +11,7 @@ function cms_jsonld_org(): array
     $org = ['@type' => 'Organization', '@id' => cms_site_url() . '/#organization', 'name' => $site, 'url' => cms_site_url() . '/'];
     if (!empty($S['logo'])) $org['logo'] = cms_abs_url(cms_img($S['logo']));
     if (!empty($S['email'])) $org['email'] = $S['email'];
-    if ($same) $org['sameAs'] = $same;
+    if ($same) $org['sameAs'] = array_values(array_unique($same));
     if (!empty($S['phone_href'])) $org['telephone'] = $S['phone_href'];
     if (!empty($S['whatsapp'])) $org['contactPoint'] = [['@type' => 'ContactPoint', 'contactType' => 'sales', 'telephone' => '+' . preg_replace('/\D/', '', $S['whatsapp']), 'availableLanguage' => cms_active_langs()]];
     if (!empty($S['country'])) $org['areaServed'] = $S['country'];
@@ -25,7 +25,7 @@ function cms_jsonld_breadcrumbs(array $items): array
     return ['@type' => 'BreadcrumbList', 'itemListElement' => $list];
 }
 
-function cms_jsonld_graph(array ...$nodes): array
+function cms_jsonld_graph(?array ...$nodes): array
 {
     return ['@context' => 'https://schema.org', '@graph' => array_values(array_filter($nodes))];
 }
@@ -116,7 +116,7 @@ function cms_sitemap(): void
             $rows[] = [cms_url('list:' . $k, $l), $latest, '0.8'];
         }
         foreach ($pages as $k => $def) if (empty($def['noindex'])) $rows[] = [cms_url('page:' . $k, $l), $latest, '0.8'];
-        foreach ($types as $k => $def) foreach ($all[$k] as $it) $rows[] = [cms_url('item:' . $k, $l, $it['slug']), $it['updated'] ?? ($it['date'] ?? ''), '0.7'];
+        foreach ($types as $k => $def) { if (!empty($def['noindex'])) continue; foreach ($all[$k] as $it) $rows[] = [cms_url('item:' . $k, $l, $it['slug']), $it['updated'] ?? ($it['date'] ?? ''), '0.7']; }
     }
     echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
     foreach ($rows as [$u, $mod, $prio]) {

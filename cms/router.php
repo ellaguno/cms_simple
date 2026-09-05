@@ -6,6 +6,7 @@
  *   /{segmento-tipo}/          → plantilla de listado del tipo (template_list)
  *   /{segmento-tipo}/{slug}    → plantilla de detalle (template_single)
  *   /{segmento-página}         → páginas estáticas de config 'pages'
+ *   /{ruta/completa}           → tipos en árbol ('tree' => true; con 'routes' vacío cuelgan de la raíz)
  *   /sitemap.xml  /robots.txt  /llms.txt (site/llms.txt, si existe)  /_cms/form (POST del formulario de contacto)
  */
 declare(strict_types=1);
@@ -49,6 +50,16 @@ $alt = function (string $route, ?string $slug = null): array {
 };
 $home_crumb = [$t('crumb_home', $lang === 'en' ? 'Home' : 'Inicio'), cms_url('home', $lang)];
 
+/** Borrador o programado con token de vista previa válido (?preview=…). */
+function cms_preview_item(string $type, string $slug): ?array
+{
+    $tok = (string) ($_GET['preview'] ?? '');
+    if ($tok === '') return null;
+    $it = cms_item($type, $slug, false);
+    if (!$it || cms_item_is_live($it)) return null;
+    return hash_equals(cms_preview_token($type, $slug), $tok) ? $it : null;
+}
+
 $page = ['lang' => $lang, 'path' => $path, 'route' => '404'];
 $template = null;
 $item = null;
@@ -76,7 +87,7 @@ if ($seg === []) {
             $page += ['title' => $t($k . '_meta_title', $label) . ' · ' . $site, 'desc' => $t($k . '_meta_desc'), 'alt' => $alt('list:' . $k), 'noindex' => $filtered];
             $page['route'] = 'list:' . $k;
             $page['jsonld'] = [cms_jsonld_graph(cms_jsonld_org(), cms_jsonld_breadcrumbs([$home_crumb, [$label, cms_url('list:' . $k, $lang)]]))];
-        } elseif (count($seg) === 2 && ($item = cms_item($k, $seg[1]))) {
+        } elseif (count($seg) === 2 && (($item = cms_item($k, $seg[1])) || ($item = cms_preview_item($k, $seg[1])))) {
             $template = $d['template_single'] ?? rtrim($k, 's');
             $type = $k; $def = $d;
             $title = (string) cms_f($item, $d['title_field'] ?? 'title', $lang);
@@ -90,6 +101,7 @@ if ($seg === []) {
                 'og_type' => in_array($d['schema'] ?? '', ['Article', 'BlogPosting', 'NewsArticle'], true) ? 'article' : 'website',
                 'noindex' => !empty($d['noindex'])];
             $page['route'] = 'item:' . $k;
+            if (!cms_item_is_live($item)) { $page['noindex'] = true; $page['preview'] = true; }
             $page['jsonld'] = [cms_jsonld_graph(cms_jsonld_org(), cms_jsonld_breadcrumbs([$home_crumb, [$label, cms_url('list:' . $k, $lang)], [$title, $url]]), cms_jsonld_item($d, $item, $lang, $url))];
         }
         break;
@@ -107,6 +119,35 @@ if ($seg === []) {
                 !empty($d['schema']) ? ['@type' => $d['schema'], 'url' => cms_abs_url(cms_url('page:' . $k, $lang)), 'name' => $label, 'mainEntity' => ['@id' => cms_site_url() . '/#organization']] : null)];
             break;
         }
+    }
+}
+
+// tipos en árbol: /ruta/completa (raíz) o /segmento/ruta/completa
+if ($template === null && $seg !== []) {
+    foreach (cms_config('types') as $k => $d) {
+        if (empty($d['tree'])) continue;
+        $d += ['key' => $k];
+        $tseg = cms_segment($d, $lang);
+        $rel = $path;
+        if ($tseg !== '') { if (strpos($path, $tseg . '/') !== 0) continue; $rel = substr($path, strlen($tseg) + 1); }
+        $item = cms_tree_item($k, $rel);
+        if (!$item && ($_GET['preview'] ?? '') !== '') { $cand = cms_tree_item($k, $rel, false); if ($cand && !cms_item_is_live($cand) && hash_equals(cms_preview_token($k, $cand['slug']), (string) $_GET['preview'])) $item = $cand; }
+        if (!$item) continue;
+        $template = $d['template_single'] ?? rtrim($k, 's');
+        $type = $k; $def = $d;
+        $title = (string) cms_f($item, $d['title_field'] ?? 'title', $lang);
+        $url = cms_url('item:' . $k, $lang, $item['slug']);
+        $crumbs = [$home_crumb];
+        foreach (cms_tree_ancestors($k, $item, false) as $a) $crumbs[] = [(string) cms_f($a, $d['title_field'] ?? 'title', $lang), cms_url('item:' . $k, $lang, $a['slug'])];
+        $crumbs[] = [$title, $url];
+        $page += ['slug' => $item['slug'], 'title' => cms_f($item, 'seo_title', $lang) ?: $title . ' · ' . $site,
+            'desc' => cms_f($item, 'seo_desc', $lang) ?: (string) cms_f($item, $d['excerpt_field'] ?? 'excerpt', $lang),
+            'alt' => $alt('item:' . $k, $item['slug']), 'og_image' => $item[$d['image_field'] ?? 'image'] ?? '', 'og_type' => 'website',
+            'noindex' => !empty($d['noindex']) || !cms_item_is_live($item), 'crumbs' => $crumbs];
+        $page['route'] = 'item:' . $k;
+        if (!cms_item_is_live($item)) $page['preview'] = true;
+        $page['jsonld'] = [cms_jsonld_graph(cms_jsonld_org(), cms_jsonld_breadcrumbs($crumbs), cms_jsonld_item($d, $item, $lang, $url))];
+        break;
     }
 }
 

@@ -150,6 +150,28 @@ Advertencia: es edición de código en producción. Un error lógico en `config.
 sitio o el propio panel fuera de servicio (la verificación evita errores de sintaxis, no errores de lógica).
 En ese caso, restaura el respaldo desde `data/backups/` por FTP. Úsalo con cuentas de administrador de confianza.
 
+## Constructor de páginas por secciones, mapa del sitio y flujo de contenido (1.5)
+
+- **Secciones**: un campo `'type' => 'sections'` convierte un tipo en páginas armadas con bloques que declara el
+  tema en `site/blocks.php` (campos como en `config.php`, `wrap_class`, `styles` permitidos) y dibuja en
+  `site/blocks/<clave>.php` (`$b` datos, `$st` estilo, `$sec`, `$lang`, `$S`, `$t`, `$page`, `$item`). El núcleo
+  envuelve cada bloque en `<section class="sec sec-<clave> sec-bg-* sec-text-* sec-pad-* sec-w-* sec-align-*">`
+  (más `sec-has-bg` con `--sec-bg`/`--sec-overlay`, `sec-hide-mobile`, ancla, clases); el tema implementa esas
+  clases en su CSS. Paleta de fondos: `'sections' => ['palette' => [clave => etiqueta]]` en `config.php`.
+  Panel: tarjetas plegables con pestañas Contenido/Estilo, selector por grupos, subir/bajar, arrastrar, duplicar,
+  ocultar; **vista previa en vivo** (`admin/?p=preview`) que dibuja el formulario sin guardar con el tema en un
+  iframe (escritorio/tableta/móvil); clic en una sección de la vista previa abre su tarjeta.
+- **Tipos en árbol**: `'tree' => true` da página padre, ruta completa (`path`), migas de pan y resolución a
+  cualquier profundidad; `'routes' => ['es' => '']` las cuelga de la raíz (con validación de segmentos reservados).
+- **Mapa del sitio** (Admin → Mapa del sitio): árbol de todo lo que responde, con estado y origen; desde ahí se
+  crean páginas hijas, se mueven arrastrando, se ordenan, se publican y se añaden al menú.
+- **Flujo de contenido**: vista previa de borradores con token (`?preview=`), publicación programada
+  (`publish_at`), versiones (últimas 10, restaurables) y duplicar.
+- Campo `code` (textarea monoespaciado). `admin_read_item()` compartido. Elementos en memoria
+  (`$GLOBALS['cms_item_override']`) y `cms_items_flush()`.
+
+Un tema que no defina `site/blocks.php` no cambia en nada.
+
 ## Editor visual (1.4)
 
 Barra completa (títulos 1-4, negritas, cursivas, subrayado, tachado, listas con sangría, cita, bloque de código,

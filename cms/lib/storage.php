@@ -76,7 +76,8 @@ function cms_content_dir(string $type): string
 /** Todos los elementos de un tipo (publicados por defecto), ordenados según el esquema. */
 function cms_items(string $type, bool $published_only = true): array
 {
-    static $cache = [];
+    $cache = &$GLOBALS['cms_items_cache'];
+    if (!is_array($cache)) $cache = [];
     $k = $type . ($published_only ? ':pub' : ':all');
     if (isset($cache[$k])) return $cache[$k];
     $def = cms_type($type);
@@ -85,7 +86,9 @@ function cms_items(string $type, bool $published_only = true): array
         $it = cms_json_read($f, null);
         if (is_array($it) && !empty($it['slug'])) $items[$it['slug']] = $it;
     }
-    if ($published_only) $items = array_filter($items, fn($i) => ($i['status'] ?? 'draft') === 'published');
+    // elementos en memoria (vista previa del constructor, sin guardar)
+    foreach ((array) ($GLOBALS['cms_item_override'][$type] ?? []) as $sl => $it) $items[$sl] = $it;
+    if ($published_only) $items = array_filter($items, 'cms_item_is_live');
     $sort = $def['sort'] ?? ['field' => 'date', 'dir' => 'desc'];
     $field = $sort['field'] ?? 'date';
     $dir = ($sort['dir'] ?? 'desc') === 'asc' ? 1 : -1;
@@ -97,14 +100,87 @@ function cms_items(string $type, bool $published_only = true): array
     return $cache[$k] = $items;
 }
 
+/** Vacía la caché de elementos (tras guardar o al inyectar un elemento en memoria). */
+function cms_items_flush(): void
+{
+    $GLOBALS['cms_items_cache'] = [];
+}
+
 function cms_item(string $type, string $slug, bool $published_only = true): ?array
 {
     return cms_items($type, $published_only)[$slug] ?? null;
 }
 
+/** Publicado y, si tiene fecha de publicación programada, ya alcanzada. */
+function cms_item_is_live(array $it): bool
+{
+    if (($it['status'] ?? 'draft') !== 'published') return false;
+    $at = (string) ($it['publish_at'] ?? '');
+    return $at === '' || $at <= date('Y-m-d');
+}
+
+/** Guarda el elemento; la versión anterior queda en data/versions/<tipo>/<slug>/ (se conservan las últimas 10). */
 function cms_item_save(string $type, array $item): bool
 {
-    return cms_json_write(cms_content_dir($type) . '/' . $item['slug'] . '.json', $item);
+    $file = cms_content_dir($type) . '/' . $item['slug'] . '.json';
+    if (is_file($file)) {
+        $old = (string) file_get_contents($file);
+        $new = json_encode($item, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($old !== $new && $old !== '') {
+            $dir = cms_versions_dir($type, $item['slug']);
+            if (is_dir($dir) || mkdir($dir, 0755, true)) {
+                $vf = $dir . '/' . date('Ymd-His'); $n = 1;
+                while (is_file($vf . ($n > 1 ? '-' . $n : '') . '.json')) $n++;
+                file_put_contents($vf . ($n > 1 ? '-' . $n : '') . '.json', $old);
+                $vs = glob($dir . '/*.json') ?: [];
+                sort($vs);
+                foreach (array_slice($vs, 0, max(0, count($vs) - 10)) as $v) @unlink($v);
+            }
+        }
+    }
+    $ok = cms_json_write($file, $item);
+    cms_items_flush();
+    return $ok;
+}
+
+function cms_versions_dir(string $type, string $slug): string
+{
+    return CMS_DATA . '/versions/' . preg_replace('/[^a-z0-9_-]/i', '', $type) . '/' . cms_slugify($slug);
+}
+
+/** Versiones guardadas de un elemento: [['file' => ruta, 'when' => 'AAAA-MM-DD HH:MM:SS', 'title' => …], …] de la más reciente a la más antigua. */
+function cms_item_versions(string $type, string $slug): array
+{
+    $out = [];
+    foreach (glob(cms_versions_dir($type, $slug) . '/*.json') ?: [] as $f) {
+        $b = basename($f, '.json');
+        $d = json_decode((string) file_get_contents($f), true);
+        $out[] = ['file' => $f, 'name' => $b, 'when' => preg_replace('/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/', '$1-$2-$3 $4:$5:$6', $b),
+            'title' => is_array($d) ? (string) (is_array($d['title'] ?? null) ? reset($d['title']) : ($d['title'] ?? '')) : '', 'status' => is_array($d) ? ($d['status'] ?? '') : ''];
+    }
+    return array_reverse($out);
+}
+
+/** Secreto de la instalación (data/.secret), para tokens de vista previa. */
+function cms_secret(): string
+{
+    $f = CMS_DATA . '/.secret';
+    if (is_file($f)) return trim((string) file_get_contents($f));
+    $s = bin2hex(random_bytes(24));
+    @file_put_contents($f, $s);
+    return $s;
+}
+
+function cms_preview_token(string $type, string $slug): string
+{
+    return substr(hash_hmac('sha256', $type . '/' . $slug, cms_secret()), 0, 24);
+}
+
+/** URL pública de un elemento; si no está visible, con el token de vista previa (borradores y programados). */
+function cms_item_url(string $type, array $item, string $lang): string
+{
+    $u = cms_url('item:' . $type, $lang, $item['slug']);
+    return cms_item_is_live($item) ? $u : $u . '?preview=' . cms_preview_token($type, $item['slug']);
 }
 
 function cms_item_delete(string $type, string $slug): bool
@@ -125,6 +201,62 @@ function cms_f(array $item, string $field, string $lang, $default = '')
         return ($y !== null && $y !== '' && $y !== []) ? $y : $default;
     }
     return $v ?? $default;
+}
+
+/* ------------------------------------------------------------------ tipos en árbol ('tree' => true: elementos con 'parent' y ruta completa 'path') */
+
+/** Ruta completa de un elemento de un tipo en árbol (padre/…/slug), calculada a partir de 'parent'. */
+function cms_tree_path(string $type, array $items, string $slug, int $depth = 0): string
+{
+    $it = $items[$slug] ?? null;
+    if (!$it) return $slug;
+    $parent = (string) ($it['parent'] ?? '');
+    if ($parent === '' || $parent === $slug || $depth > 20 || !isset($items[$parent])) return $slug;
+    return cms_tree_path($type, $items, $parent, $depth + 1) . '/' . $slug;
+}
+
+/** Recalcula y guarda 'path' en todos los elementos del tipo cuyo valor haya cambiado (tras renombrar o mover). */
+function cms_tree_rebuild(string $type): void
+{
+    $items = [];
+    foreach (glob(cms_content_dir($type) . '/*.json') ?: [] as $f) { $it = cms_json_read($f, null); if (is_array($it) && !empty($it['slug'])) $items[$it['slug']] = $it; }
+    foreach ($items as $slug => $it) {
+        $path = cms_tree_path($type, $items, $slug);
+        if (($it['path'] ?? '') !== $path) { $it['path'] = $path; cms_json_write(cms_content_dir($type) . '/' . $slug . '.json', $it); }
+    }
+}
+
+/** Elemento de un tipo en árbol por su ruta completa. */
+function cms_tree_item(string $type, string $path, bool $published_only = true): ?array
+{
+    foreach (cms_items($type, $published_only) as $it) if (($it['path'] ?? $it['slug']) === $path) return $it;
+    return null;
+}
+
+/** Ancestros de un elemento (del más lejano al padre directo). */
+function cms_tree_ancestors(string $type, array $item, bool $published_only = true): array
+{
+    $items = cms_items($type, $published_only);
+    $out = []; $p = (string) ($item['parent'] ?? ''); $n = 0;
+    while ($p !== '' && isset($items[$p]) && $n++ < 20) { array_unshift($out, $items[$p]); $p = (string) ($items[$p]['parent'] ?? ''); }
+    return $out;
+}
+
+/** Hijos directos publicados de un elemento (o de la raíz si $slug = ''), en el orden del tipo. */
+function cms_tree_children(string $type, string $slug = ''): array
+{
+    return array_values(array_filter(cms_items($type), fn($i) => (string) ($i['parent'] ?? '') === $slug));
+}
+
+/** Primeros segmentos de URL que no puede usar una página de árbol en la raíz. */
+function cms_reserved_segments(): array
+{
+    $r = ['admin', 'cms', 'site', 'data', 'uploads', 'api', 'index.php', 'sitemap.xml', 'robots.txt', 'llms.txt', '_cms'];
+    foreach (cms_config('types') as $k => $d) foreach ((array) ($d['routes'] ?? [$k]) as $sg) if ($sg !== '') $r[] = $sg;
+    foreach (cms_config('pages') as $k => $d) foreach ((array) ($d['routes'] ?? [$k]) as $sg) if ($sg !== '') $r[] = $sg;
+    foreach (cms_langs() as $l) $r[] = $l;
+    if (function_exists('cms_static_dirs')) foreach (cms_static_dirs() as $d) $r[] = $d;
+    return array_values(array_unique($r));
 }
 
 /* ------------------------------------------------------------------ usuarios */

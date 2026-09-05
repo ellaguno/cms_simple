@@ -94,6 +94,10 @@ function cms_head(array $page): void
     if (!empty($S['google_verification'])) echo '<meta name="google-site-verification" content="' . cms_e($S['google_verification']) . '">' . "\n";
     echo '<link rel="icon" href="' . (!empty($S['favicon']) ? cms_e(cms_img($S['favicon'])) : 'data:,') . '">' . "\n";
     echo '<meta name="generator" content="cms_simple ' . CMS_VERSION . '">' . "\n";
+    if (!empty($page['preview'])) {
+        echo '<script>document.addEventListener("DOMContentLoaded",function(){var b=document.createElement("div");b.textContent="Vista previa · este contenido aún no es público";'
+            . 'b.style.cssText="position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:99999;background:#111;color:#fff;font:600 13px/1 system-ui,sans-serif;padding:10px 16px;border-radius:30px;box-shadow:0 8px 24px rgba(0,0,0,.25)";document.body.appendChild(b);});</script>' . "\n";
+    }
     foreach ((array) ($page['jsonld'] ?? []) as $ld) {
         echo '<script type="application/ld+json">' . json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
     }

@@ -9,7 +9,7 @@ declare(strict_types=1);
  */
 function admin_nav(): array
 {
-    $nav = ['dashboard' => ['Inicio', admin_url('dashboard')]];
+    $nav = ['dashboard' => ['Inicio', admin_url('dashboard')], 'map' => ['Mapa del sitio', admin_url('map')]];
     foreach (cms_config('types') as $k => $def) {
         $entry = [$def['label'] ?? $k, admin_url('content', ['type' => $k])];
         $g = trim((string) ($def['group'] ?? ''));
@@ -102,6 +102,7 @@ function admin_footer(): void
 <script src="<?= $cm . '/' . $f ?>"></script>
 <?php endforeach; endif; ?>
 <script src="<?= $assets ?>/admin.js?v=<?= CMS_VERSION ?>"></script>
+<script src="<?= $assets ?>/builder.js?v=<?= CMS_VERSION ?>"></script>
 </body>
 </html>
 <?php

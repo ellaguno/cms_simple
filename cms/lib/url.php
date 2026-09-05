@@ -32,6 +32,11 @@ function cms_url(string $route, string $lang, ?string $slug = null): string
         $def = cms_type($key);
         if (!$def) return $base . '/';
         $seg = cms_segment($def, $lang);
+        if ($kind === 'item' && !empty($def['tree'])) {
+            $it = cms_items($key, false)[(string) $slug] ?? null;
+            $path = $it ? ($it['path'] ?? $it['slug']) : (string) $slug;
+            return $base . ($seg !== '' ? '/' . $seg : '') . '/' . implode('/', array_map('rawurlencode', explode('/', $path)));
+        }
         return $kind === 'list' ? $base . '/' . $seg . '/' : $base . '/' . $seg . '/' . rawurlencode((string) $slug);
     }
     if ($kind === 'page') {

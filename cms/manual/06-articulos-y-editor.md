@@ -10,6 +10,16 @@ Artículos, planes, preguntas frecuentes, integrantes del equipo o proyectos son
 
 En el listado ves el estado de cada elemento y puedes **Ver** o hacer **Vista previa**, **Editar**, **Duplicar** o **Eliminar**. Eliminar no tiene deshacer; si dudas, pásalo a borrador.
 
+## Precios: dónde se editan
+
+Los planes viven en **Planes de precios**. Hay dos juegos, uno por producto: **Abogados**, que se muestra en la landing
+/derecho y en la página /precios, y **Teams**, en la portada. Cada plan es un elemento con precio mensual, precio con pago
+anual, etiqueta, características, excedentes y botón. Cambiar un plan lo actualiza en todas las páginas donde aparece.
+
+La tabla comparativa de /precios es una sección de esa página (bloque Tabla comparativa) con una fila por
+característica. Los encabezados y precios de las columnas se toman solos de los planes; las filas se escriben a mano,
+así que al cambiar un cupo, como usuarios o almacenamiento, cámbialo en la tarjeta del plan y en la fila de la tabla.
+
 ## Un artículo
 
 ![Editor de un artículo](img/editor.png)

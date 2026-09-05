@@ -27,6 +27,7 @@ admin_header('Inicio', 'dashboard');
       <li><a href="<?= admin_url('settings') ?>">Cambiar correo, teléfono, WhatsApp y redes sociales</a></li>
       <li><a href="<?= admin_url('menu') ?>">Editar los enlaces del menú</a></li>
       <li><a href="<?= admin_url('strings') ?>">Revisar los textos fijos del sitio<?= count(cms_langs()) > 1 ? ' y sus traducciones' : '' ?></a></li>
+      <li><a href="<?= admin_url('backup') ?>">Crear un respaldo del sitio</a></li>
       <li><a href="<?= CMS_BASE ?>/sitemap.xml" target="_blank" rel="noopener">Ver sitemap.xml</a></li>
     </ul>
   </section>

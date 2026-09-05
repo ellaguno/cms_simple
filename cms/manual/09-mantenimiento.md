@@ -4,9 +4,11 @@
 
 ## Respaldos
 
-Todo el contenido vive en dos carpetas: `data/` (páginas, artículos, ajustes, textos, menú, usuarios, versiones) y `uploads/` (archivos subidos). Respaldar el sitio es copiarlas. Hazlo antes de cualquier cambio grande y, en general, una vez al mes. El diseño está en `site/` y el motor en `cms/`; esos se recuperan desde el repositorio de código.
+Todo el contenido vive en dos carpetas: `data/` (páginas, artículos, ajustes, textos, menú, usuarios, versiones) y `uploads/` (archivos subidos). El diseño está en `site/` y el motor en `cms/`.
 
-Restaurar es igual de simple: vuelve a poner las carpetas en su lugar.
+En **Respaldos** creas un zip con esas carpetas en un clic, con una nota para recordar el motivo, y opcionalmente con el tema. Los respaldos quedan en la carpeta `/backups` del sitio, que no es accesible desde fuera; desde el panel los descargas a tu equipo, los restauras o los eliminas. Al restaurar, el contenido actual se sustituye por el del respaldo, conservando los usuarios actuales si así lo marcas, y antes se guarda un respaldo automático del estado previo por si te arrepientes.
+
+Hazlo antes de cualquier cambio grande y, en general, una vez al mes. Descarga los importantes: el hosting no es un archivo. Sin el panel, restaurar es descomprimir el zip en la raíz del sitio por FTP.
 
 ## Versiones de contenido
 

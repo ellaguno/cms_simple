@@ -24,6 +24,7 @@ function admin_nav(): array
         'strings'   => ['Textos del sitio', admin_url('strings')],
         'settings'  => ['Ajustes', admin_url('settings')],
         'redirects' => ['Redirecciones 301', admin_url('redirects')],
+        'backup'    => ['Respaldos', admin_url('backup')],
         'users'     => ['Usuarios', admin_url('users')],
         'password'  => ['Contraseña', admin_url('password')],
     ];

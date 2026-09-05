@@ -218,10 +218,10 @@ function admin_sections_control(string $name, array $def, array $sections): stri
     $h .= '<div class="ad-modal" data-section-picker hidden><div class="ad-modal-box"><div class="ad-modal-head"><h3>Añadir sección</h3><button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-close>Cerrar</button></div><div class="ad-modal-body ad-picker-body">';
     foreach ($groups as $g => $list) {
         $h .= '<h4>' . cms_e($g) . '</h4><div class="ad-picker-grid">';
-        foreach ($list as $k => $bd) $h .= '<button type="button" class="ad-picker-item" data-block="' . cms_e($k) . '"><strong>' . cms_e($bd['label']) . '</strong>' . (!empty($bd['desc']) ? '<span>' . cms_e($bd['desc']) . '</span>' : '') . '</button>';
+        foreach ($list as $k => $bd) { $pv = cms_block_preview($bd); $h .= '<button type="button" class="ad-picker-item" data-block="' . cms_e($k) . '"' . ($pv ? ' data-preview="' . cms_e($pv) . '"' : '') . '><strong>' . cms_e($bd['label']) . '</strong>' . (!empty($bd['desc']) ? '<span>' . cms_e($bd['desc']) . '</span>' : '') . '</button>'; }
         $h .= '</div>';
     }
-    $h .= '</div></div></div>';
+    $h .= '</div><div class="ad-picker-preview" data-picker-preview hidden><img alt=""><p></p></div></div></div>';
     // plantillas (una por bloque) para clonar desde JS
     foreach ($blocks as $k => $bd) $h .= '<template data-section-tpl="' . cms_e($k) . '">' . admin_section_card($name, '__IDX__', ['id' => '__ID__', 'type' => $k, 'data' => [], 'style' => []], $bd) . '</template>';
     return $h . '</div>';
@@ -262,7 +262,10 @@ function admin_section_card(string $name, string $idx, array $sec, array $bd): s
     echo '</div>';
     if ($styles) {
         echo '<div class="ad-sec-pane ad-sec-style" data-sec-pane="style" hidden><div class="ad-two">';
-        foreach ($styles as $k => $sd) admin_field($n . '[style][' . $k . ']', $sd, $style[$k] ?? '');
+        foreach ($styles as $k => $sd) {
+            admin_field($n . '[style][' . $k . ']', $sd, $style[$k] ?? '');
+            if ($k === 'effect') { $pv = []; foreach (cms_effects() as $ek => $ed) if (($u = cms_effect_preview($ed)) !== '') $pv[$ek] = $u; echo '<div class="ad-field ad-effect-preview" data-effect-preview=\'' . cms_e(json_encode($pv, JSON_UNESCAPED_SLASHES)) . '\' hidden><label>Así se ve el efecto</label><img alt=""></div>'; }
+        }
         echo '</div></div>';
     }
     $h .= ob_get_clean();

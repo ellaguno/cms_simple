@@ -167,3 +167,24 @@ function cms_assets_head(array $page): string
     foreach ($need['js'] as $u) $h .= '<script defer src="' . cms_e($u) . '"></script>' . "\n";
     return $h;
 }
+
+/** URL de la vista previa (gif/webp/png) de un bloque: site/assets/previews/<clave>.* para el tema, <paquete>/assets/previews/<bloque>.* para paquetes. */
+function cms_block_preview(array $def): string
+{
+    if (!empty($def['preview'])) return preg_match('#^(https?:)?//#', (string) $def['preview']) ? (string) $def['preview'] : CMS_BASE . '/' . ltrim((string) $def['preview'], '/');
+    $key = (string) ($def['key'] ?? '');
+    if (isset($def['pack']) && ($p = cms_packs()[$def['pack']] ?? null)) { $dir = $p['dir'] . '/assets/previews'; $url = $p['url'] . '/assets/previews'; $name = substr($key, strlen($def['pack']) + 1); }
+    else { $dir = CMS_SITE . '/assets/previews'; $url = CMS_BASE . '/site/assets/previews'; $name = $key; }
+    foreach (['gif', 'webp', 'png', 'jpg'] as $ext) if (is_file($dir . '/' . $name . '.' . $ext)) return $url . '/' . $name . '.' . $ext . '?v=' . filemtime($dir . '/' . $name . '.' . $ext);
+    return '';
+}
+
+/** URL de la vista previa de un efecto: <paquete>/assets/previews/efecto-<clave>.* */
+function cms_effect_preview(array $def): string
+{
+    $p = cms_packs()[$def['pack'] ?? ''] ?? null;
+    if (!$p) return '';
+    $name = 'efecto-' . substr((string) $def['key'], strlen($def['pack']) + 1);
+    foreach (['gif', 'webp', 'png', 'jpg'] as $ext) if (is_file($p['dir'] . '/assets/previews/' . $name . '.' . $ext)) return $p['url'] . '/assets/previews/' . $name . '.' . $ext . '?v=' . filemtime($p['dir'] . '/assets/previews/' . $name . '.' . $ext);
+    return '';
+}

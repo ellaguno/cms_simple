@@ -337,3 +337,22 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-manual-card span { font-size: 13px; color: var(--grey); }
 .ad-manual-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); }
 @media (max-width: 900px) { .ad-manual { grid-template-columns: 1fr; } .ad-manual-toc { position: static; flex-direction: row; flex-wrap: wrap; } }
+
+/* vistas previas de bloques y efectos */
+.ad-picker-body { position: relative; }
+.ad-picker-preview { position: sticky; bottom: 0; margin-top: 12px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px; box-shadow: 0 -8px 24px rgba(0,0,0,.08); display: flex; gap: 12px; align-items: center; }
+.ad-picker-preview img { width: 360px; max-width: 60%; height: auto; border-radius: 8px; border: 1px solid var(--line); background: #f3f3f5; }
+.ad-picker-preview p { margin: 0; font-weight: 600; }
+.ad-picker-item:hover { background: var(--bg); }
+.ad-effect-preview img { width: 100%; max-width: 420px; border-radius: 8px; border: 1px solid var(--line); }
+.ad-manual-catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin: 8px 0 20px; }
+.ad-manual-catalog figure { margin: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--bg); }
+.ad-manual-catalog img { margin: 0; border: 0; border-radius: 0; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; }
+.ad-manual-catalog figcaption { padding: 10px 12px; font-size: 13px; }
+.ad-manual-catalog figcaption strong { display: block; margin-bottom: 2px; }
+.ad-manual-catalog figcaption code { font-size: 11px; }
+
+/* respaldos */
+.ad-restore-box { min-width: 300px; padding: 12px; gap: 8px; }
+.ad-restore-box .ad-check { display: block; font-size: 13px; }
+.ad-restore-box .ad-btn { margin-top: 6px; width: auto; }

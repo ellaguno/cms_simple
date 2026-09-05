@@ -53,8 +53,11 @@ $keys = array_keys($chapters);
         $list = '';
         $groups = [];
         foreach (cms_blocks() as $k => $bd) $groups[(string) ($bd['group'] ?? 'Bloques')][] = $bd;
-        foreach ($groups as $g => $bs) { $list .= '<h4>' . cms_e($g) . '</h4><ul>'; foreach ($bs as $bd) $list .= '<li><strong>' . cms_e($bd['label']) . '</strong>' . (!empty($bd['desc']) ? ': ' . cms_e($bd['desc']) : '') . ' <code>' . cms_e($bd['key']) . '</code></li>'; $list .= '</ul>'; }
-        if (cms_effects()) { $list .= '<h4>Efectos (pestaña Estilo)</h4><ul>'; foreach (cms_effects() as $e) $list .= '<li><strong>' . cms_e($e['label']) . '</strong>' . (!empty($e['desc']) ? ': ' . cms_e($e['desc']) : '') . '</li>'; $list .= '</ul>'; }
+        $card = function (string $label, string $desc, string $key, string $img): string {
+            return '<figure>' . ($img ? '<img src="' . cms_e($img) . '" alt="' . cms_e($label) . '" loading="lazy">' : '') . '<figcaption><strong>' . cms_e($label) . '</strong>' . ($desc ? cms_e($desc) . ' ' : '') . '<code>' . cms_e($key) . '</code></figcaption></figure>';
+        };
+        foreach ($groups as $g => $bs) { $list .= '<h4>' . cms_e($g) . '</h4><div class="ad-manual-catalog">'; foreach ($bs as $bd) $list .= $card((string) $bd['label'], (string) ($bd['desc'] ?? ''), (string) $bd['key'], cms_block_preview($bd)); $list .= '</div>'; }
+        if (cms_effects()) { $list .= '<h4>Efectos (pestaña Estilo)</h4><div class="ad-manual-catalog">'; foreach (cms_effects() as $e) $list .= $card((string) $e['label'], (string) ($e['desc'] ?? ''), (string) $e['key'], cms_effect_preview($e)); $list .= '</div>'; }
         $html = str_replace('{{bloques}}', $list, $html);
     }
     echo $html;

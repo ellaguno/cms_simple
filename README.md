@@ -150,6 +150,13 @@ Advertencia: es edición de código en producción. Un error lógico en `config.
 sitio o el propio panel fuera de servicio (la verificación evita errores de sintaxis, no errores de lógica).
 En ese caso, restaura el respaldo desde `data/backups/` por FTP. Úsalo con cuentas de administrador de confianza.
 
+## Vistas previas de bloques y Respaldos (1.8)
+
+Cada bloque y efecto puede llevar una imagen o GIF (`site/assets/previews/<clave>.*`, `cms/packs/<paquete>/assets/
+previews/<bloque>.*` y `efecto-<efecto>.*`) que se muestra en el manual y en el selector del constructor al pasar el
+ratón. Se generan con `tools/make-previews.sh` (Chrome sin interfaz; el tema debe dibujar solo el contenido cuando
+llega `?cmsbare=1`). Admin → Respaldos: zip de `data/` y `uploads/` en `/backups`, descargar, restaurar y eliminar.
+
 ## Manual embebido (1.7)
 
 Admin → Manual: capítulos en `cms/manual/*.md` con capturas, desde instalar hasta SEO/GEO y mantenimiento; el

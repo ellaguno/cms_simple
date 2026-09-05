@@ -48,6 +48,13 @@
       card.querySelector("[data-sec-dup]").addEventListener("click", function () { duplicate(card); });
       card.querySelector('.ad-sec-hide input[type="checkbox"]').addEventListener("change", function (e) { card.classList.toggle("ad-sec-hidden", e.target.checked); ping(); });
       card.addEventListener("input", function () { updateTitle(card); });
+      // vista previa del efecto elegido en Estilo
+      var eff = card.querySelector('select[name$="[style][effect]"]'), effPv = card.querySelector("[data-effect-preview]");
+      if (eff && effPv) {
+        var map = {}; try { map = JSON.parse(effPv.getAttribute("data-effect-preview") || "{}"); } catch (e) {}
+        var showEff = function () { var u = map[eff.value]; effPv.hidden = !u; if (u) effPv.querySelector("img").src = u; };
+        eff.addEventListener("change", showEff); showEff();
+      }
       card.addEventListener("focusin", function () { select(card, true); });
       // arrastrar para reordenar
       card.addEventListener("dragstart", function (e) {
@@ -107,8 +114,16 @@
       add(card.getAttribute("data-sec-type"), values, card);
     }
 
-    // selector de bloques
+    // selector de bloques (con vista previa al pasar el ratón)
     box.querySelector("[data-add-section]").addEventListener("click", function () { picker.hidden = false; });
+    var pv = picker.querySelector("[data-picker-preview]");
+    picker.querySelectorAll("[data-block]").forEach(function (b) {
+      b.addEventListener("mouseenter", function () {
+        var u = b.getAttribute("data-preview"); if (!u || !pv) { if (pv) pv.hidden = true; return; }
+        pv.querySelector("img").src = u; pv.querySelector("p").textContent = b.querySelector("strong").textContent; pv.hidden = false;
+      });
+    });
+    picker.querySelector(".ad-picker-body").addEventListener("mouseleave", function () { if (pv) pv.hidden = true; });
     picker.querySelector("[data-close]").addEventListener("click", function () { picker.hidden = true; });
     picker.addEventListener("click", function (e) { if (e.target === picker) picker.hidden = true; });
     picker.querySelectorAll("[data-block]").forEach(function (b) {

@@ -81,7 +81,9 @@ $titleInputName = !empty($fields[$titleField]['i18n']) ? $titleField . '[' . $dl
   <div class="ad-builder-bar">
     <span class="ad-help">Vista previa en vivo: se actualiza sola al editar. Clic en una sección de la vista previa para abrirla aquí.</span>
     <span class="ad-builder-devices"><button type="button" class="on" data-device="desktop" title="Escritorio">▭</button><button type="button" data-device="tablet" title="Tableta">▯</button><button type="button" data-device="mobile" title="Móvil">▮</button></span>
+    <span class="ad-builder-devices"><button type="button" data-toggle-panel="nav" title="Ocultar o mostrar el menú del panel">◧ Menú</button><button type="button" data-toggle-panel="side" title="Ocultar o mostrar la columna de ajustes de la página">◨ Ajustes</button></span>
     <button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-preview-refresh>Actualizar vista previa</button>
+    <button type="submit" class="ad-btn ad-btn-sm">Guardar</button>
     <button type="submit" class="ad-btn ad-btn-sm" formaction="<?= admin_url('preview', ['type' => $type, 'slug' => $orig]) ?>" formtarget="cms-preview" formnovalidate hidden data-preview-submit>Vista previa</button>
   </div>
 <?php endif; ?>

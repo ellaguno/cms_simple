@@ -138,6 +138,21 @@
     });
   });
 
+  /* ---------------- aprovechar el ancho: plegar menú del panel y columna de ajustes ---------------- */
+  if (form) {
+    document.body.classList.add("ad-has-builder");
+    var panels = { nav: ["ad-nav-collapsed", document.body], side: ["ad-side-collapsed", form] };
+    Object.keys(panels).forEach(function (k) {
+      var cls = panels[k][0], target = panels[k][1], btn = form.querySelector('[data-toggle-panel="' + k + '"]');
+      var on = false; try { on = localStorage.getItem("ad-builder-" + k) === "1"; } catch (e) {}
+      if (on) { target.classList.add(cls); if (btn) btn.classList.add("on"); }
+      if (btn) btn.addEventListener("click", function () {
+        var now = target.classList.toggle(cls); btn.classList.toggle("on", now);
+        try { localStorage.setItem("ad-builder-" + k, now ? "1" : "0"); } catch (e) {}
+      });
+    });
+  }
+
   /* ---------------- vista previa en vivo ---------------- */
   if (!form) return;
   var frame = document.querySelector("[data-preview-frame]"), btn = form.querySelector("[data-preview-submit]");

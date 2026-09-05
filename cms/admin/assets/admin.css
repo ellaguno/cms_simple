@@ -111,6 +111,23 @@ code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 12px; 
 .ad-editor .ql-editor a { color: #000; text-decoration: underline; }
 .ad-editor .ql-editor.ql-blank::before { color: #999; font-style: normal; }
 .ad-editor-lg .ql-editor { min-height: 480px; }
+.ad-editor .ql-editor h1 { font-size: 30px; font-weight: 600; margin: 24px 0 12px; }
+.ad-editor .ql-editor h4 { font-size: 17px; font-weight: 600; margin: 16px 0 6px; }
+.ad-editor .ql-editor hr { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
+.ad-editor .ql-editor .ql-code-block-container { background: #1f2937; color: #f3f4f6; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+/* video responsivo en el editor: el iframe no recibe clics (así se selecciona el bloque sin abrir YouTube) */
+.ad-editor .ql-editor .video-embed { position: relative; width: 100%; aspect-ratio: 16 / 9; margin: 14px 0; background: #111; border-radius: 10px; overflow: hidden; cursor: pointer; }
+.ad-editor .ql-editor .video-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
+.ad-editor .ql-editor .video-embed::after { content: "Video · clic para seleccionar, Supr para quitar"; position: absolute; left: 10px; bottom: 8px; font-size: 11px; color: #fff; background: rgba(0,0,0,.55); padding: 3px 8px; border-radius: 20px; pointer-events: none; }
+.ad-editor .ql-toolbar .ql-hr, .ad-editor .ql-toolbar .ql-html { width: auto; padding: 0 6px; font-size: 13px; font-weight: 600; }
+.ad-editor .ql-toolbar .ql-html.ql-active { color: #fff; background: #000; border-radius: 6px; }
+.ad-editor .ql-toolbar .ql-hr { font-size: 16px; line-height: 1; }
+/* modo HTML: se oculta el área visual y se muestra el código */
+.ad-editor-html .ql-container { display: none; }
+.ad-editor-html .ql-toolbar .ql-formats button:not(.ql-html), .ad-editor-html .ql-toolbar .ql-picker { opacity: .3; pointer-events: none; }
+.ad-editor-src { display: block; width: 100%; min-height: 360px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 10px 10px; padding: 12px; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize: vertical; }
+.ad-editor-lg .ad-editor-src { min-height: 520px; }
+.ad-editor .CodeMirror { border: 1px solid var(--line); border-top: 0; border-radius: 0 0 10px 10px; font-size: 13px; }
 .ql-snow .ql-toolbar button.ql-upload, .ql-snow .ql-toolbar button.ql-library, .ql-snow.ql-toolbar button.ql-upload, .ql-snow.ql-toolbar button.ql-library { width: auto; padding: 0 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--line); border-radius: 20px; height: 26px; margin-top: -1px; }
 .ql-snow.ql-toolbar button.ql-upload:hover, .ql-snow.ql-toolbar button.ql-library:hover { color: #fff; background: #000; border-color: #000; }
 

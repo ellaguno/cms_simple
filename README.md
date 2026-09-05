@@ -150,6 +150,15 @@ Advertencia: es edición de código en producción. Un error lógico en `config.
 sitio o el propio panel fuera de servicio (la verificación evita errores de sintaxis, no errores de lógica).
 En ese caso, restaura el respaldo desde `data/backups/` por FTP. Úsalo con cuentas de administrador de confianza.
 
+## Editor visual (1.4)
+
+Barra completa (títulos 1-4, negritas, cursivas, subrayado, tachado, listas con sangría, cita, bloque de código,
+línea horizontal, alineación, enlace, video, subir imagen, biblioteca, quitar formato) y botón **HTML** que cambia
+a un editor de código (CodeMirror bajo demanda) para editar el HTML directamente; lo escrito ahí se guarda tal cual.
+Los videos de YouTube/Vimeo se insertan como `<div class="video-embed"><iframe class="ql-video" …></div>`: el tema
+debe estilizar `.video-embed` (por ejemplo `position:relative; aspect-ratio:16/9` con el iframe absoluto al 100 %);
+los temas que ya estilizan `iframe.ql-video` siguen funcionando.
+
 ## Opciones del núcleo añadidas en 1.3 (todas opcionales)
 
 - **Grupos en el menú del panel**: `'group' => 'Páginas'` en un tipo lo agrupa bajo ese encabezado plegable

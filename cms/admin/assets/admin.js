@@ -65,6 +65,9 @@
   /* ---------------- editor visual (Quill) ---------------- */
   if (window.Quill) {
     var BlockEmbed = Quill.import("blots/block/embed");
+    var Delta = Quill.import("delta");
+
+    /* Video de la Biblioteca (archivo mp4/webm) */
     class VideoFile extends BlockEmbed {
       static create(url) {
         var n = super.create();
@@ -78,17 +81,86 @@
     VideoFile.tagName = "video";
     Quill.register(VideoFile);
 
-    var titles = { bold: "Negritas", italic: "Cursivas", underline: "Subrayado", blockquote: "Cita", link: "Enlace", image: "Insertar imagen", video: "Video de YouTube o Vimeo (pega la URL)", clean: "Quitar formato", upload: "Subir una imagen desde tu computadora", library: "Insertar imagen, PDF o video de la Biblioteca" };
+    /* Video de YouTube / Vimeo: <div class="video-embed"><iframe …></div>, responsivo al 100 % del ancho.
+       Sustituye al blot "video" de Quill (iframe suelto de 300 px). El tema debe estilizar .video-embed. */
+    function embedUrl(url) {
+      url = (url || "").trim();
+      var m;
+      if ((m = url.match(/(?:youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?(?:.*&)?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/))) return "https://www.youtube-nocookie.com/embed/" + m[1];
+      if ((m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/))) return "https://player.vimeo.com/video/" + m[1];
+      return url;
+    }
+    class VideoEmbed extends BlockEmbed {
+      static create(url) {
+        var n = super.create();
+        var f = document.createElement("iframe");
+        f.className = "ql-video";   // los temas antiguos estilizan iframe.ql-video
+        f.setAttribute("src", embedUrl(url));
+        f.setAttribute("loading", "lazy");
+        f.setAttribute("allow", "accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share");
+        f.setAttribute("allowfullscreen", "");
+        f.setAttribute("title", "Video");
+        n.appendChild(f);
+        return n;
+      }
+      static value(n) { var f = n.querySelector("iframe"); return f ? f.getAttribute("src") : ""; }
+    }
+    VideoEmbed.blotName = "video";
+    VideoEmbed.tagName = "div";
+    VideoEmbed.className = "video-embed";
+    Quill.register(VideoEmbed, true);
+
+    /* Línea horizontal */
+    class Divider extends BlockEmbed {}
+    Divider.blotName = "divider";
+    Divider.tagName = "hr";
+    Quill.register(Divider);
+
+    var titles = { bold: "Negritas", italic: "Cursivas", underline: "Subrayado", strike: "Tachado", blockquote: "Cita", "code-block": "Bloque de código", link: "Enlace",
+      image: "Insertar imagen", video: "Video de YouTube o Vimeo (pega la URL)", clean: "Quitar formato", upload: "Subir una imagen desde tu computadora",
+      library: "Insertar imagen, PDF o video de la Biblioteca", hr: "Línea horizontal", html: "Editar el HTML directamente", indent: "Sangría" };
+
+    /* Carga CodeMirror bajo demanda para el modo HTML */
+    var cmLoading = null;
+    function loadCodeMirror() {
+      if (window.CodeMirror) return Promise.resolve();
+      if (cmLoading) return cmLoading;
+      var base = "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/";
+      var css = document.createElement("link"); css.rel = "stylesheet"; css.href = base + "codemirror.min.css"; document.head.appendChild(css);
+      var files = ["codemirror.min.js", "mode/xml/xml.min.js", "mode/javascript/javascript.min.js", "mode/css/css.min.js", "mode/htmlmixed/htmlmixed.min.js", "addon/edit/closetag.min.js", "addon/selection/active-line.min.js"];
+      cmLoading = files.reduce(function (p, f) {
+        return p.then(function () { return new Promise(function (res, rej) { var sc = document.createElement("script"); sc.src = base + f; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); });
+      }, Promise.resolve());
+      return cmLoading;
+    }
+    /* HTML legible: un bloque por línea */
+    function prettyHtml(h) {
+      return h.replace(/></g, ">\n<")
+        .replace(/\n<(\/?)(strong|em|u|s|a|br|span|code|mark|sub|sup|b|i)\b/g, "<$1$2")
+        .replace(/(<\/(?:strong|em|u|s|a|span|code|mark|sub|sup|b|i)>)\n/g, "$1")
+        .replace(/(<br\s*\/?>)\n/g, "$1")
+        .replace(/\n{2,}/g, "\n").trim();
+    }
 
     document.querySelectorAll("textarea[data-html]").forEach(function (ta) {
       var wrap = document.createElement("div");
-      wrap.className = "ad-editor" + (ta.name.indexOf("body") === 0 ? " ad-editor-lg" : "");
+      wrap.className = "ad-editor" + (ta.name.indexOf("body") === 0 || ta.getAttribute("data-size") === "lg" ? " ad-editor-lg" : "");
       var box = document.createElement("div");
       wrap.appendChild(box);
       ta.parentNode.insertBefore(wrap, ta);
       box.innerHTML = ta.value;
+      // iframes antiguos de Quill (ql-video) o sueltos → bloque .video-embed
+      box.querySelectorAll("iframe").forEach(function (f) {
+        if (f.parentNode.classList && f.parentNode.classList.contains("video-embed")) return;
+        var d = document.createElement("div"); d.className = "video-embed"; f.parentNode.insertBefore(d, f); d.appendChild(f);
+        f.className = "ql-video"; f.removeAttribute("width"); f.removeAttribute("height");
+      });
 
-      var quill;
+      var quill, cm = null, mode = "visual";
+      var src = document.createElement("textarea");
+      src.className = "ad-editor-src"; src.hidden = true; src.spellcheck = false;
+      wrap.appendChild(src);
+
       var handlers = {
         upload: function () {
           pickFile(function (file) {
@@ -107,7 +179,13 @@
             else if (it.type === "video") { quill.insertEmbed(i, "videofile", it.url, "user"); quill.setSelection(i + 1, 0, "silent"); }
             else { var txt = it.name + " (PDF)"; quill.insertText(i, txt, { link: it.url }, "user"); quill.setSelection(i + txt.length, 0, "silent"); }
           });
-        }
+        },
+        hr: function () {
+          var r = quill.getSelection(true);
+          quill.insertEmbed(r.index, "divider", true, "user");
+          quill.setSelection(r.index + 1, 0, "silent");
+        },
+        html: function () { toggleMode(); }
       };
       handlers.image = handlers.upload;
 
@@ -116,7 +194,16 @@
         placeholder: "Escribe aquí…",
         modules: {
           toolbar: {
-            container: [[{ header: [2, 3, false] }], ["bold", "italic", "underline"], [{ list: "ordered" }, { list: "bullet" }, "blockquote"], [{ align: [] }], ["link", "video"], ["upload", "library"], ["clean"]],
+            container: [
+              [{ header: [1, 2, 3, 4, false] }],
+              ["bold", "italic", "underline", "strike"],
+              [{ list: "ordered" }, { list: "bullet" }, { indent: "-1" }, { indent: "+1" }],
+              ["blockquote", "code-block", "hr"],
+              [{ align: [] }],
+              ["link", "video"],
+              ["upload", "library"],
+              ["clean", "html"]
+            ],
             handlers: handlers
           },
           uploader: {
@@ -129,22 +216,59 @@
           }
         }
       });
+      // iframes pegados desde el portapapeles → video
+      quill.clipboard.addMatcher("IFRAME", function (node) { return new Delta().insert({ video: node.getAttribute("src") }); });
 
       var tb = wrap.querySelector(".ql-toolbar");
       tb.querySelector(".ql-upload").textContent = "Subir imagen";
       tb.querySelector(".ql-library").textContent = "Biblioteca";
+      tb.querySelector(".ql-hr").textContent = "—";
+      tb.querySelector(".ql-html").textContent = "HTML";
+      tb.querySelector(".ql-html").classList.add("ql-html-toggle");
       Object.keys(titles).forEach(function (k) { tb.querySelectorAll(".ql-" + k).forEach(function (b) { b.title = titles[k]; }); });
 
-      // sincronizar con el textarea oculto
+      // sincronizar con el textarea oculto (en modo HTML manda el código tal cual se escribió)
+      var visualHtml = function () {
+        var empty = quill.getLength() <= 1 && !quill.root.querySelector("img,video,iframe,hr");
+        return empty ? "" : quill.root.innerHTML;
+      };
       var sync = function () {
-        var html = quill.root.innerHTML;
-        var empty = quill.getLength() <= 1 && !quill.root.querySelector("img,video,iframe");
-        ta.value = empty ? "" : html;
+        if (mode === "html") { if (cm) cm.save(); ta.value = src.value.trim(); }
+        else ta.value = visualHtml();
       };
       quill.on("text-change", sync);
       sync();
       var form = ta.closest("form");
       if (form) form.addEventListener("submit", sync);
+
+      function toggleMode() {
+        var btn = tb.querySelector(".ql-html");
+        if (mode === "visual") {
+          src.value = prettyHtml(visualHtml());
+          mode = "html";
+          wrap.classList.add("ad-editor-html");
+          btn.classList.add("ql-active");
+          src.hidden = false;
+          loadCodeMirror().then(function () {
+            if (mode !== "html" || cm) return;
+            cm = CodeMirror.fromTextArea(src, { mode: "htmlmixed", lineNumbers: true, lineWrapping: true, autoCloseTags: true, styleActiveLine: true, viewportMargin: 50 });
+            cm.setSize("100%", wrap.classList.contains("ad-editor-lg") ? 520 : 360);
+            cm.on("change", function () { cm.save(); ta.value = src.value.trim(); });
+          }).catch(function () { /* sin CodeMirror: queda el textarea */ });
+          src.addEventListener("input", function () { ta.value = src.value.trim(); });
+        } else {
+          if (cm) cm.save();
+          var html = src.value.trim();
+          mode = "visual";
+          wrap.classList.remove("ad-editor-html");
+          btn.classList.remove("ql-active");
+          if (cm) { cm.toTextArea(); cm = null; }
+          src.hidden = true;
+          quill.setContents([], "silent");
+          quill.clipboard.dangerouslyPasteHTML(0, html, "silent");
+          sync();
+        }
+      }
     });
   }
 

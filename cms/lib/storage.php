@@ -88,6 +88,8 @@ function cms_items(string $type, bool $published_only = true): array
     }
     // elementos en memoria (vista previa del constructor, sin guardar)
     foreach ((array) ($GLOBALS['cms_item_override'][$type] ?? []) as $sl => $it) $items[$sl] = $it;
+    // al dibujar el sitio, los campos bilingües llegan resueltos al idioma de la petición (las plantillas usan $item['title'] sin más)
+    if (!empty($GLOBALS['cms_render_lang'])) foreach ($items as $sl => $it) $items[$sl] = cms_localize($it, (string) $GLOBALS['cms_render_lang']);
     if ($published_only) $items = array_filter($items, 'cms_item_is_live');
     $sort = $def['sort'] ?? ['field' => 'date', 'dir' => 'desc'];
     $field = $sort['field'] ?? 'date';
@@ -187,6 +189,34 @@ function cms_item_delete(string $type, string $slug): bool
 {
     $f = cms_content_dir($type) . '/' . cms_slugify($slug) . '.json';
     return is_file($f) && unlink($f);
+}
+
+/** ¿Es un valor por idioma? (arreglo cuyas claves son códigos de idioma del sitio) */
+function cms_is_i18n_value($v): bool
+{
+    if (!is_array($v) || !$v || isset($v[0])) return false;
+    foreach (array_keys($v) as $k) if (!in_array($k, cms_langs(), true)) return false;
+    return true;
+}
+
+/** Resuelve recursivamente los valores por idioma de un elemento (o de cualquier arreglo) a un idioma, con respaldo al predeterminado. */
+function cms_localize($data, string $lang)
+{
+    if (!is_array($data)) return $data;
+    if (cms_is_i18n_value($data)) {
+        $x = $data[$lang] ?? null;
+        if ($x !== null && $x !== '' && $x !== []) return $x;
+        $y = $data[cms_default_lang()] ?? null;
+        return $y ?? '';
+    }
+    foreach ($data as $k => $v) if (is_array($v)) $data[$k] = cms_localize($v, $lang);
+    return $data;
+}
+
+/** Idioma que se está dibujando (vacío en el panel). */
+function cms_render_lang(): string
+{
+    return (string) ($GLOBALS['cms_render_lang'] ?? cms_default_lang());
 }
 
 /** Campo bilingüe: $item[$field][$lang] con respaldo al idioma predeterminado. */

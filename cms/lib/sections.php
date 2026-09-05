@@ -82,11 +82,12 @@ function cms_section_id(): string
 function cms_block_data(array $def, array $data): array
 {
     foreach ((array) ($def['fields'] ?? []) as $k => $fd) {
-        if (!array_key_exists($k, $data) || $data[$k] === '' || $data[$k] === null) {
+        if (!array_key_exists($k, $data) || $data[$k] === null) {
+            // valor inicial de la definición; un campo vaciado a propósito se respeta
             if (array_key_exists('default', $fd)) $data[$k] = $fd['default'];
             elseif (in_array($fd['type'] ?? 'text', ['lines', 'images', 'tags'], true)) $data[$k] = [];
-            elseif (!array_key_exists($k, $data)) $data[$k] = '';
-        }
+            else $data[$k] = '';
+        } elseif ($data[$k] === '' && in_array($fd['type'] ?? 'text', ['lines', 'images', 'tags'], true)) $data[$k] = [];
     }
     return $data;
 }
@@ -115,6 +116,7 @@ function cms_sections_render(array $sections, array $ctx = []): string
         $cls = ['sec', 'sec-' . $type];
         if (!empty($def['wrap_class'])) foreach (preg_split('/\s+/', (string) $def['wrap_class']) as $c) if ($c !== '') $cls[] = $c;
         if (!empty($def['wrap_class_by']['field'])) { $wv = (string) ($b[$def['wrap_class_by']['field']] ?? ''); if (!empty($def['wrap_class_by']['map'][$wv])) $cls[] = (string) $def['wrap_class_by']['map'][$wv]; }
+        if (!empty($def['wrap_class_if'])) foreach ((array) $def['wrap_class_if'] as $field => $cl) if (!empty($b[$field])) $cls[] = (string) $cl;
         foreach (['bg', 'text', 'pad', 'width', 'align'] as $k) if (!empty($st[$k])) $cls[] = 'sec-' . ($k === 'width' ? 'w' : $k) . '-' . preg_replace('/[^a-z0-9-]/i', '', (string) $st[$k]);
         if (!empty($st['hide_mobile'])) $cls[] = 'sec-hide-mobile';
         if (!empty($st['bg_image'])) $cls[] = 'sec-has-bg';
@@ -174,7 +176,7 @@ function cms_section_summary(array $sec): string
     foreach ((array) ($def['fields'] ?? []) as $k => $fd) {
         if (in_array($fd['type'] ?? 'text', ['text', 'textarea', 'html'], true)) {
             $v = $sec['data'][$k] ?? '';
-            if (is_array($v)) $v = reset($v);
+            if (is_array($v)) $v = (string) ($v[cms_default_lang()] ?? reset($v));
             $v = trim(preg_replace('/\s+/', ' ', strip_tags((string) $v)));
             if ($v !== '') return mb_substr($v, 0, 70) . (mb_strlen($v) > 70 ? '…' : '');
         }

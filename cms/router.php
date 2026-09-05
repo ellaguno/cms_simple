@@ -37,6 +37,8 @@ foreach (cms_langs() as $l) {
     if ($path === $l || strpos($path, $l . '/') === 0) { $lang = $l; $path = trim(substr($path, strlen($l)), '/'); break; }
 }
 if (!in_array($lang, cms_active_langs(), true)) { header('Location: ' . cms_url('home', cms_default_lang()), true, 302); exit; }
+$GLOBALS['cms_render_lang'] = $lang;   // los campos bilingües del contenido llegan resueltos a este idioma (cms_localize)
+cms_items_flush();
 
 $S = cms_settings();
 $site = $S['site_name'] ?? cms_config('name');

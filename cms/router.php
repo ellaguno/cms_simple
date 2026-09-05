@@ -2,7 +2,7 @@
 /**
  * cms_simple — enrutador público.
  * Rutas (por idioma, con prefijo /xx para los no predeterminados):
- *   /                          → plantilla "home"
+ *   /                          → plantilla "home" o, con config 'home_item' => [tipo, slug], ese elemento (constructor)
  *   /{segmento-tipo}/          → plantilla de listado del tipo (template_list)
  *   /{segmento-tipo}/{slug}    → plantilla de detalle (template_single)
  *   /{segmento-página}         → páginas estáticas de config 'pages'
@@ -70,10 +70,22 @@ if ($seg === []) {
     $template = 'home';
     $page += ['title' => $t('home_meta_title', $site), 'desc' => $t('home_meta_desc'), 'alt' => $alt('home')];
     $page['route'] = 'home';
-    $page['jsonld'] = [cms_jsonld_graph(cms_jsonld_org(), [
-        '@type' => 'WebSite', '@id' => cms_site_url() . '/#website', 'url' => cms_site_url() . '/', 'name' => $site,
-        'inLanguage' => $lang === 'en' ? 'en' : $lang . '-MX', 'publisher' => ['@id' => cms_site_url() . '/#organization'],
-    ])];
+    $website = ['@type' => 'WebSite', '@id' => cms_site_url() . '/#website', 'url' => cms_site_url() . '/', 'name' => $site,
+        'inLanguage' => $lang === 'en' ? 'en' : $lang . '-MX', 'publisher' => ['@id' => cms_site_url() . '/#organization']];
+    $page['jsonld'] = [cms_jsonld_graph(cms_jsonld_org(), $website)];
+    // portada del constructor: config 'home_item' => [tipo, slug]
+    $hi = cms_config('home_item');
+    if (is_array($hi) && ($def = cms_type((string) $hi[0]))) {
+        $type = (string) $hi[0];
+        $item = cms_item($type, (string) $hi[1]) ?: cms_preview_item($type, (string) $hi[1]);
+        if ($item) {
+            $template = $def['template_single'] ?? rtrim($type, 's');
+            $page['title'] = cms_f($item, 'seo_title', $lang) ?: $t('home_meta_title', $site);
+            $page['desc'] = cms_f($item, 'seo_desc', $lang) ?: ((string) cms_f($item, $def['excerpt_field'] ?? 'excerpt', $lang) ?: $t('home_meta_desc'));
+            if (!empty($item[$def['image_field'] ?? 'image'])) $page['og_image'] = $item[$def['image_field'] ?? 'image'];
+            if (!cms_item_is_live($item)) { $page['noindex'] = true; $page['preview'] = true; }
+        } else { $type = null; $def = null; }
+    }
 } else {
     // tipos de contenido
     foreach (cms_config('types') as $k => $d) {
@@ -131,6 +143,7 @@ if ($template === null && $seg !== []) {
         $rel = $path;
         if ($tseg !== '') { if (strpos($path, $tseg . '/') !== 0) continue; $rel = substr($path, strlen($tseg) + 1); }
         $item = cms_tree_item($k, $rel);
+        if ($item && cms_is_home_item($k, $item['slug'])) { header('Location: ' . cms_url('home', $lang), true, 301); exit; }
         if (!$item && ($_GET['preview'] ?? '') !== '') { $cand = cms_tree_item($k, $rel, false); if ($cand && !cms_item_is_live($cand) && hash_equals(cms_preview_token($k, $cand['slug']), (string) $_GET['preview'])) $item = $cand; }
         if (!$item) continue;
         $template = $d['template_single'] ?? rtrim($k, 's');

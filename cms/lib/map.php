@@ -49,10 +49,11 @@ function cms_map_type_children(string $type, array $def, string $lang): array
 {
     $items = cms_items($type, false);
     $nodes = [];
-    foreach ($items as $it) $nodes[$it['slug']] = cms_map_item_node($type, $def, $it, $lang);
+    foreach ($items as $it) if (!cms_is_home_item($type, $it['slug'])) $nodes[$it['slug']] = cms_map_item_node($type, $def, $it, $lang);
     if (empty($def['tree'])) return array_values($nodes);
     $roots = [];
     foreach ($items as $it) {
+        if (!isset($nodes[$it['slug']])) continue;
         $parent = (string) ($it['parent'] ?? '');
         if ($parent !== '' && isset($nodes[$parent]) && $parent !== $it['slug']) $nodes[$parent]['children'][] = &$nodes[$it['slug']];
         else $roots[] = &$nodes[$it['slug']];
@@ -67,6 +68,12 @@ function cms_site_map(string $lang): array
     $t = fn(string $k, $d = '') => cms_t($k, $lang, $d);
     $root = ['kind' => 'home', 'label' => $t('home_meta_title', $S['site_name'] ?? cms_config('name')), 'url' => cms_url('home', $lang), 'route' => 'home',
         'status' => 'published', 'noindex' => false, 'source' => 'plantilla home.php', 'updated' => '', 'edit' => ADMIN_URL . '/?p=strings', 'children' => []];
+    $hi = cms_config('home_item');
+    if (is_array($hi) && ($hit = cms_item((string) $hi[0], (string) $hi[1], false))) {
+        $root['label'] = (string) (cms_f($hit, 'title', $lang) ?: $root['label']);
+        $root['source'] = 'constructor · ' . $hi[0] . '/' . $hi[1] . '.json'; $root['updated'] = (string) ($hit['updated'] ?? '');
+        $root['status'] = cms_map_item_status($hit); $root['edit'] = ADMIN_URL . '/?p=edit&type=' . rawurlencode((string) $hi[0]) . '&slug=' . rawurlencode((string) $hi[1]);
+    }
 
     // páginas fijas
     foreach (cms_config('pages') as $k => $d) {

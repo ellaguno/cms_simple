@@ -167,6 +167,8 @@ En ese caso, restaura el respaldo desde `data/backups/` por FTP. Úsalo con cuen
   crean páginas hijas, se mueven arrastrando, se ordenan, se publican y se añaden al menú.
 - **Flujo de contenido**: vista previa de borradores con token (`?preview=`), publicación programada
   (`publish_at`), versiones (últimas 10, restaurables) y duplicar.
+- **Portada del constructor**: `'home_item' => ['paginas', 'inicio']` en `config.php` hace que `/` dibuje ese elemento
+  (su ruta propia redirige a `/`).
 - Campo `code` (textarea monoespaciado). `admin_read_item()` compartido. Elementos en memoria
   (`$GLOBALS['cms_item_override']`) y `cms_items_flush()`.
 

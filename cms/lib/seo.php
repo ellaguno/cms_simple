@@ -120,7 +120,7 @@ function cms_sitemap(): void
             $rows[] = [cms_url('list:' . $k, $l), $latest, '0.8'];
         }
         foreach ($pages as $k => $def) if (empty($def['noindex'])) $rows[] = [cms_url('page:' . $k, $l), $latest, '0.8'];
-        foreach ($types as $k => $def) { if (!empty($def['noindex'])) continue; foreach ($all[$k] as $it) $rows[] = [cms_url('item:' . $k, $l, $it['slug']), $it['updated'] ?? ($it['date'] ?? ''), '0.7']; }
+        foreach ($types as $k => $def) { if (!empty($def['noindex'])) continue; foreach ($all[$k] as $it) { if (cms_is_home_item($k, $it['slug'])) continue; $rows[] = [cms_url('item:' . $k, $l, $it['slug']), $it['updated'] ?? ($it['date'] ?? ''), '0.7']; } }
     }
     echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
     foreach ($rows as [$u, $mod, $prio]) {

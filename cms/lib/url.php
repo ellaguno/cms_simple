@@ -32,6 +32,7 @@ function cms_url(string $route, string $lang, ?string $slug = null): string
         $def = cms_type($key);
         if (!$def) return $base . '/';
         $seg = cms_segment($def, $lang);
+        if ($kind === 'item' && cms_is_home_item($key, (string) $slug)) return $base . '/';
         if ($kind === 'item' && !empty($def['tree'])) {
             $it = cms_items($key, false)[(string) $slug] ?? null;
             $path = $it ? ($it['path'] ?? $it['slug']) : (string) $slug;
@@ -48,6 +49,13 @@ function cms_url(string $route, string $lang, ?string $slug = null): string
 }
 
 /** URL de un enlace del menú: absoluto (http/mailto/tel/#) o relativo a la raíz del idioma ("/blog"). */
+/** ¿Este elemento es la portada? (config 'home_item' => ['paginas', 'inicio']) */
+function cms_is_home_item(string $type, string $slug): bool
+{
+    $h = cms_config('home_item');
+    return is_array($h) && count($h) >= 2 && $h[0] === $type && $h[1] === $slug;
+}
+
 function cms_menu_url(string $url, string $lang): string
 {
     if ($url === '' || preg_match('#^(https?:)?//|^mailto:|^tel:|^\##i', $url)) return $url;

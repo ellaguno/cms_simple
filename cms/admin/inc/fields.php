@@ -127,9 +127,10 @@ function admin_read_sections($raw): array
     $styles = cms_section_styles();
     foreach ($raw as $r) {
         if (!is_array($r)) continue;
-        $type = preg_replace('/[^a-z0-9_-]/i', '', (string) ($r['type'] ?? ''));
+        $type = preg_replace('/[^a-z0-9_\/-]/i', '', (string) ($r['type'] ?? ''));
         $def = cms_block($type);
         if (!$def) continue;
+        $type = (string) $def['key'];
         $id = preg_replace('/[^a-z0-9]/i', '', (string) ($r['id'] ?? ''));
         if ($id === '') $id = cms_section_id();
         $data = [];
@@ -206,7 +207,7 @@ function admin_sections_control(string $name, array $def, array $sections): stri
     $h .= '<div class="ad-sections-list" data-sections-list>';
     foreach (array_values($sections) as $i => $sec) {
         $bd = cms_block((string) ($sec['type'] ?? ''));
-        if ($bd) $h .= admin_section_card($name, (string) $i, $sec, $bd);
+        if ($bd) { $sec['type'] = $bd['key']; $h .= admin_section_card($name, (string) $i, $sec, $bd); }
     }
     $h .= '</div>';
     $h .= '<p class="ad-sections-empty ad-help"' . ($sections ? ' hidden' : '') . '>Esta página aún no tiene secciones. Añade la primera.</p>';

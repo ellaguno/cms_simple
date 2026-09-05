@@ -22,14 +22,20 @@ function cms_blocks(): array
     if ($b === null) {
         $b = [];
         $file = CMS_SITE . '/blocks.php';
-        if (is_file($file)) foreach ((array) require $file as $k => $d) $b[$k] = (array) $d + ['key' => $k, 'label' => ucfirst($k), 'fields' => []];
+        if (is_file($file)) foreach ((array) require $file as $k => $d) $b[$k] = (array) $d + ['key' => $k, 'label' => ucfirst($k), 'fields' => [], 'file' => CMS_SITE . '/blocks/' . preg_replace('/[^a-z0-9_-]/i', '', (string) $k) . '.php'];
+        $b += cms_pack_blocks();
+        foreach ((array) cms_config('block_exclude', []) as $k) unset($b[$k]);
     }
     return $b;
 }
 
+/** Definición de un bloque; admite alias (config 'block_aliases' => ['viejo' => 'paquete/nuevo']). */
 function cms_block(string $type): ?array
 {
-    return cms_blocks()[$type] ?? null;
+    $b = cms_blocks();
+    if (isset($b[$type])) return $b[$type];
+    $alias = (array) cms_config('block_aliases', []);
+    return isset($alias[$type], $b[$alias[$type]]) ? $b[$alias[$type]] : null;
 }
 
 /** Paleta de fondos del tema (config 'sections' => ['palette' => [clave => etiqueta]]). */
@@ -51,6 +57,7 @@ function cms_section_styles(): array
         'animate'     => ['type' => 'select', 'label' => 'Animación al aparecer', 'options' => ['' => 'Por defecto', 'none' => 'Ninguna', 'fade-up' => 'Subir y aparecer', 'fade-in' => 'Aparecer', 'zoom-in' => 'Acercar']],
         'bg_image'    => ['type' => 'image', 'label' => 'Imagen de fondo'],
         'overlay'     => ['type' => 'number', 'label' => 'Oscurecer la imagen de fondo (0 a 90 %)', 'min' => 0, 'max' => 90, 'step' => 10],
+        'effect'      => ['type' => 'select', 'label' => 'Efecto', 'options' => ['' => 'Ninguno'] + array_map(fn($e) => (string) $e['label'], cms_effects())],
         'anchor'      => ['type' => 'text', 'label' => 'Ancla (id para enlaces #ancla)', 'placeholder' => 'contacto'],
         'class'       => ['type' => 'text', 'label' => 'Clases CSS adicionales (avanzado)'],
         'hide_mobile' => ['type' => 'checkbox', 'label' => 'Móvil', 'text' => 'Ocultar en pantallas pequeñas'],
@@ -61,6 +68,7 @@ function cms_section_styles(): array
 function cms_block_styles(array $def): array
 {
     $all = cms_section_styles();
+    if (!cms_effects()) unset($all['effect']);
     if (!array_key_exists('styles', $def)) return $all;
     return array_intersect_key($all, array_flip((array) $def['styles']));
 }
@@ -97,9 +105,10 @@ function cms_sections_render(array $sections, array $ctx = []): string
     foreach (array_values($sections) as $i => $sec) {
         if (!is_array($sec) || !empty($sec['hidden'])) continue;
         $type = (string) ($sec['type'] ?? '');
-        $def = $blocks[$type] ?? null;
-        $file = CMS_SITE . '/blocks/' . preg_replace('/[^a-z0-9_-]/i', '', $type) . '.php';
+        $def = cms_block($type);
+        $file = (string) ($def['file'] ?? '');
         if (!$def || !is_file($file)) continue;
+        $type = (string) $def['key'];
         $b = cms_block_data($def, (array) ($sec['data'] ?? []));
         $st = (array) ($sec['style'] ?? []);
         $id = (string) ($sec['id'] ?? ('s' . $i));
@@ -121,7 +130,10 @@ function cms_sections_render(array $sections, array $ctx = []): string
         if ($anim === '') $anim = (string) ($def['animate'] ?? '');
         if ($anim !== '' && $anim !== 'none') $attrs .= ' data-aos="' . cms_e($anim) . '"';
         if ($builder) $attrs .= ' data-sec-id="' . cms_e($id) . '"';
+        $attrs .= ' data-block="' . cms_e($type) . '"';
         $secMeta = ['id' => $id, 'index' => $i, 'type' => $type, 'anchor' => $anchor];
+        // efectos: los del bloque, los elegidos en Estilo y los que la vista añada con cms_section_effect()
+        $GLOBALS['cms_current_effects'] = array_values(array_unique(array_merge((array) ($def['effects'] ?? []), cms_section_effect_list($st))));
         ob_start();
         try {
             (static function () use ($file, $b, $st, $secMeta, $ctx, $lang, $S, $t, $page, $item) {
@@ -134,6 +146,8 @@ function cms_sections_render(array $sections, array $ctx = []): string
             continue;
         }
         $inner = ob_get_clean();
+        $fx = array_values(array_filter((array) ($GLOBALS['cms_current_effects'] ?? []), fn($e) => preg_match('#^[a-z0-9_-]+/[a-z0-9_-]+$#i', (string) $e)));
+        if ($fx) $attrs .= ' data-effect="' . cms_e(implode(' ', $fx)) . '"';
         $out .= '<section' . $attrs . '>' . $inner . '</section>' . "\n";
     }
     if ($builder) $out .= cms_sections_builder_script();
@@ -166,4 +180,34 @@ function cms_section_summary(array $sec): string
         }
     }
     return '';
+}
+
+/** Desde la vista de un bloque: añade (o quita, con $on = false) un efecto a la sección que se está dibujando.
+ *  Los recursos (CSS/JS) de un efecto solo se cargan si está declarado en 'effects' de la definición del bloque o elegido en Estilo,
+ *  porque el <head> se calcula antes de dibujar; la vista decide si al final la sección lo lleva o no. */
+function cms_section_effect(string $effect, bool $on = true): void
+{
+    $cur = (array) ($GLOBALS['cms_current_effects'] ?? []);
+    if ($on) { if (!in_array($effect, $cur, true)) $cur[] = $effect; }
+    else $cur = array_values(array_filter($cur, fn($e) => $e !== $effect));
+    $GLOBALS['cms_current_effects'] = $cur;
+}
+
+/** Clases del tema para los bloques de paquetes (config 'sections' => ['classes' => ['container' => …, 'header' => …, 'title' => …, 'subtitle' => …, 'btn' => …]]). */
+function cms_block_class(string $what): string
+{
+    $map = (array) (cms_config('sections')['classes'] ?? []);
+    $defaults = ['container' => 'cms-container', 'header' => 'cms-header', 'title' => '', 'subtitle' => '', 'btn' => 'cms-btn'];
+    return trim(($defaults[$what] ?? '') . ' ' . (string) ($map[$what] ?? ''));
+}
+
+/** Cabecera estándar de un bloque de paquete: título (HTML sencillo permitido) y subtítulo. */
+function cms_block_header(string $title, string $subtitle = '', string $extraClass = ''): string
+{
+    if (trim($title) === '' && trim($subtitle) === '') return '';
+    $clean = fn(string $x) => preg_replace('/\s+on[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', strip_tags($x, '<span><strong><em><b><i><br><small>')) ?? '';
+    $h = '<div class="' . cms_e(trim(cms_block_class('header') . ' ' . $extraClass)) . '">';
+    if (trim($title) !== '') $h .= '<h2 class="' . cms_e(cms_block_class('title')) . '">' . $clean($title) . '</h2>';
+    if (trim($subtitle) !== '') $h .= '<p class="' . cms_e(cms_block_class('subtitle')) . '">' . $clean($subtitle) . '</p>';
+    return $h . '</div>';
 }

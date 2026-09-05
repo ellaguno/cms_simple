@@ -1,0 +1,52 @@
+/* cms_simple · paquete visual — clases vis-*; colores y radios desde variables del sitio con valores de respaldo */
+
+/* galería 3D */
+.vis-g3d { position: relative; width: 100%; height: 80vh; min-height: 560px; max-height: 860px; background: var(--vis-g3d-bg, radial-gradient(ellipse at center, #f8f9fc 0%, #eef0f5 100%)); border-radius: var(--cms-radius-lg, 1rem); overflow: hidden; display: flex; flex-direction: column; }
+.vis-g3d-short { height: 60vh; min-height: 420px; } .vis-g3d-tall { height: 100vh; max-height: none; }
+.vis-g3d-header { text-align: center; padding: 1.5rem 1rem 0; position: relative; z-index: 2; flex-shrink: 0; margin-bottom: 0; }
+.vis-g3d-header h2 { margin-bottom: .25rem; } .vis-g3d-header p { margin-bottom: 0; }
+.vis-g3d-canvas { display: block; width: 100%; flex: 1; min-height: 0; }
+.vis-g3d-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; pointer-events: none; text-align: center; }
+.vis-g3d-hint { display: inline-flex; align-items: center; gap: .35rem; color: rgba(0,0,0,.45); font-size: .8125rem; font-weight: 500; background: rgba(255,255,255,.6); backdrop-filter: blur(8px); padding: .5rem 1rem; border-radius: 999px; animation: vis-pulse 3s ease-in-out infinite; }
+.vis-g3d-hint svg { animation: vis-bounce 2s ease-in-out infinite; }
+@keyframes vis-pulse { 0%, 100% { opacity: .7; } 50% { opacity: 1; } }
+@keyframes vis-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+.vis-g3d-fallback { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 1.5rem; }
+.vis-g3d-fallback img { width: 100%; border-radius: var(--cms-radius, .75rem); object-fit: cover; }
+@media (max-width: 640px) { .vis-g3d { height: 70vh; min-height: 460px; border-radius: 0; } }
+
+/* carrusel */
+.vis-carousel { border-radius: var(--cms-radius-lg, 1rem); overflow: hidden; --swiper-theme-color: var(--cms-accent, #4f46e5); }
+.vis-slide { margin: 0; } .vis-slide img { display: block; width: 100%; height: auto; }
+.vis-slide figcaption { text-align: center; font-size: .875rem; color: var(--cms-muted, #6b7280); padding: .5rem 0 2rem; }
+
+/* galería con lightbox */
+.vis-grid { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); }
+.vis-grid-2 { grid-template-columns: repeat(2, 1fr); } .vis-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.vis-grid-item { display: block; overflow: hidden; border-radius: var(--cms-radius, .75rem); aspect-ratio: 4 / 3; }
+.vis-grid-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
+.vis-grid-item:hover img { transform: scale(1.05); }
+@media (max-width: 768px) { .vis-grid, .vis-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+
+/* efecto: fondo shader */
+[data-effect~="visual/shader"] { position: relative; overflow: hidden; }
+.vis-shader { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .vis-shader { display: none; } }
+
+/* efecto: degradado animado */
+[data-effect~="visual/gradient"] { position: relative; overflow: hidden; }
+.vis-blobs { position: absolute; inset: 0; pointer-events: none; filter: blur(40px); z-index: 0; }
+.vis-blob { position: absolute; border-radius: 50%; mix-blend-mode: hard-light; }
+.vis-blob-1 { width: 520px; height: 520px; top: -160px; left: -120px; background: radial-gradient(circle at 30% 30%, var(--vis-blob-1, #1f6feb), var(--vis-blob-1b, #0d3b8c)); animation: vis-drift 18s ease-in-out infinite; }
+.vis-blob-2 { width: 80%; height: 80%; top: 10%; left: 10%; background: radial-gradient(circle at center, var(--vis-blob-2, rgba(221,74,255,.8)) 0, transparent 50%); transform-origin: calc(50% - 400px); animation: vis-circle 20s reverse infinite; }
+.vis-blob-pointer { width: 100%; height: 100%; top: -50%; left: -50%; opacity: .7; background: radial-gradient(circle at center, var(--vis-blob-3, rgba(140,100,255,.8)) 0, transparent 50%); }
+@keyframes vis-circle { 0% { transform: rotate(0deg); } 50% { transform: rotate(180deg); } 100% { transform: rotate(360deg); } }
+@keyframes vis-drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(60px, 40px); } }
+@media (prefers-reduced-motion: reduce) { .vis-blobs { display: none; } }
+
+/* efecto: tarjetas con luz (la clase vis-spot la pone el JS en cada tarjeta) */
+.vis-spot { --spot-base: 220; --spot-spread: 200; --spot-size: 200px; --spot-hue: calc(var(--spot-base) + (var(--xp, 0) * var(--spot-spread))); position: relative; overflow: hidden; }
+.vis-spot::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .4s ease; background: radial-gradient(var(--spot-size) var(--spot-size) at calc(var(--card-x, 50%) * 1px) calc(var(--card-y, 50%) * 1px), hsl(var(--spot-hue) 100% 70% / .12), transparent); }
+.vis-spot::after { content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .4s ease; background: radial-gradient(calc(var(--spot-size) * .6) calc(var(--spot-size) * .6) at calc(var(--card-x, 50%) * 1px) calc(var(--card-y, 50%) * 1px), hsl(var(--spot-hue) 100% 60% / .6), transparent 100%); mask: linear-gradient(transparent, transparent), linear-gradient(white, white); -webkit-mask: linear-gradient(transparent, transparent), linear-gradient(white, white); mask-clip: padding-box, border-box; -webkit-mask-clip: padding-box, border-box; mask-composite: exclude; -webkit-mask-composite: xor; }
+.vis-spot-active .vis-spot::before, .vis-spot-active .vis-spot::after { opacity: 1; }
+.vis-spot > * { position: relative; z-index: 1; }

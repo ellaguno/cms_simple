@@ -150,6 +150,19 @@ Advertencia: es edición de código en producción. Un error lógico en `config.
 sitio o el propio panel fuera de servicio (la verificación evita errores de sintaxis, no errores de lógica).
 En ese caso, restaura el respaldo desde `data/backups/` por FTP. Úsalo con cuentas de administrador de confianza.
 
+## Paquetes de bloques y efectos (1.6)
+
+`cms/packs/<nombre>/` (compartido) o `site/packs/<nombre>/`: `pack.php` (manifiesto con efectos y recursos),
+`blocks.php`, `blocks/*.php`, `assets/`, `LICENSES.md`. Se activan con `'packs' => ['visual', 'motion']` en
+`site/config.php` (con opciones: `['motion' => ['site' => ['cursor']]]`). Bloques `paquete/bloque`, efectos
+`paquete/efecto` (pestaña Estilo). CSS, JS y librerías se cargan solo en las páginas que los usan; las librerías
+abiertas (GSAP 3.13, three.js, Swiper, GLightbox, AOS) las descarga `cms/assets/cms.js` bajo demanda
+(`CMS.load('gsap')`). Los bloques de paquete usan clases neutras `cms-*` con variables `--cms-*` que el tema puede
+definir, y `sections.classes` mapea la cabecera estándar a las clases del tema.
+Incluidos: **visual** (galería 3D, carrusel, lightbox; shader de ondas, luz en tarjetas, degradado animado) y
+**motion** (marquesina, cifras, titular, galería con parallax; texto revelado, aparición escalonada, parallax, cursor
+magnético). Sin jQuery ni temas comerciales; cada paquete documenta sus licencias.
+
 ## Constructor de páginas por secciones, mapa del sitio y flujo de contenido (1.5)
 
 - **Secciones**: un campo `'type' => 'sections'` convierte un tipo en páginas armadas con bloques que declara el

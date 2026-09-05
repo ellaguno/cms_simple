@@ -1,0 +1,44 @@
+/* cms_simple · paquete motion — clases mo-* */
+/* marquesina */
+.mo-marquee { overflow: hidden; white-space: nowrap; --mo-duration: 30s; }
+.mo-marquee-slow { --mo-duration: 55s; } .mo-marquee-fast { --mo-duration: 16s; }
+.mo-marquee-track { display: inline-flex; align-items: center; gap: 2.5rem; padding-right: 2.5rem; animation: mo-marquee var(--mo-duration) linear infinite; will-change: transform; }
+.mo-marquee-right .mo-marquee-track { animation-direction: reverse; }
+.mo-marquee:hover .mo-marquee-track { animation-play-state: paused; }
+.mo-marquee-item { font-weight: 700; letter-spacing: -.02em; color: var(--cms-text, #111827); line-height: 1; }
+.mo-marquee-m .mo-marquee-item { font-size: clamp(1.2rem, 2.5vw, 2rem); } .mo-marquee-l .mo-marquee-item { font-size: clamp(2rem, 5vw, 4rem); } .mo-marquee-xl .mo-marquee-item { font-size: clamp(3rem, 9vw, 7rem); }
+.mo-marquee-item img { height: 1em; width: auto; display: block; }
+.mo-marquee-sep { color: var(--cms-accent, #4f46e5); font-size: .6em; }
+.mo-marquee-outline .mo-marquee-item:nth-child(4n+3) { color: transparent; -webkit-text-stroke: 1px var(--cms-text, #111827); }
+@keyframes mo-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .mo-marquee-track { animation: none; } }
+/* cifras */
+.mo-counters { display: grid; gap: 2rem; grid-template-columns: repeat(3, 1fr); text-align: center; }
+.mo-counters-2 { grid-template-columns: repeat(2, 1fr); } .mo-counters-4 { grid-template-columns: repeat(4, 1fr); }
+.mo-counter-num { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; line-height: 1; color: var(--cms-accent, #4f46e5); letter-spacing: -.03em; }
+.mo-counter-suffix { font-size: .6em; vertical-align: top; margin-left: .05em; }
+.mo-counter-label { margin-top: .6rem; color: var(--cms-muted, #6b7280); font-weight: 500; }
+@media (max-width: 640px) { .mo-counters, .mo-counters-4 { grid-template-columns: repeat(2, 1fr); } }
+/* titular */
+.mo-statement { max-width: 1000px; }
+.mo-statement-center { margin: 0 auto; text-align: center; }
+.mo-statement-text { font-size: clamp(2rem, 5.5vw, 4.5rem); line-height: 1.05; letter-spacing: -.03em; font-weight: 800; margin: 0 0 1.25rem; color: var(--cms-text, #111827); }
+.mo-statement-text em { font-style: normal; color: var(--cms-accent, #4f46e5); }
+.mo-statement-sub { font-size: clamp(1.05rem, 1.6vw, 1.35rem); color: var(--cms-muted, #6b7280); max-width: 700px; margin: 0 0 1.5rem; }
+.mo-statement-center .mo-statement-sub { margin-left: auto; margin-right: auto; }
+/* galería parallax */
+.mo-parallax { display: grid; gap: 1.25rem; grid-template-columns: repeat(3, 1fr); align-items: start; }
+.mo-parallax-2 { grid-template-columns: repeat(2, 1fr); }
+.mo-parallax-col { display: flex; flex-direction: column; gap: 1.25rem; will-change: transform; }
+.mo-parallax-col:nth-child(2) { margin-top: 4rem; }
+.mo-parallax-item { display: block; position: relative; overflow: hidden; border-radius: var(--cms-radius, .75rem); }
+.mo-parallax-item img { display: block; width: 100%; height: auto; transition: transform .6s ease; }
+.mo-parallax-item:hover img { transform: scale(1.04); }
+.mo-parallax-caption { position: absolute; left: 1rem; bottom: 1rem; background: rgba(0,0,0,.55); color: #fff; font-size: .8125rem; padding: .3rem .7rem; border-radius: 999px; }
+@media (max-width: 640px) { .mo-parallax, .mo-parallax-2 { grid-template-columns: 1fr 1fr; } .mo-parallax-col:nth-child(2) { margin-top: 2rem; } }
+/* efecto reveal: evitar el destello antes de animar */
+[data-effect~="motion/reveal"] .mo-reveal-pending { visibility: hidden; }
+/* cursor magnético */
+.mo-cursor { position: fixed; top: 0; left: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--cms-accent, #4f46e5); pointer-events: none; z-index: 99999; transform: translate(-50%, -50%); mix-blend-mode: difference; transition: width .25s, height .25s, opacity .25s; opacity: 0; }
+.mo-cursor.on { opacity: 1; } .mo-cursor.hover { width: 48px; height: 48px; background: #fff; }
+body.mo-has-cursor a, body.mo-has-cursor button { cursor: none; }

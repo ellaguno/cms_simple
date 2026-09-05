@@ -12,7 +12,7 @@
  */
 declare(strict_types=1);
 
-const CMS_VERSION = '1.5.0';
+const CMS_VERSION = '1.6.0';
 
 define('CMS_DIR', __DIR__);
 define('CMS_ROOT', dirname(__DIR__));
@@ -80,4 +80,5 @@ require_once CMS_DIR . '/lib/icons.php';
 require_once CMS_DIR . '/lib/seo.php';
 require_once CMS_DIR . '/lib/map.php';
 require_once CMS_DIR . '/lib/sections.php';
+require_once CMS_DIR . '/lib/packs.php';
 if (is_file(CMS_SITE . '/inc/functions.php')) require_once CMS_SITE . '/inc/functions.php';

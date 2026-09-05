@@ -125,7 +125,7 @@
         f.className = "ql-video";   // los temas antiguos estilizan iframe.ql-video
         f.setAttribute("src", embedUrl(url));
         f.setAttribute("loading", "lazy");
-        f.setAttribute("allow", "accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share");
+        f.setAttribute("allow", "accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
         f.setAttribute("allowfullscreen", "");
         f.setAttribute("title", "Video");
         n.appendChild(f);

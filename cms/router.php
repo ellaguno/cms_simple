@@ -170,6 +170,7 @@ if ($template === null || !is_file(CMS_SITE . '/templates/' . $template . '.php'
     $page += ['title' => $t('not_found_title', '404') . ' · ' . $site, 'desc' => '', 'alt' => $alt('home'), 'noindex' => true];
 }
 $page['canonical'] = cms_abs_url($page['alt'][$lang] ?? cms_url('home', $lang));
+if (is_array($item ?? null) && is_array($item['sections'] ?? null)) $page['sections'] = $item['sections'];
 
 site_header($page);
 require CMS_SITE . '/templates/' . $template . '.php';

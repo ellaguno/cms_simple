@@ -150,6 +150,11 @@ Advertencia: es edición de código en producción. Un error lógico en `config.
 sitio o el propio panel fuera de servicio (la verificación evita errores de sintaxis, no errores de lógica).
 En ese caso, restaura el respaldo desde `data/backups/` por FTP. Úsalo con cuentas de administrador de confianza.
 
+## Manual embebido (1.7)
+
+Admin → Manual: capítulos en `cms/manual/*.md` con capturas, desde instalar hasta SEO/GEO y mantenimiento; el
+capítulo de bloques lista el catálogo real del sitio. Capítulos propios en `site/manual/*.md`.
+
 ## Paquetes de bloques y efectos (1.6)
 
 `cms/packs/<nombre>/` (compartido) o `site/packs/<nombre>/`: `pack.php` (manifiesto con efectos y recursos),

@@ -13,6 +13,7 @@ admin_header('Inicio', 'dashboard');
   <a class="ad-card" href="<?= admin_url('content', ['type' => $k]) ?>"><strong><?= count($all) ?></strong><span><?= cms_e($def['label'] ?? $k) ?> · <?= $pub ?> publicados</span></a>
 <?php endforeach; ?>
   <a class="ad-card" href="<?= admin_url('map') ?>"><strong>⌂</strong><span>Mapa del sitio</span></a>
+  <a class="ad-card" href="<?= admin_url('manual') ?>"><strong>?</strong><span>Manual: cómo construir el sitio</span></a>
   <a class="ad-card" href="<?= admin_url('media') ?>"><strong><?= count(media_list()) ?></strong><span>Archivos en Medios</span></a>
   <a class="ad-card" href="<?= admin_url('menu') ?>"><strong><?= count(cms_menu(cms_default_lang())) ?></strong><span>Enlaces en el menú</span></a>
   <a class="ad-card" href="<?= admin_url('users') ?>"><strong><?= count(cms_users()) ?></strong><span>Usuarios del admin</span></a>

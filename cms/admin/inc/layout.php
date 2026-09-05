@@ -28,6 +28,7 @@ function admin_nav(): array
         'password'  => ['Contraseña', admin_url('password')],
     ];
     if (cms_config('code_editor', true) !== false) $nav['code'] = ['Código del tema', admin_url('code')];
+    $nav['manual'] = ['Manual', admin_url('manual')];
     return $nav;
 }
 

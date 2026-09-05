@@ -10,6 +10,7 @@ declare(strict_types=1);
 function admin_nav(): array
 {
     $nav = ['dashboard' => ['Inicio', admin_url('dashboard')], 'map' => ['Mapa del sitio', admin_url('map')]];
+    if (cms_config('importer', true) !== false) $nav['importar'] = ['Importar diseño', admin_url('importar')];
     foreach (cms_config('types') as $k => $def) {
         $entry = [$def['label'] ?? $k, admin_url('content', ['type' => $k])];
         $g = trim((string) ($def['group'] ?? ''));

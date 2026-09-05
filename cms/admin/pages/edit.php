@@ -118,6 +118,15 @@ $titleInputName = !empty($fields[$titleField]['i18n']) ? $titleField . '[' . $dl
         </ul>
       </details>
 <?php endif; endif; ?>
+<?php if (!empty($item['import']) && is_array($item['import'])): $imp = $item['import']; ?>
+      <details class="ad-versions ad-import-ref"><summary>Diseño importado<?= !empty($imp['source']) ? ' · ' . cms_e($imp['source']) : '' ?></summary>
+<?php if (!empty($imp['screens'])): ?>        <div class="ad-import-screens"><?php foreach ((array) $imp['screens'] as $i => $sc): ?><a href="<?= cms_e(cms_img($sc)) ?>" target="_blank" rel="noopener" title="Pantalla <?= $i + 1 ?>"><img src="<?= cms_e(cms_img($sc)) ?>" alt="Pantalla <?= $i + 1 ?>" loading="lazy"></a><?php endforeach; ?></div>
+<?php endif; if (!empty($imp['notes'])): ?>        <p class="ad-help"><strong>Notas del análisis</strong></p><ul class="ad-list ad-help"><?php foreach ((array) $imp['notes'] as $n): ?><li><?= cms_e($n) ?></li><?php endforeach; ?></ul>
+<?php endif; if (!empty($imp['unmapped'])): ?>        <p class="ad-help"><strong>Sin bloque equivalente</strong></p><ul class="ad-list ad-help"><?php foreach ((array) $imp['unmapped'] as $n): ?><li><?= cms_e($n) ?></li><?php endforeach; ?></ul>
+<?php endif; if (!empty($imp['palette'])): ?>        <p class="ad-help"><strong>Paleta:</strong> <?php foreach ((array) $imp['palette'] as $k => $c): ?><span class="ad-pill" style="border-left:12px solid <?= cms_e((string) $c) ?>"><?= cms_e($k) ?> <?= cms_e((string) $c) ?></span> <?php endforeach; ?></p>
+<?php endif; ?>
+      </details>
+<?php endif; ?>
     </aside>
   </div>
 </form>

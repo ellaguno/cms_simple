@@ -150,6 +150,19 @@ Advertencia: es edición de código en producción. Un error lógico en `config.
 sitio o el propio panel fuera de servicio (la verificación evita errores de sintaxis, no errores de lógica).
 En ese caso, restaura el respaldo desde `data/backups/` por FTP. Úsalo con cuentas de administrador de confianza.
 
+## Importar un diseño con IA (1.9)
+
+Admin → Importar diseño: de un PDF o imagen de una página (Figma, Illustrator, Word o Inkscape exportan a PDF en un
+clic) a un borrador del constructor con las mismas bandas y los mismos textos, usando los bloques del sitio. El
+navegador rasteriza el archivo con pdf.js en pantallas de 1400×1100 y extrae la capa de texto
+(`cms/admin/assets/importar.js`); el servidor arma el prompt con el catálogo real de bloques y un JSON Schema de la
+respuesta, llama al modelo y materializa las secciones (`cms/lib/import.php`). Proveedores: OpenRouter, con cualquier
+modelo con visión y su precio a la vista (clave y modelo se guardan en `data/settings.json`), o la CLI de Claude Code si
+está instalada en el equipo. Las pantallas de referencia y las notas del análisis (imágenes que faltan, partes sin
+bloque equivalente, paleta) quedan en el panel "Diseño importado" del constructor. `'importer' => false` en
+`site/config.php` lo desactiva. Desde la línea de comandos: `tools/import-design.py` con `tools/blocks-schema.php`.
+Manual: capítulo 12.
+
 ## Vistas previas de bloques y Respaldos (1.8)
 
 Cada bloque y efecto puede llevar una imagen o GIF (`site/assets/previews/<clave>.*`, `cms/packs/<paquete>/assets/

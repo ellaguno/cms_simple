@@ -356,3 +356,8 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-restore-box { min-width: 300px; padding: 12px; gap: 8px; }
 .ad-restore-box .ad-check { display: block; font-size: 13px; }
 .ad-restore-box .ad-btn { margin-top: 6px; width: auto; }
+
+/* importador de diseños */
+.ad-import-screens { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.ad-import-screens img { width: 64px; height: 50px; object-fit: cover; object-position: top; border: 1px solid var(--line); border-radius: 4px; }
+.ad-import-ref ul { padding-left: 16px; }

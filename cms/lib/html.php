@@ -80,3 +80,24 @@ function cms_btn(string $text, string $href, string $class = 'btn', string $attr
 {
     return '<a href="' . cms_e($href) . '" class="' . cms_e($class) . '" ' . $attrs . '>' . cms_e($text) . '</a>';
 }
+
+/**
+ * Aclara ($amount > 0, hacia blanco) u oscurece ($amount < 0, hacia negro) un color hex; $amount entre -1 y 1.
+ * Sirve a los temas para derivar tonos de un color elegido en Ajustes (cms_color_shade('#4f46e5', -0.15)).
+ */
+function cms_color_shade(string $hex, float $amount): string
+{
+    if (!preg_match('/^#?([0-9a-f]{6})$/i', $hex, $m)) return $hex;
+    $rgb = array_map('hexdec', str_split($m[1], 2));
+    $amount = max(-1, min(1, $amount));
+    foreach ($rgb as &$c) $c = (int) round($amount >= 0 ? $c + (255 - $c) * $amount : $c * (1 + $amount));
+    return sprintf('#%02x%02x%02x', ...$rgb);
+}
+
+/** Enlace a Google Fonts para una o varias familias (nombres exactos), con los pesos habituales. */
+function cms_google_fonts_url(array $families, string $weights = '400;500;600;700;800'): string
+{
+    $families = array_values(array_unique(array_filter(array_map('trim', $families))));
+    if (!$families) return '';
+    return 'https://fonts.googleapis.com/css2?' . implode('&', array_map(fn($f) => 'family=' . str_replace(' ', '+', $f) . ':wght@' . $weights, $families)) . '&display=swap';
+}

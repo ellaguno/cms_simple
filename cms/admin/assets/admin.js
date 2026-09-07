@@ -467,6 +467,13 @@
   });
 
   /* ---------------- confirmaciones ---------------- */
+  /* campo de color: el selector y el texto hex van a la par; × vuelve al color del tema */
+  document.querySelectorAll(".ad-color-row").forEach(function (row) {
+    var pick = row.querySelector("[data-color-pick]"), hex = row.querySelector("[data-color-hex]"), clear = row.querySelector("[data-color-clear]");
+    pick.addEventListener("input", function () { hex.value = pick.value; pick.classList.remove("is-empty"); hex.dispatchEvent(new Event("input", { bubbles: true })); });
+    hex.addEventListener("input", function () { if (/^#[0-9a-f]{6}$/i.test(hex.value)) { pick.value = hex.value; pick.classList.remove("is-empty"); } });
+    clear.addEventListener("click", function () { hex.value = ""; pick.classList.add("is-empty"); hex.dispatchEvent(new Event("input", { bubbles: true })); });
+  });
   document.querySelectorAll("form[data-confirm]").forEach(function (f) {
     f.addEventListener("submit", function (e) { if (!window.confirm(f.getAttribute("data-confirm"))) e.preventDefault(); });
   });

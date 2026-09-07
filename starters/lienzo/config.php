@@ -50,8 +50,8 @@ return [
                                 'help' => 'Se toman su primera sección "Cabecera del sitio" y su última "Pie de página"; se editan ahí, en el constructor. Las demás páginas dejan de mostrar sus propias cabecera y pie.'],
         ],
         'Diseño' => [
-            'color_primary' => ['type' => 'text', 'label' => 'Color principal (hex)', 'placeholder' => '#1f2937', 'half' => true],
-            'color_accent'  => ['type' => 'text', 'label' => 'Color de acento (hex)', 'placeholder' => '#2563eb', 'half' => true],
+            'color_primary' => ['type' => 'color', 'label' => 'Color principal (títulos, cabecera oscura, pie)', 'placeholder' => '#111827 (el del tema)', 'half' => true],
+            'color_accent'  => ['type' => 'color', 'label' => 'Color de acento (botones, enlaces, resaltados)', 'placeholder' => '#2563eb (el del tema)', 'half' => true],
             'font_heading'  => ['type' => 'select', 'label' => 'Tipografía de títulos (Google Fonts)', 'options' => ['' => 'La misma que el texto', 'Inter' => 'Inter', 'Poppins' => 'Poppins', 'Montserrat' => 'Montserrat', 'Manrope' => 'Manrope', 'DM Sans' => 'DM Sans', 'Plus Jakarta Sans' => 'Plus Jakarta Sans', 'Space Grotesk' => 'Space Grotesk', 'Sora' => 'Sora', 'Outfit' => 'Outfit', 'Raleway' => 'Raleway', 'Playfair Display' => 'Playfair Display', 'Merriweather' => 'Merriweather', 'Lora' => 'Lora', 'Fraunces' => 'Fraunces'], 'half' => true],
             'font'          => ['type' => 'select', 'label' => 'Tipografía del texto (Google Fonts)', 'options' => ['' => 'Inter', 'Inter' => 'Inter', 'Poppins' => 'Poppins', 'Montserrat' => 'Montserrat', 'Manrope' => 'Manrope', 'DM Sans' => 'DM Sans', 'Plus Jakarta Sans' => 'Plus Jakarta Sans', 'Nunito' => 'Nunito', 'Open Sans' => 'Open Sans', 'Lato' => 'Lato', 'Roboto' => 'Roboto', 'Source Sans 3' => 'Source Sans 3', 'Work Sans' => 'Work Sans', 'Lora' => 'Lora', 'Merriweather' => 'Merriweather'], 'half' => true],
             'font_custom'   => ['type' => 'text', 'label' => 'Otra tipografía de Google Fonts (nombre exacto; tiene prioridad para el texto)', 'placeholder' => 'Figtree'],

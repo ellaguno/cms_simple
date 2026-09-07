@@ -76,3 +76,12 @@ Si una opción no aparece en un bloque es porque ese bloque no la admite; un her
 3. Una prueba: testimonio, cifras, logotipos de clientes.
 4. Cierra siempre con un llamado a la acción. La gente que llegó hasta abajo quiere saber qué hacer.
 5. Alterna fondos claros y oscuros para que las secciones se distingan al hacer scroll rápido.
+
+## Colores y tipografías: dónde se editan
+
+Hay dos niveles, y conviene tenerlos claros porque una página no tiene colores propios.
+
+- **El sitio.** En **Ajustes → Diseño** están el color principal, el color de acento y la tipografía. Cambiarlos ahí cambia todo el sitio: botones, enlaces, degradados, títulos. Se eligen con un selector de color o escribiendo el valor hex, y el botón × vuelve al color original del tema. En sitios cuyo tema no tiene ese grupo, los colores viven en su hoja de estilos, editable desde Código del tema.
+- **Cada sección.** En la pestaña **Estilo** de la sección se elige el fondo entre la paleta del sitio (blanco, gris claro, oscuro, color principal, degradado), el color del texto (automático, oscuro o claro), una imagen de fondo con su oscurecido, el espacio vertical, el ancho, la alineación y la animación. No hay un selector de color libre a propósito: así todas las páginas quedan en la misma familia de colores y un cambio en Ajustes las actualiza todas.
+
+Si una sección necesita algo fuera de la paleta, la salida es el campo **Clases CSS adicionales** de Estilo con una regla en la hoja del tema, o el bloque HTML. El importador de diseños propone la paleta y las tipografías que ve en el PDF para que las lleves a Ajustes → Diseño.

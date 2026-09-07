@@ -55,6 +55,11 @@ function admin_control(string $inputName, array $def, $value, string $extra = ''
             return admin_sections_control($inputName, $def, is_array($value) ? $value : []);
         case 'code':
             return '<textarea name="' . cms_e($inputName) . '" rows="' . (int) ($def['rows'] ?? 8) . '" class="ad-code"' . $ph . ' spellcheck="false">' . cms_e((string) $value) . '</textarea>';
+        case 'color':
+            $v = preg_match('/^#[0-9a-f]{6}$/i', (string) $value) ? strtolower((string) $value) : '';
+            return '<div class="ad-color-row"><input type="color" value="' . ($v ?: '#888888') . '" data-color-pick' . ($v ? '' : ' class="is-empty"') . '>'
+                . '<input type="text" name="' . cms_e($inputName) . '" value="' . cms_e($v) . '" placeholder="' . cms_e($def['placeholder'] ?? '#rrggbb (vacío = el del tema)') . '" pattern="#[0-9a-fA-F]{6}" data-color-hex ' . $extra . '>'
+                . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-color-clear title="Volver al color del tema">×</button></div>';
         case 'date': case 'number': case 'url': case 'email':
             $attrs = '';
             foreach (['min', 'max', 'step'] as $a) if (isset($def[$a])) $attrs .= ' ' . $a . '="' . cms_e($def[$a]) . '"';
@@ -103,6 +108,11 @@ function admin_read_control(array $def, $raw)
             return is_string($raw) ? str_replace("\r\n", "\n", $raw) : '';
         case 'number':
             return is_numeric($raw) ? $raw + 0 : ($raw === '' || $raw === null ? '' : (string) $raw);
+        case 'color':
+            $c = strtolower(trim(is_string($raw) ? $raw : ''));
+            if (preg_match('/^#?([0-9a-f]{3})$/', $c, $m)) $c = '#' . $m[1][0] . $m[1][0] . $m[1][1] . $m[1][1] . $m[1][2] . $m[1][2];
+            elseif (preg_match('/^([0-9a-f]{6})$/', $c)) $c = '#' . $c;
+            return preg_match('/^#[0-9a-f]{6}$/', $c) ? $c : '';
         default:
             return is_string($raw) ? trim(str_replace("\r\n", "\n", $raw)) : '';
     }

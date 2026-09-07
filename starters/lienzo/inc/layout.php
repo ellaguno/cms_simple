@@ -28,11 +28,15 @@ function site_header(array $page): void
 </head>
 <body class="lz<?= !empty($_GET['cmsbare']) ? ' cms-bare' : '' ?>">
 <?php
+    [$hdr] = lz_shared();
+    if ($hdr && empty($_GET['cmsbare'])) echo cms_sections_render([$hdr], ['lang' => $lang, 'S' => $S, 'page' => $page, 'builder' => false]);
 }
 
 function site_footer(array $page): void
 {
     $aos = cms_libs()['aos'];
+    [, $ftr] = lz_shared();
+    if ($ftr && empty($_GET['cmsbare'])) echo cms_sections_render([$ftr], ['lang' => $page['lang'], 'S' => cms_settings(), 'page' => $page, 'builder' => false]);
     ?>
 <script defer src="<?= cms_e($aos['js'][0]) ?>"></script>
 <script defer src="<?= cms_asset('js/lienzo.js') ?>?v=<?= CMS_VERSION ?>"></script>

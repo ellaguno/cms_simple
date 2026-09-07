@@ -173,6 +173,14 @@ preguntas, llamado a la acción, contacto y los paquetes visual y motion. Con é
 completo, menú y pie incluidos: si el catálogo tiene los bloques `cabecera` y `pie`, el importador los usa en lugar
 de ignorar esas bandas. Colores y tipografía se ajustan en Ajustes → Diseño. Ver `starters/lienzo/LEEME.md`.
 
+## Aviso de cookies (1.12)
+
+Ajustes → Aviso de cookies: barra con texto por idioma, botón, enlace a la política y posición (abajo o esquina). La
+dibuja el núcleo desde `cms_head()` con un script, así que funciona con cualquier tema; la aceptación queda en
+`localStorage`. `'cookie_notice' => false` en `site/config.php` quita el grupo. El tema lienzo añade migas de pan en
+páginas con padre y cabecera y pie compartidos entre páginas (Ajustes → Cabecera y pie compartidos, con una página de
+origen).
+
 ## Paquete media y librerías nuevas (1.11)
 
 `cms/packs/media`: video de YouTube o Vimeo que carga al hacer clic (dominio sin cookies hasta entonces), mapa de

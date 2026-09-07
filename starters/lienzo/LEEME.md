@@ -33,7 +33,16 @@ elegidas de una lista de Google Fonts o escritas a mano) salen de Ajustes → Di
 constructor (fondo, color de texto, espacio, ancho, alineación) están implementados con las clases `sec-*` del núcleo.
 Para un diseño propio, sustituye la hoja o añade reglas al final.
 
-## Pendiente
+## Cabecera y pie compartidos
 
-Compartir la cabecera y el pie entre páginas sin repetirlos ('site_sections' en Ajustes, con la primera página
-importada como origen).
+Una página importada trae su cabecera y su pie como secciones. Para que todas las páginas los compartan, en
+Ajustes → Cabecera y pie compartidos se marca la casilla y se escribe la URL de la página de origen (por ejemplo
+`inicio`). Desde entonces el tema dibuja en todas las páginas la primera sección "Cabecera del sitio" y la última
+"Pie de página" de esa página, y las demás páginas dejan de mostrar los suyos propios. Se editan en el constructor de
+la página de origen.
+
+## Migas de pan y aviso de cookies
+
+Las páginas con padre muestran migas de pan (Inicio › Padre › Página) bajo la cabecera, con su JSON-LD. El aviso de
+cookies es del núcleo: Ajustes → Aviso de cookies (texto por idioma, botón, enlace a la política, abajo o en la
+esquina); el tema puede restilizarlo con `.cms-cookie` y las variables `--cms-cookie-*`.

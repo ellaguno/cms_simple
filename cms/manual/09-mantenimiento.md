@@ -10,6 +10,10 @@ En **Respaldos** creas un zip con esas carpetas en un clic, con una nota para re
 
 Hazlo antes de cualquier cambio grande y, en general, una vez al mes. Descarga los importantes: el hosting no es un archivo. Sin el panel, restaurar es descomprimir el zip en la raíz del sitio por FTP.
 
+## Aviso de cookies
+
+En **Ajustes → Aviso de cookies** se activa una barra que pide aceptar el uso de cookies, con texto por idioma, botón, enlace a la política de privacidad y posición (abajo o en la esquina). Aparece hasta que la persona la acepta y no vuelve a salir en ese navegador. Si el sitio solo usa cookies técnicas, como la sesión del panel, no es obligatoria; si añades analítica o video incrustado, conviene activarla y enlazar la política.
+
 ## Versiones de contenido
 
 Cada vez que guardas una página o un artículo, la versión anterior se conserva. En el editor, "Versiones anteriores" permite restaurar cualquiera de las últimas diez. No hace falta hacer copias manuales antes de editar.

@@ -44,6 +44,11 @@ return [
     ],
 
     'settings' => [
+        'Cabecera y pie compartidos' => [
+            'shared_on'     => ['type' => 'checkbox', 'label' => 'Compartir', 'text' => 'Usar en todas las páginas la cabecera y el pie de la página de origen'],
+            'shared_source' => ['type' => 'text', 'label' => 'URL (slug) de la página de origen', 'placeholder' => 'inicio',
+                                'help' => 'Se toman su primera sección "Cabecera del sitio" y su última "Pie de página"; se editan ahí, en el constructor. Las demás páginas dejan de mostrar sus propias cabecera y pie.'],
+        ],
         'Diseño' => [
             'color_primary' => ['type' => 'text', 'label' => 'Color principal (hex)', 'placeholder' => '#1f2937', 'half' => true],
             'color_accent'  => ['type' => 'text', 'label' => 'Color de acento (hex)', 'placeholder' => '#2563eb', 'half' => true],

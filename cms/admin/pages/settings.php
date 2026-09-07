@@ -5,6 +5,14 @@ declare(strict_types=1);
 $S = cms_json_read(CMS_DATA . '/settings.json', []) ?: cms_settings();
 $socials = ['linkedin' => 'LinkedIn', 'facebook' => 'Facebook', 'x' => 'X (Twitter)', 'instagram' => 'Instagram', 'behance' => 'Behance', 'youtube' => 'YouTube'];
 $siteSections = (array) cms_config('settings');
+// aviso de cookies (núcleo): el tema no tiene que hacer nada; se dibuja desde cms_head(). 'cookie_notice' => false en config lo quita.
+if (cms_config('cookie_notice', true) !== false) $siteSections += ['Aviso de cookies' => [
+    'cookie_on'     => ['type' => 'checkbox', 'label' => 'Aviso', 'text' => 'Mostrar la barra de aviso de cookies hasta que la persona la acepte'],
+    'cookie_text'   => ['type' => 'textarea', 'i18n' => true, 'label' => 'Texto', 'rows' => 2, 'placeholder' => 'Usamos cookies para mejorar tu experiencia. Al seguir navegando aceptas su uso.'],
+    'cookie_button' => ['type' => 'text', 'i18n' => true, 'label' => 'Texto del botón', 'placeholder' => 'Aceptar', 'half' => true],
+    'cookie_link'   => ['type' => 'text', 'label' => 'Enlace a la política de privacidad o cookies (opcional)', 'placeholder' => '/legal/privacidad', 'half' => true],
+    'cookie_pos'    => ['type' => 'select', 'label' => 'Posición', 'options' => ['bottom' => 'Abajo, a todo el ancho', 'corner' => 'Esquina inferior izquierda'], 'default' => 'bottom'],
+]];
 $langNames = ['es' => 'Español', 'en' => 'English', 'fr' => 'Français', 'pt' => 'Português', 'de' => 'Deutsch', 'it' => 'Italiano'];
 
 if (admin_is_post() && admin_post('action') === 'webp') {

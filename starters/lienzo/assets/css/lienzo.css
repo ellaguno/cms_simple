@@ -168,3 +168,7 @@ p { margin: 0 0 1em; }
 .lz-newsletter { text-align: center; }
 .lz-form-inline { display: flex; gap: .6rem; max-width: 520px; margin: 0 auto; flex-wrap: wrap; justify-content: center; } .lz-form-inline input[type=email] { flex: 1; min-width: 240px; } .lz-form-inline .lz-form-msg { width: 100%; }
 .lz-note { color: var(--lz-muted); font-size: .85rem; margin-top: .75rem; }
+/* migas de pan */
+.lz-crumbs { font-size: .85rem; color: var(--lz-muted); padding: .9rem 0; border-bottom: 1px solid var(--lz-line); }
+.lz-crumbs a { color: var(--lz-muted); text-decoration: none; } .lz-crumbs a:hover { color: var(--lz-accent); }
+.lz-crumbs-sep { margin: 0 .5rem; } .lz-crumbs [aria-current] { color: var(--lz-primary); font-weight: 500; }

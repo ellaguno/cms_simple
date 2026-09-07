@@ -102,6 +102,25 @@ function cms_head(array $page): void
     foreach ((array) ($page['jsonld'] ?? []) as $ld) {
         echo '<script type="application/ld+json">' . json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
     }
+    echo cms_cookie_bar((string) ($page['lang'] ?? cms_default_lang()));
+}
+
+/**
+ * Barra de aviso de cookies (Ajustes → Aviso de cookies). Se inyecta desde el <head> con un script, así funciona con
+ * cualquier tema; el tema puede restilizarla con .cms-cookie. La aceptación se guarda en localStorage (cms_cookies).
+ */
+function cms_cookie_bar(string $lang): string
+{
+    $S = cms_settings();
+    if (empty($S['cookie_on']) || cms_config('cookie_notice', true) === false || !empty($_GET['cmsbare'])) return '';
+    $text = trim((string) cms_localize($S['cookie_text'] ?? '', $lang)) ?: 'Usamos cookies para mejorar tu experiencia. Al seguir navegando aceptas su uso.';
+    $btn = trim((string) cms_localize($S['cookie_button'] ?? '', $lang)) ?: 'Aceptar';
+    $link = trim((string) ($S['cookie_link'] ?? ''));
+    $more = $link !== '' ? '<a href="' . cms_e(cms_menu_url($link, $lang)) . '">' . cms_e($lang === 'en' ? 'More info' : 'Más información') . '</a>' : '';
+    $corner = ($S['cookie_pos'] ?? 'bottom') === 'corner';
+    $html = '<div class="cms-cookie' . ($corner ? ' cms-cookie-corner' : '') . '" role="dialog" aria-live="polite"><p>' . cms_e($text) . ' ' . $more . '</p><button type="button" class="cms-cookie-ok">' . cms_e($btn) . '</button></div>';
+    $css = '.cms-cookie{position:fixed;left:0;right:0;bottom:0;z-index:99998;display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;padding:14px 20px;background:var(--cms-cookie-bg,#111827);color:var(--cms-cookie-text,#fff);font:14px/1.5 var(--cms-cookie-font,system-ui,sans-serif);box-shadow:0 -6px 24px rgba(0,0,0,.15)}.cms-cookie p{margin:0;max-width:760px}.cms-cookie a{color:inherit;text-decoration:underline}.cms-cookie-ok{background:var(--cms-cookie-btn,var(--cms-accent,#4f46e5));color:#fff;border:0;border-radius:999px;padding:9px 20px;font:inherit;font-weight:600;cursor:pointer}.cms-cookie-corner{left:16px;right:auto;bottom:16px;max-width:380px;border-radius:14px;flex-direction:column;align-items:flex-start;text-align:left}@media(max-width:640px){.cms-cookie-corner{right:16px;max-width:none}}';
+    return '<style>' . $css . '</style><script>(function(){try{if(localStorage.getItem("cms_cookies"))return}catch(e){}var h=' . json_encode($html, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ';document.addEventListener("DOMContentLoaded",function(){var d=document.createElement("div");d.innerHTML=h;var b=d.firstChild;document.body.appendChild(b);b.querySelector(".cms-cookie-ok").addEventListener("click",function(){try{localStorage.setItem("cms_cookies","1")}catch(e){}b.remove()})})})();</script>' . "\n";
 }
 
 function cms_sitemap(): void

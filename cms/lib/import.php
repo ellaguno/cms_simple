@@ -46,12 +46,12 @@ function cms_import_field(string $name, array $f): array
             $human = "opción ($label): $optHuman";
             break;
         case 'image':
-            $prop = ['type' => 'string', 'description' => $desc . '. No pongas una ruta: escribe una descripción breve de la imagen que va aquí (contenido, orientación), o vacío si no hay.'];
-            $human = "imagen: $label (escribe una descripción breve de la imagen del diseño; se pone una imagen provisional)";
+            $prop = ['type' => 'string', 'description' => $desc . '. "#N" si es una de las imágenes numeradas del diseño; si no está en la lista, una descripción breve (contenido, orientación); vacío si no hay imagen. Nunca una ruta.'];
+            $human = "imagen: $label (\"#N\" de la lista de imágenes del diseño, o una descripción breve si no está en la lista)";
             break;
         case 'images':
-            $prop = ['type' => 'array', 'items' => ['type' => 'string'], 'description' => $desc . '. Una entrada por imagen del diseño, con una descripción breve de cada una (no rutas).'];
-            $human = "lista de imágenes: $label (una descripción breve por imagen; se ponen imágenes provisionales)";
+            $prop = ['type' => 'array', 'items' => ['type' => 'string'], 'description' => $desc . '. Una entrada por imagen del diseño, en orden: "#N" si es una de las numeradas (opcional "#N | pie de foto"), o una descripción breve si no está en la lista. Nunca rutas.'];
+            $human = "lista de imágenes: $label (una entrada por imagen: \"#N\" de la lista, opcional \"#N | pie\", o descripción breve)";
             break;
         case 'html':
         case 'code':
@@ -146,8 +146,14 @@ function cms_import_catalog(): array
  * Prompt del importador. $screens: cuántas pantallas; $files: rutas si el modelo debe leerlas él mismo (CLI);
  * $text: capa de texto extraída (o '' si no hay).
  */
-function cms_import_prompt(int $screens, string $text, array $files = []): string
+function cms_import_prompt(int $screens, string $text, array $files = [], array $images = []): string
 {
+    $imgList = '';
+    if ($images) {
+        $imgList = "\n## Imágenes del diseño (ya extraídas del archivo, a su calidad original)\n\nCada una con su número, la pantalla donde aparece y su posición y tamaño en píxeles dentro de esa pantalla (x, y desde la esquina superior izquierda):\n";
+        foreach ($images as $im) $imgList .= '- #' . (int) $im['n'] . ': pantalla ' . (int) $im['screen'] . ', x=' . (int) $im['x'] . ' y=' . (int) $im['y'] . ', ' . (int) $im['w'] . '×' . (int) $im['h'] . ' px' . (!empty($im['ow']) ? ' (original ' . (int) $im['ow'] . '×' . (int) $im['oh'] . ')' : '') . "\n";
+        $imgList .= "En los campos de imagen usa \"#N\" para colocarlas donde el diseño las muestra. Fotos, mockups y logotipos en mapa de bits están en esta lista; lo vectorial (iconos, ilustraciones de trazo) no, descríbelo.\n";
+    }
     $site = (string) (cms_settings()['site_name'] ?? cms_config('name', ''));
     $how = $files
         ? "Lee TODAS las pantallas con la herramienta Read, en orden, antes de responder:\n" . implode("\n", array_map(fn($i, $p) => '  ' . ($i + 1) . ". $p", array_keys($files), $files))
@@ -176,9 +182,10 @@ Reglas:
 - Los bloques planes, faq, equipo y articulos toman su contenido de colecciones del sitio; úsalos si el diseño
   muestra precios, preguntas frecuentes, equipo o artículos, y describe en "note" lo que el diseño muestra (planes,
   precios, preguntas) para cargarlo después en la colección.
-- Imágenes: en cada campo de imagen escribe una descripción breve de la que va ahí (contenido, orientación, tamaño
-  aproximado), nunca una ruta; en los campos de lista de imágenes, una descripción por imagen del diseño, en orden.
-  El CMS pone imágenes provisionales con esa descripción como pie para que quien edita las sustituya.
+- Imágenes: si la imagen está en la lista numerada de imágenes del diseño, pon "#N" en el campo (en listas de
+  imágenes, una entrada por imagen, en orden, opcionalmente "#N | pie de foto"). Si el diseño muestra una imagen que
+  no está en la lista, escribe una descripción breve (contenido, orientación) y el CMS pondrá una provisional con esa
+  descripción como pie. Nunca inventes rutas.
 - style: solo cuando el diseño lo pide claramente. bg según el fondo de la banda; text "light" solo sobre fondos
   oscuros; align "center" si todo el bloque va centrado; pad si la banda es notablemente más alta o más baja de lo
   normal. Deja "" (vacío) para lo que no aplica. En el hero, "shader" solo si el fondo es animado o con ondas o
@@ -190,7 +197,7 @@ Reglas:
 
 Sitio de destino: $site.
 
-TXT . cms_import_catalog()['catalog'] . "\n## Capa de texto del archivo (en orden, puede traer restos de maquetación)\n\n"
+TXT . cms_import_catalog()['catalog'] . $imgList . "\n## Capa de texto del archivo (en orden, puede traer restos de maquetación)\n\n"
         . ($text !== '' ? $text : '(sin capa de texto: lee el texto de las imágenes)') . "\n";
 }
 
@@ -200,8 +207,17 @@ TXT . cms_import_catalog()['catalog'] . "\n## Capa de texto del archivo (en orde
  * Convierte la respuesta del modelo en un elemento del tipo $type (borrador). Devuelve [item, notas[]].
  * $extra: campos adicionales del elemento (brand, parent…). $source: nombre del archivo importado.
  */
-function cms_import_materialize(array $result, string $type, string $slug, string $lang, array $extra = [], string $source = '', string $placeholder = ''): array
+function cms_import_materialize(array $result, string $type, string $slug, string $lang, array $extra = [], string $source = '', string $placeholder = '', array $imagePaths = []): array
 {
+    $used = [];
+    // "#N", "N" o "imagen N" → ruta de la imagen extraída del diseño; devuelve null si no es una referencia
+    $ref = function ($v) use ($imagePaths, &$used) {
+        if (!is_string($v) || !preg_match('/^\s*(?:#|imagen\s*)?(\d{1,3})\s*$/iu', $v, $m)) return null;
+        $n = (int) $m[1];
+        if (!isset($imagePaths[$n])) return null;
+        $used[$n] = true;
+        return $imagePaths[$n];
+    };
     $meta = cms_import_catalog()['meta'];
     $langs = cms_langs();
     $dl = cms_default_lang();
@@ -218,15 +234,24 @@ function cms_import_materialize(array $result, string $type, string $slug, strin
             if ($v === '' || $v === null || $v === []) continue;
             if (in_array($k, $m['lines'], true) && is_string($v)) $v = array_values(array_filter(array_map('trim', explode("\n", $v)), 'strlen'));
             if (in_array($k, $m['image'], true)) {
-                // el modelo describe la imagen; se pone la provisional y la descripción va a las notas
-                if (!preg_match('#^(uploads/|site/|https?://)#', (string) $v)) { $imgNotes[] = 'imagen «' . $k . '»: ' . $v; $v = $placeholder; }
+                // "#N" → imagen del diseño; una descripción → imagen provisional y la descripción va a las notas
+                $r = $ref($v);
+                if ($r !== null) $v = $r;
+                elseif (!preg_match('#^(uploads/|site/|https?://)#', (string) $v)) { $imgNotes[] = 'imagen «' . $k . '» provisional: ' . $v; $v = $placeholder; }
                 if ($v === '') continue;
             } elseif (in_array($k, $m['images'], true)) {
                 $lines = is_array($v) ? $v : array_filter(array_map('trim', explode("\n", (string) $v)), 'strlen');
-                $v = [];
-                foreach ($lines as $i => $d) { $d = trim((string) $d); if ($d === '') continue; $v[] = preg_match('#^(uploads/|site/|https?://)#', $d) ? $d : ($placeholder !== '' ? $placeholder . ' | ' . $d : $d); }
+                $v = []; $prov = 0;
+                foreach ($lines as $d) {
+                    $d = trim((string) $d); if ($d === '') continue;
+                    [$first, $cap] = array_pad(array_map('trim', explode('|', $d, 2)), 2, '');
+                    $r = $ref($first);
+                    if ($r !== null) $v[] = $r . ($cap !== '' ? ' | ' . $cap : '');
+                    elseif (preg_match('#^(uploads/|site/|https?://)#', $first)) $v[] = $d;
+                    else { $v[] = ($placeholder !== '' ? $placeholder . ' | ' : '') . $d; $prov++; }
+                }
                 if (!$v) continue;
-                if ($placeholder !== '') $imgNotes[] = count($v) . ' imágenes provisionales en «' . $k . '»; el pie de cada una dice cuál va';
+                if ($prov && $placeholder !== '') $imgNotes[] = $prov . ' imágenes provisionales en «' . $k . '»; el pie de cada una dice cuál va';
             }
             $data[$k] = in_array($k, $m['i18n'], true) ? $i18n($v) : $v;
         }
@@ -251,10 +276,37 @@ function cms_import_materialize(array $result, string $type, string $slug, strin
     $item += ['created' => $today, 'updated' => $today];
     $item['import'] = [
         'source' => $source, 'date' => $today, 'lang' => $lang,
+        'images' => array_values($imagePaths), 'images_used' => count($used),
         'palette' => $result['palette'] ?? null, 'fonts' => $result['fonts'] ?? [],
         'notes' => $notes, 'unmapped' => (array) ($result['unmapped'] ?? []),
     ];
     return [$item, $notes];
+}
+
+/** Guarda una imagen extraída del diseño en $dest (jpg o png): reduce al ancho máximo del sitio y genera su WebP. */
+function cms_import_store_image(string $src, string $dest): bool
+{
+    $ext = strtolower(pathinfo($dest, PATHINFO_EXTENSION));
+    $info = @getimagesize($src);
+    if (!$info) return false;
+    [$w, $h] = $info;
+    $maxw = (int) cms_config('max_image_width', 1800);
+    $done = false;
+    if ($maxw > 0 && $w > $maxw && function_exists('imagecreatefromstring')) {
+        $im = @imagecreatefromstring((string) file_get_contents($src));
+        if ($im) {
+            $nw = $maxw; $nh = (int) round($h * $maxw / $w);
+            $dst = imagecreatetruecolor($nw, $nh);
+            if ($ext === 'png') { imagealphablending($dst, false); imagesavealpha($dst, true); }
+            imagecopyresampled($dst, $im, 0, 0, 0, 0, $nw, $nh, $w, $h);
+            $done = $ext === 'png' ? imagepng($dst, $dest, 7) : imagejpeg($dst, $dest, 86);
+            imagedestroy($dst); imagedestroy($im);
+        }
+    }
+    if (!$done && !@rename($src, $dest) && !copy($src, $dest)) return false;
+    @chmod($dest, 0644);
+    if (function_exists('cms_webp_make')) cms_webp_make($dest);
+    return true;
 }
 
 /* ------------------------------------------------------------------ proveedores */
@@ -346,12 +398,12 @@ function cms_import_http(string $url, ?array $body, array $headers = [], int $ti
  * Ejecuta el análisis. $screens: rutas PNG en orden. Devuelve [resultado (array según el schema), stats].
  * Lanza RuntimeException con un mensaje legible si algo falla.
  */
-function cms_import_run(string $provider, string $model, array $screens, string $text): array
+function cms_import_run(string $provider, string $model, array $screens, string $text, array $images = []): array
 {
     if (!$screens) throw new RuntimeException('No hay pantallas que analizar.');
     $t0 = microtime(true);
-    if ($provider === 'claude-cli') [$result, $stats] = cms_import_run_cli($model, $screens, $text);
-    else [$result, $stats] = cms_import_run_openrouter($model, $screens, $text);
+    if ($provider === 'claude-cli') [$result, $stats] = cms_import_run_cli($model, $screens, $text, $images);
+    else [$result, $stats] = cms_import_run_openrouter($model, $screens, $text, $images);
     $stats['seconds'] = round(microtime(true) - $t0, 1);
     $stats['provider'] = $provider; $stats['model'] = $model; $stats['screens'] = count($screens);
     if (!is_array($result) || !isset($result['sections'])) throw new RuntimeException('El modelo no devolvió la estructura esperada.');
@@ -370,7 +422,7 @@ function cms_import_parse_json(string $s): ?array
     return null;
 }
 
-function cms_import_run_openrouter(string $model, array $screens, string $text): array
+function cms_import_run_openrouter(string $model, array $screens, string $text, array $images = []): array
 {
     $key = (string) (cms_settings()['openrouter_key'] ?? '');
     if ($key === '') throw new RuntimeException('Falta la clave de OpenRouter en los ajustes del importador.');
@@ -383,7 +435,7 @@ function cms_import_run_openrouter(string $model, array $screens, string $text):
     $schema = cms_import_catalog()['schema'];
     $base = [
         'model' => $model,
-        'messages' => [['role' => 'system', 'content' => cms_import_prompt(count($screens), $text)], ['role' => 'user', 'content' => $content]],
+        'messages' => [['role' => 'system', 'content' => cms_import_prompt(count($screens), $text, [], $images)], ['role' => 'user', 'content' => $content]],
         'max_tokens' => 16000, 'temperature' => 0.2,
         'usage' => ['include' => true],
     ];
@@ -417,13 +469,13 @@ function cms_import_run_openrouter(string $model, array $screens, string $text):
     throw $last ?? new RuntimeException('No se pudo completar la petición.');
 }
 
-function cms_import_run_cli(string $model, array $screens, string $text): array
+function cms_import_run_cli(string $model, array $screens, string $text, array $images = []): array
 {
     $cli = cms_import_claude_cli();
     if ($cli === '') throw new RuntimeException('La CLI de Claude Code no está disponible en este servidor.');
     $model = preg_replace('/[^a-z0-9._-]/i', '', $model) ?: 'sonnet';
     $work = dirname((string) $screens[0]);
-    $prompt = cms_import_prompt(count($screens), $text, array_map('strval', $screens));
+    $prompt = cms_import_prompt(count($screens), $text, array_map('strval', $screens), $images);
     $schema = json_encode(cms_import_catalog()['schema'], JSON_UNESCAPED_UNICODE);
     $cmd = [$cli, '-p', '--model', $model, '--output-format', 'json', '--allowedTools', 'Read', '--add-dir', $work, '--json-schema', $schema];
     $proc = proc_open($cmd, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $work, array_merge(getenv(), ['HOME' => getenv('HOME') ?: dirname($cli, 3)]));

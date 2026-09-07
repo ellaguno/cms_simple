@@ -51,10 +51,20 @@ if (admin_is_post()) {
             $tmp = CMS_DATA . '/import-tmp/' . $token;
             if (!is_dir($tmp) && !@mkdir($tmp, 0755, true)) throw new RuntimeException('No se puede escribir en data/import-tmp/.');
             $f = $_FILES['screen'] ?? null;
-            if (!$f || !is_uploaded_file($f['tmp_name'] ?? '')) throw new RuntimeException('No llegó la pantalla' . (!empty($f['error']) ? ' (error ' . $f['error'] . ': ¿supera upload_max_filesize?)' : '') . '.');
+            if (!$f || !is_uploaded_file($f['tmp_name'] ?? '')) throw new RuntimeException('No llegó el archivo' . (!empty($f['error']) ? ' (error ' . $f['error'] . ': ¿supera upload_max_filesize?)' : '') . '.');
             $info = @getimagesize($f['tmp_name']);
+            $n = max(1, min(99, (int) admin_post('index')));
+            if (admin_post('kind') === 'imagen') {
+                // imagen incrustada del diseño, con su posición (meta JSON)
+                if (!$info || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)) throw new RuntimeException('Las imágenes deben ser PNG o JPG.');
+                $ext = $info[2] === IMAGETYPE_PNG ? 'png' : 'jpg';
+                $meta = json_decode(admin_post('meta'), true);
+                $base = $tmp . '/imagen-' . str_pad((string) $n, 2, '0', STR_PAD_LEFT);
+                if (!move_uploaded_file($f['tmp_name'], $base . '.' . $ext)) throw new RuntimeException('No se pudo guardar la imagen.');
+                cms_json_write($base . '.json', ['n' => $n] + array_map('intval', array_intersect_key(is_array($meta) ? $meta : [], array_flip(['page', 'screen', 'x', 'y', 'w', 'h', 'ow', 'oh']))));
+                importar_json(['ok' => true, 'token' => $token, 'n' => $n]);
+            }
             if (!$info || $info[2] !== IMAGETYPE_PNG) throw new RuntimeException('Las pantallas deben ser PNG.');
-            $n = max(1, min(60, (int) admin_post('index')));
             if (!move_uploaded_file($f['tmp_name'], $tmp . '/pantalla-' . str_pad((string) $n, 2, '0', STR_PAD_LEFT) . '.png')) throw new RuntimeException('No se pudo guardar la pantalla.');
             importar_json(['ok' => true, 'token' => $token, 'n' => count(glob($tmp . '/pantalla-*.png') ?: [])]);
         } catch (Throwable $e) {
@@ -65,7 +75,7 @@ if (admin_is_post()) {
     if ($action === 'analizar') {
         @set_time_limit(900);
         ignore_user_abort(true);
-        $dir = ''; $saved = false;
+        $dir = ''; $tmp = ''; $saved = false;
         // limpiar subidas a medias de otros días
         foreach (glob(CMS_DATA . '/import-tmp/*', GLOB_ONLYDIR) ?: [] as $d) if (filemtime($d) < time() - 86400) { foreach (glob($d . '/*') ?: [] as $f) @unlink($f); @rmdir($d); }
         try {
@@ -74,8 +84,9 @@ if (admin_is_post()) {
             $def = $targets[$type];
             $title = admin_post('title');
             $slug = cms_slugify(admin_post('slug') !== '' ? admin_post('slug') : $title);
-            if ($slug === '') throw new RuntimeException('Escribe un título o una URL para la página.');
-            if (cms_item($type, $slug, false)) throw new RuntimeException("Ya existe una página con la URL «$slug». Elige otra.");
+            $autoSlug = admin_post('auto_slug') === '1';   // varias páginas web de un PDF: el título y la URL salen del diseño
+            if ($slug === '' && !$autoSlug) throw new RuntimeException('Escribe un título o una URL para la página.');
+            if ($slug !== '' && cms_item($type, $slug, false) && !$autoSlug) throw new RuntimeException("Ya existe una página con la URL «$slug». Elige otra.");
             if (!empty($def['tree']) && admin_post('parent') === '' && in_array($slug, cms_reserved_segments(), true)) throw new RuntimeException("La URL «$slug» está reservada en la raíz.");
             $prov = admin_post('provider') !== '' ? admin_post('provider') : $provider;
             $mod = admin_post('model') !== '' ? admin_post('model') : $model;
@@ -88,6 +99,25 @@ if (admin_is_post()) {
             $uploaded = strlen($token) === 16 && is_dir($tmp) ? (glob($tmp . '/pantalla-*.png') ?: []) : [];
             if (!$uploaded) throw new RuntimeException('No llegaron las pantallas del diseño. Vuelve a intentarlo.');
             sort($uploaded);
+            $text = admin_post('text');
+            if (mb_strlen($text) > 60000) $text = mb_substr($text, 0, 60000);
+            // imágenes del diseño: lista para el prompt (posición) y rutas definitivas al guardar
+            $images = [];
+            foreach (glob($tmp . '/imagen-*.json') ?: [] as $mf) {
+                $m = cms_json_read($mf, []);
+                $file = glob(substr($mf, 0, -5) . '.{jpg,png}', GLOB_BRACE)[0] ?? null;
+                if ($file && !empty($m['n'])) $images[(int) $m['n']] = $m + ['file' => $file];
+            }
+            ksort($images);
+
+            // el análisis va primero: si falla, no se crea nada
+            [$result, $stats] = cms_import_run($prov, $mod, $uploaded, $text, array_values($images));
+
+            if ($slug === '' || ($autoSlug && cms_item($type, $slug, false))) {
+                $base = cms_slugify((string) ($result['title'] ?? '')) ?: 'importada';
+                $slug = $base; $k = 2;
+                while (cms_item($type, $slug, false) || in_array($slug, cms_reserved_segments(), true)) $slug = $base . '-' . $k++;
+            }
             $dir = CMS_UPLOADS . '/import/' . $slug;
             if (!is_dir($dir) && !@mkdir($dir, 0755, true)) throw new RuntimeException('No se puede escribir en uploads/import/.');
             $screens = [];
@@ -96,12 +126,13 @@ if (admin_is_post()) {
                 if (!@rename($src, $dest) && !copy($src, $dest)) throw new RuntimeException('No se pudo guardar una pantalla.');
                 $screens[] = $dest;
             }
+            $imagePaths = [];
+            foreach ($images as $n => $im) {
+                $dest = $dir . '/imagen-' . str_pad((string) $n, 2, '0', STR_PAD_LEFT) . '.' . pathinfo($im['file'], PATHINFO_EXTENSION);
+                if (cms_import_store_image($im['file'], $dest)) $imagePaths[$n] = 'uploads/import/' . $slug . '/' . basename($dest);
+                @unlink($im['file']); @unlink(substr($im['file'], 0, strrpos($im['file'], '.')) . '.json');
+            }
             @rmdir($tmp);
-            if (count($screens) > 40) throw new RuntimeException('Demasiadas pantallas (' . count($screens) . '). El diseño es demasiado largo para una sola página.');
-            $text = admin_post('text');
-            if (mb_strlen($text) > 60000) $text = mb_substr($text, 0, 60000);
-
-            [$result, $stats] = cms_import_run($prov, $mod, $screens, $text);
 
             $extra = [];
             if (!empty($def['tree'])) $extra['parent'] = cms_slugify(admin_post('parent'));
@@ -111,7 +142,7 @@ if (admin_is_post()) {
             // imagen provisional junto a las pantallas de referencia: los bloques con imágenes se ven y se sustituyen desde Medios
             $ph = '';
             if (is_file(CMS_DIR . '/assets/img/pendiente.png') && copy(CMS_DIR . '/assets/img/pendiente.png', $dir . '/pendiente.png')) $ph = 'uploads/import/' . $slug . '/pendiente.png';
-            [$item, $notes] = cms_import_materialize($result, $type, $slug, $lang, $extra, admin_post('source'), $ph);
+            [$item, $notes] = cms_import_materialize($result, $type, $slug, $lang, $extra, admin_post('source'), $ph, $imagePaths);
             if ($title !== '') $item[$def['title_field'] ?? 'title'] = [$lang => $title] + (array) $item[$def['title_field'] ?? 'title'];
             $item['import']['screens'] = array_map(fn($p) => 'uploads/import/' . $slug . '/' . basename($p), $screens);
             $item['import']['stats'] = $stats;
@@ -122,6 +153,8 @@ if (admin_is_post()) {
             $labels = cms_import_catalog()['meta'];
             importar_json([
                 'ok' => true,
+                'title' => cms_f($item, $def['title_field'] ?? 'title', $lang),
+                'images_total' => count($imagePaths), 'images_used' => (int) ($item['import']['images_used'] ?? 0),
                 'edit' => admin_url('edit', ['type' => $type, 'slug' => $slug]),
                 'preview' => cms_item_url($type, $item, $lang),
                 'sections' => array_map(fn($s) => $labels[$s['type']]['label'] ?? $s['type'], $item['sections']),
@@ -131,7 +164,8 @@ if (admin_is_post()) {
             ]);
         } catch (Throwable $e) {
             // sin borrador no hay que conservar las pantallas subidas
-            if (!empty($dir) && is_dir($dir) && empty($saved)) { foreach (glob($dir . '/*.png') ?: [] as $f) @unlink($f); @rmdir($dir); }
+            if (!empty($dir) && is_dir($dir) && empty($saved)) { foreach (glob($dir . '/*.*') ?: [] as $f) @unlink($f); @rmdir($dir); }
+            if (!empty($tmp) && is_dir($tmp)) { foreach (glob($tmp . '/*') ?: [] as $f) @unlink($f); @rmdir($tmp); }
             importar_json(['ok' => false, 'error' => $e->getMessage()], 200);
         }
     }
@@ -145,7 +179,7 @@ $cli = cms_import_claude_cli() !== '';
 $typeKeys = array_keys($targets);
 admin_header('Importar diseño', 'importar');
 ?>
-<p class="ad-help" style="margin:-8px 0 18px;max-width:760px">Sube el diseño de una página (PDF de una o varias páginas, PNG o JPG) y el modelo lo convierte en un borrador del constructor: mismas bandas, mismos textos, bloques del catálogo del sitio. Las imágenes del diseño quedan descritas en notas para que las subas desde Medios. Un diseño hecho en Figma, Illustrator, Word o Inkscape se exporta a PDF con un clic.</p>
+<p class="ad-help" style="margin:-8px 0 18px;max-width:760px">Sube el diseño de una página (PDF de una o varias páginas, PNG o JPG) y el modelo lo convierte en un borrador del constructor: mismas bandas, mismos textos, bloques del catálogo del sitio. Las fotos y mapas de bits incrustados en el PDF se extraen a su calidad original y se colocan en su sitio; lo que no se pueda extraer queda como imagen provisional con su descripción. Un diseño hecho en Figma, Illustrator, Word o Inkscape se exporta a PDF con un clic.</p>
 
 <?php if (!$targets): ?>
 <div class="ad-flash err">Ningún tipo de contenido de este sitio tiene un campo de secciones. El importador crea páginas del constructor.</div>
@@ -200,6 +234,12 @@ admin_header('Importar diseño', 'importar');
 <?php else: ?>
       <input type="hidden" name="type" value="<?= cms_e($typeKeys[0]) ?>" data-import-type>
 <?php endif; ?>
+      <div class="ad-field" hidden><label>El PDF contiene</label>
+        <select name="split" data-import-split>
+          <option value="una">Una sola página web (apilar todas las páginas del PDF)</option>
+          <option value="cada">Una página web por cada página del PDF</option>
+          <option value="marcar">Varias páginas web: marcar dónde empieza cada una</option>
+        </select></div>
       <div class="ad-field"><label>Idioma del diseño</label><select name="lang"><?php foreach (cms_langs() as $l): ?><option value="<?= $l ?>"<?= $l === cms_default_lang() ? ' selected' : '' ?>><?= strtoupper($l) ?></option><?php endforeach; ?></select></div>
     </div>
 <?php foreach ($targets as $tk => $d): ?>
@@ -216,6 +256,7 @@ admin_header('Importar diseño', 'importar');
       <span class="ad-help" data-import-cost>Con <?= cms_e($provider === 'claude-cli' ? 'Claude Code (' . ($model ?: 'sonnet') . ')' : $defaultModel) ?>. Una página de 6 a 8 pantallas cuesta unos centavos y tarda de 1 a 3 minutos.</span>
     </div>
   </form>
+  <div data-import-splitbox hidden style="margin-top:18px"></div>
   <div data-import-progress hidden style="margin-top:18px">
     <div class="ad-flash ok" data-import-status>Preparando…</div>
     <div data-import-thumbs style="display:flex;gap:6px;flex-wrap:wrap"></div>

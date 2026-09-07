@@ -15,6 +15,23 @@ En la propia pantalla, en **Motor de análisis**, se elige:
 - **Proveedor.** OpenRouter da acceso a cualquier modelo con visión de cualquier fabricante con una sola clave. Se crea en openrouter.ai, se carga saldo y se pega aquí; queda en `data/settings.json`, fuera del repositorio. En un equipo de desarrollo con Claude Code instalado aparece además la opción de usarlo directamente, sin clave.
 - **Modelo.** La lista muestra solo modelos con visión, con su precio por millón de tokens de entrada y salida. Recomendación: Claude Sonnet como predeterminado y Opus para diseños complejos. Una página de 6 a 8 pantallas cuesta unos centavos con Sonnet y menos de un dólar con Opus. Los modelos sin "salida estructurada" también funcionan, pero con más riesgo de que la respuesta no sea válida.
 
+## Las imágenes del diseño
+
+Las fotos, maquetas y logotipos en mapa de bits que van incrustados en el PDF se extraen a su resolución original, con su posición, y el modelo las coloca en el bloque que corresponde. Si venían en buena calidad se quedan tal cual: el CMS las reduce al ancho máximo del sitio y genera su versión WebP, como con cualquier imagen subida. Todas quedan en la carpeta `uploads/import/` de esa página y aparecen en Medios, también las que el modelo no colocó.
+
+Lo que no es un mapa de bits, como iconos, ilustraciones vectoriales o composiciones dibujadas con trazos, no se puede extraer como archivo. Cuando pdf.js no conserva la imagen original, el panel recorta la zona de la página rasterizada, con calidad de pantalla. Y cuando el diseño muestra una imagen que no está en ninguna de las dos listas, el modelo la describe y el CMS pone una imagen provisional gris con esa descripción como pie, para sustituirla desde Medios.
+
+Un aviso sobre el origen: Illustrator, InDesign y Photoshop incrustan las fotos a la calidad con que se colocaron. Figma exporta a la resolución de pantalla salvo que se pida más al exportar, y Word las comprime. Una captura PNG o JPG no trae imágenes separadas: todo se resuelve con provisionales.
+
+## Un PDF con varias páginas web
+
+Por defecto, todas las páginas del PDF se apilan como una sola página web larga, que es lo habitual cuando quien diseña entrega una landing partida por el tamaño de hoja. Si el PDF trae varias páginas web distintas, como portada, nosotros y servicios, en el campo **El PDF contiene** eliges:
+
+- **Una página web por cada página del PDF.**
+- **Varias páginas web: marcar dónde empieza cada una.** Tras rasterizar, el panel muestra las páginas del PDF en miniatura y marcas en cuáles empieza una página web nueva; las demás se apilan con la anterior.
+
+Cada página web se analiza por separado, con su costo, y se crea como borrador con el título y la URL que propone el propio diseño, salvo la primera, que usa los que escribiste. Todas cuelgan de la página padre que hayas elegido.
+
 ## Preparar el archivo
 
 - **Figma, Illustrator, Photoshop, Inkscape, LibreOffice Draw, Word.** Exporta a PDF. Todos lo hacen en un clic, y el PDF conserva el texto, que es lo que garantiza que el copy salga exacto con sus acentos.
@@ -39,7 +56,7 @@ Todo esto queda guardado en la página: en el constructor, en la columna derecha
 
 ## Qué revisar en el borrador
 
-- **Imágenes.** Vienen vacías. Súbelas desde Medios con los originales de quien diseñó; la nota de cada sección dice cuál va.
+- **Imágenes.** Las extraídas del PDF ya están en su sitio; revisa que cada una sea la correcta. Las provisionales grises llevan en el pie la descripción de la que va: súbela desde Medios.
 - **Enlaces de los botones.** Si el diseño no muestra la URL, quedan como `#`.
 - **Planes, preguntas frecuentes, equipo, artículos.** Esos bloques toman su contenido de las colecciones del sitio. El importador coloca el bloque y anota lo que el diseño mostraba, por ejemplo los precios; cárgalo en la colección correspondiente.
 - **Traducción.** El borrador se crea en el idioma del diseño. Los demás idiomas se completan en el mismo editor.

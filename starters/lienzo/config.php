@@ -1,0 +1,57 @@
+<?php
+/**
+ * Tema "lienzo": un sitio en blanco para el constructor de páginas.
+ * No trae cabecera ni pie propios: son bloques (cabecera, pie) que se ponen en cada página, de modo que un diseño
+ * importado desde un PDF genera el sitio completo. Cuando el sitio crece, la cabecera y el pie se comparten con
+ * 'site_sections' (ver LEEME.md). Copia esta carpeta como site/ de un sitio nuevo.
+ */
+return [
+    'name' => 'Lienzo',
+    'langs' => ['es'],
+    'default_lang' => 'es',
+    'timezone' => 'America/Mexico_City',
+    'admin_logo' => '',
+    'site_url' => '',
+
+    'types' => [
+        'paginas' => [
+            'label' => 'Páginas', 'label_singular' => 'Página', 'group' => 'Páginas',
+            'routes' => ['es' => ''],           // en la raíz: /ruta-de-la-pagina
+            'tree' => true,                     // páginas anidadas (padre/hijo)
+            'template_single' => 'pagina',
+            'schema' => 'WebPage',
+            'sort' => ['field' => 'order', 'dir' => 'asc'],
+            'list' => ['status', 'updated'],
+            'title_field' => 'title', 'excerpt_field' => 'summary', 'image_field' => 'image',
+            'fields' => [
+                'title'    => ['type' => 'text', 'i18n' => true, 'label' => 'Título', 'required' => true],
+                'sections' => ['type' => 'sections', 'label' => 'Secciones de la página',
+                               'help' => 'La página se arma con secciones: cabecera, hero, texto, tarjetas, galería, preguntas, llamado a la acción, pie…'],
+                'summary'  => ['type' => 'textarea', 'i18n' => true, 'label' => 'Descripción para buscadores (opcional)', 'rows' => 2, 'sidebar' => true],
+                'image'    => ['type' => 'image', 'label' => 'Imagen para redes (opcional)', 'sidebar' => true],
+                'order'    => ['type' => 'number', 'label' => 'Orden', 'sidebar' => true],
+            ],
+        ],
+    ],
+    'home_item' => ['paginas', 'inicio'],   // la página con URL "inicio" es la portada (/)
+    'pages' => [],
+
+    // Paquetes de bloques y efectos compartidos (cms/packs): galería 3D, carrusel, lightbox, marquesina, cifras…
+    'packs' => ['visual', 'motion'],
+    'sections' => [
+        'palette' => ['white' => 'Blanco', 'light' => 'Gris claro', 'dark' => 'Oscuro', 'primary' => 'Color principal', 'accent' => 'Color de acento'],
+        'classes' => ['container' => 'lz-container', 'header' => 'lz-head', 'title' => '', 'subtitle' => '', 'btn' => 'lz-btn'],
+    ],
+
+    'settings' => [
+        'Diseño' => [
+            'color_primary' => ['type' => 'text', 'label' => 'Color principal (hex)', 'placeholder' => '#1f2937'],
+            'color_accent'  => ['type' => 'text', 'label' => 'Color de acento (hex)', 'placeholder' => '#2563eb'],
+            'font'          => ['type' => 'text', 'label' => 'Tipografía de Google Fonts', 'placeholder' => 'Inter'],
+        ],
+    ],
+    'strings_groups' => ['Navegación' => ['not_found_title', 'not_found_text', 'go_home', 'f_ok', 'f_err']],
+    'form' => ['required' => ['nombre', 'correo'], 'email_field' => 'correo', 'name_field' => 'nombre', 'honeypot' => 'empresa_web2'],
+    'max_image_width' => 1800,
+    'code_editor' => true,
+];

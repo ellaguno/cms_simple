@@ -165,6 +165,14 @@ bloque equivalente, paleta) quedan en el panel "Diseño importado" del construct
 `site/config.php` lo desactiva. Desde la línea de comandos: `tools/import-design.py` con `tools/blocks-schema.php`.
 Manual: capítulo 12.
 
+## Tema en blanco "lienzo" (starters/lienzo)
+
+Un `site/` mínimo para arrancar un sitio desde cero con el constructor: sin cabecera ni pie propios, que son bloques
+(cabecera, pie) colocados en cada página, más hero, texto, columnas, tarjetas, lista, logotipos, testimonios, planes,
+preguntas, llamado a la acción, contacto y los paquetes visual y motion. Con él, Importar diseño convierte el PDF
+completo, menú y pie incluidos: si el catálogo tiene los bloques `cabecera` y `pie`, el importador los usa en lugar
+de ignorar esas bandas. Colores y tipografía se ajustan en Ajustes → Diseño. Ver `starters/lienzo/LEEME.md`.
+
 ## Vistas previas de bloques y Respaldos (1.8)
 
 Cada bloque y efecto puede llevar una imagen o GIF (`site/assets/previews/<clave>.*`, `cms/packs/<paquete>/assets/

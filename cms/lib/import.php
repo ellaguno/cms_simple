@@ -155,6 +155,12 @@ function cms_import_prompt(int $screens, string $text, array $files = [], array 
         $imgList .= "En los campos de imagen usa \"#N\" para colocarlas donde el diseño las muestra. Fotos, mockups y logotipos en mapa de bits están en esta lista; lo vectorial (iconos, ilustraciones de trazo) no, descríbelo.\n";
     }
     $site = (string) (cms_settings()['site_name'] ?? cms_config('name', ''));
+    // si el catálogo trae bloques de cabecera y pie (tema en blanco), el diseño completo se convierte en secciones
+    $blocks = cms_blocks();
+    $hf = isset($blocks['cabecera'], $blocks['pie']);
+    $navRule = $hf
+        ? "- La cabecera de navegación (logotipo + menú + botón) es la primera sección, con el bloque \"cabecera\", y el pie de\n  página es la última, con el bloque \"pie\": logotipo o nombre, texto, columnas de enlaces, datos de contacto, redes y\n  línea de derechos. No los omitas."
+        : "- Ignora la cabecera de navegación (logo + menú) y el pie de página: el tema los pone solo. Si el pie tiene un llamado\n  a la acción o un formulario, eso sí es una sección (cta).";
     $how = $files
         ? "Lee TODAS las pantallas con la herramienta Read, en orden, antes de responder:\n" . implode("\n", array_map(fn($i, $p) => '  ' . ($i + 1) . ". $p", array_keys($files), $files))
         : "Las pantallas van adjuntas como imágenes, en orden: pantalla 1, pantalla 2… hasta la $screens.";
@@ -170,8 +176,7 @@ Reglas:
 - Una sección por banda visual del diseño, de arriba abajo. No omitas bandas; no inventes contenido que no esté.
   Un título de sección con su texto de apoyo forma parte de la misma sección que las tarjetas, lista o imagen que
   encabeza: no lo separes en un bloque "texto" aparte.
-- Ignora la cabecera de navegación (logo + menú) y el pie de página: el tema los pone solo. Si el pie tiene un llamado
-  a la acción o un formulario, eso sí es una sección (cta).
+$navRule
 - Elige el bloque que mejor represente cada banda. Si dudas entre dos, prefiere el más específico (tarjetas, planes,
   faq, testimonio, cifras…) sobre "texto". Usa "texto" solo para prosa libre y "html" nunca.
 - Copia los textos EXACTOS de la capa de texto (acentos, mayúsculas, signos). Si un título tiene una parte resaltada

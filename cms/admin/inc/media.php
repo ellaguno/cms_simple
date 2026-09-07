@@ -42,23 +42,33 @@ function media_human(int $b): string
 function media_type_of(string $file): string
 {
     $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-    if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) return 'image';
+    if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'avif'], true)) return 'image';
     if ($ext === 'pdf') return 'pdf';
     if (in_array($ext, ['mp4', 'webm', 'mov'], true)) return 'video';
     return 'other';
 }
 
-/** Lista todos los archivos de uploads/ (más recientes primero). */
+/**
+ * Lista los archivos de uploads/ (source "subidos") y las imágenes del tema en site/assets/img/ (source "tema"),
+ * más recientes primero. Las del tema se referencian como site/assets/img/… (cms_img las entiende) y en Ajustes
+ * también por su nombre a secas (logo.svg).
+ */
 function media_list(): array
 {
     $out = [];
-    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(CMS_UPLOADS, FilesystemIterator::SKIP_DOTS));
-    foreach ($it as $f) {
-        /** @var SplFileInfo $f */
-        if (!$f->isFile() || $f->getFilename()[0] === '.' || $f->getFilename() === 'index.html') continue;
-        if (strtolower($f->getExtension()) === 'webp' && is_file(preg_replace('/\.webp$/i', '.jpg', $f->getPathname())) || strtolower($f->getExtension()) === 'webp' && is_file(preg_replace('/\.webp$/i', '.png', $f->getPathname()))) continue;
-        $rel = 'uploads/' . str_replace('\\', '/', substr($f->getPathname(), strlen(CMS_UPLOADS) + 1));
-        $out[] = ['path' => $rel, 'url' => CMS_BASE . '/' . $rel, 'name' => $f->getFilename(), 'size' => $f->getSize(), 'mtime' => $f->getMTime(), 'type' => media_type_of($rel)];
+    foreach ([[CMS_UPLOADS, 'uploads', 'subidos'], [CMS_SITE . '/assets/img', 'site/assets/img', 'tema']] as [$dir, $prefix, $source]) {
+        if (!is_dir($dir)) continue;
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+        foreach ($it as $f) {
+            /** @var SplFileInfo $f */
+            if (!$f->isFile() || $f->getFilename()[0] === '.' || $f->getFilename() === 'index.html') continue;
+            $ext = strtolower($f->getExtension());
+            if ($ext === 'webp' && (is_file(preg_replace('/\.webp$/i', '.jpg', $f->getPathname())) || is_file(preg_replace('/\.webp$/i', '.png', $f->getPathname())))) continue;
+            if ($source === 'tema' && media_type_of($f->getFilename()) !== 'image') continue;
+            if ($source === 'tema' && strpos($f->getPathname(), DIRECTORY_SEPARATOR . 'previews' . DIRECTORY_SEPARATOR) !== false) continue; // vistas previas de bloques
+            $rel = $prefix . '/' . str_replace('\\', '/', substr($f->getPathname(), strlen($dir) + 1));
+            $out[] = ['path' => $rel, 'url' => CMS_BASE . '/' . $rel, 'name' => $f->getFilename(), 'size' => $f->getSize(), 'mtime' => $f->getMTime(), 'type' => media_type_of($rel), 'source' => $source];
+        }
     }
     usort($out, fn($a, $b) => $b['mtime'] <=> $a['mtime']);
     return $out;
@@ -77,17 +87,36 @@ function media_content_blob(): string
 
 function media_in_use(string $path): bool
 {
-    return strpos(media_content_blob(), $path) !== false;
+    $blob = media_content_blob();
+    if (strpos($blob, $path) !== false) return true;
+    if (strpos($path, 'site/assets/img/') === 0) {
+        // imágenes del tema: en Ajustes y en bloques se citan también como "logo.svg" o "assets/img/logo.svg"
+        $short = substr($path, strlen('site/assets/img/'));
+        return strpos($blob, '"' . $short . '"') !== false || strpos($blob, 'assets/img/' . $short) !== false || strpos($blob, '| ' . $short) !== false;
+    }
+    return false;
 }
 
-/** Ruta absoluta segura dentro de uploads/ o null. */
+/** Ruta absoluta segura dentro de uploads/ o de site/assets/img/, o null. */
 function media_safe_path(string $rel): ?string
 {
-    if (strpos($rel, 'uploads/') !== 0 || strpos($rel, '..') !== false) return null;
+    if (strpos($rel, '..') !== false) return null;
+    if (strpos($rel, 'uploads/') === 0) $root = realpath(CMS_UPLOADS);
+    elseif (strpos($rel, 'site/assets/img/') === 0) $root = realpath(CMS_SITE . '/assets/img');
+    else return null;
     $abs = realpath(CMS_ROOT . '/' . $rel);
-    $root = realpath(CMS_UPLOADS);
     if (!$abs || !$root || strpos($abs, $root . DIRECTORY_SEPARATOR) !== 0 || !is_file($abs)) return null;
     return $abs;
+}
+
+/** Elimina un archivo (y su WebP) por ruta relativa; devuelve true si se borró. */
+function media_delete(string $rel): bool
+{
+    $abs = media_safe_path($rel);
+    if (!$abs || !@unlink($abs)) return false;
+    $w = preg_replace('/\.[^.]+$/', '.webp', $abs); if ($w !== $abs && is_file($w)) @unlink($w);
+    if (strpos($rel, 'uploads/') === 0) { @rmdir(dirname($abs)); @rmdir(dirname($abs, 2)); } // limpia carpetas vacías AAAA/MM
+    return true;
 }
 
 /**

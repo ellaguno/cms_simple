@@ -2,7 +2,9 @@
  * corta pantallas y las manda al servidor, que llama al modelo y crea el borrador. */
 (function () {
   "use strict";
-  var C = window.CMS_IMPORT, A = window.CMS_ADMIN || {};
+  var C = window.CMS_IMPORT;
+  /* el token de sesión lo define el pie del panel (admin_footer), que se dibuja después de este script: leerlo al enviar */
+  function csrf() { var A = window.CMS_ADMIN || {}, inp = document.querySelector('input[name="_csrf"]'); return A.csrf || (inp ? inp.value : ""); }
   var form = document.querySelector("[data-import-form]");
   if (!form || !C) return;
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -26,7 +28,7 @@
   var refresh = $("[data-import-refresh]");
   if (refresh) refresh.addEventListener("click", function () {
     refresh.disabled = true; refresh.textContent = "Actualizando…";
-    var fd = new FormData(); fd.append("_csrf", A.csrf); fd.append("action", "modelos");
+    var fd = new FormData(); fd.append("_csrf", csrf()); fd.append("action", "modelos");
     fetch(C.endpoint, { method: "POST", body: fd, credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (j) {
       var sel = $("[data-import-models]"); sel.innerHTML = "";
       Object.keys(j.models || {}).forEach(function (id) {
@@ -192,7 +194,7 @@
         chain = chain.then(function () {
           say("Subiendo pantalla " + (i + 1) + " de " + r.blobs.length + "…");
           var fd = new FormData();
-          fd.append("_csrf", A.csrf); fd.append("action", "subir"); fd.append("token", token); fd.append("index", i + 1);
+          fd.append("_csrf", csrf()); fd.append("action", "subir"); fd.append("token", token); fd.append("index", i + 1);
           fd.append("screen", b, "pantalla-" + (i + 1) + ".png");
           return postJson(fd).then(function (j) { if (!j.ok) throw new Error(j.error || "No se pudo subir una pantalla"); token = j.token; });
         });
@@ -200,7 +202,7 @@
       return chain.then(function () {
         say("Analizando " + r.blobs.length + " pantallas con el modelo. Suele tardar de 1 a 3 minutos; no cierres esta página.");
         var fd = new FormData(form);
-        fd.append("_csrf", A.csrf); fd.append("action", "analizar"); fd.append("source", picked.name); fd.append("text", r.text); fd.append("token", token);
+        fd.append("_csrf", csrf()); fd.append("action", "analizar"); fd.append("source", picked.name); fd.append("text", r.text); fd.append("token", token);
         fd.delete("file");
         var timer = setInterval(function () { status.textContent = status.textContent.endsWith("…") ? status.textContent.slice(0, -1) : status.textContent + "…"; }, 1500);
         return postJson(fd).finally(function () { clearInterval(timer); });

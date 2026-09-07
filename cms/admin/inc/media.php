@@ -80,8 +80,9 @@ function media_content_blob(): string
     static $blob = null;
     if ($blob !== null) return $blob;
     $blob = '';
+    // ajustes, menú y textos (data/*.json) y todo el contenido (data/content/<tipo>/*.json)
     foreach (glob(CMS_DATA . '/*.json') ?: [] as $f) $blob .= file_get_contents($f);
-    foreach (glob(CMS_DATA . '/*/*.json') ?: [] as $f) $blob .= file_get_contents($f);
+    foreach (glob(CMS_DATA . '/content/*/*.json') ?: [] as $f) $blob .= file_get_contents($f);
     return $blob;
 }
 

@@ -46,12 +46,12 @@ function cms_import_field(string $name, array $f): array
             $human = "opción ($label): $optHuman";
             break;
         case 'image':
-            $prop = ['type' => 'string', 'description' => $desc . '. "#N" si es una de las imágenes numeradas del diseño; si no está en la lista, una descripción breve (contenido, orientación); vacío si no hay imagen. Nunca una ruta.'];
-            $human = "imagen: $label (\"#N\" de la lista de imágenes del diseño, o una descripción breve si no está en la lista)";
+            $prop = ['type' => 'string', 'description' => $desc . '. "#N" si es una de las imágenes numeradas del diseño; "@S:x,y,ancho,alto" para recortar un elemento vectorial (logotipo, ilustración) de la pantalla S en esas coordenadas en píxeles; si no, una descripción breve; vacío si no hay imagen. Nunca una ruta.'];
+            $human = "imagen: $label (\"#N\" de la lista de imágenes, \"@S:x,y,ancho,alto\" para recortar de la pantalla S, o una descripción breve)";
             break;
         case 'images':
-            $prop = ['type' => 'array', 'items' => ['type' => 'string'], 'description' => $desc . '. Una entrada por imagen del diseño, en orden: "#N" si es una de las numeradas (opcional "#N | pie de foto"), o una descripción breve si no está en la lista. Nunca rutas.'];
-            $human = "lista de imágenes: $label (una entrada por imagen: \"#N\" de la lista, opcional \"#N | pie\", o descripción breve)";
+            $prop = ['type' => 'array', 'items' => ['type' => 'string'], 'description' => $desc . '. Una entrada por imagen del diseño, en orden: "#N" si es una de las numeradas, "@S:x,y,ancho,alto" para recortar de la pantalla S, o una descripción breve; opcional " | pie de foto" al final. Nunca rutas.'];
+            $human = "lista de imágenes: $label (una entrada por imagen: \"#N\", \"@S:x,y,ancho,alto\" o descripción breve; opcional \" | pie\")";
             break;
         case 'html':
         case 'code':
@@ -188,9 +188,11 @@ $navRule
   muestra precios, preguntas frecuentes, equipo o artículos, y describe en "note" lo que el diseño muestra (planes,
   precios, preguntas) para cargarlo después en la colección.
 - Imágenes: si la imagen está en la lista numerada de imágenes del diseño, pon "#N" en el campo (en listas de
-  imágenes, una entrada por imagen, en orden, opcionalmente "#N | pie de foto"). Si el diseño muestra una imagen que
-  no está en la lista, escribe una descripción breve (contenido, orientación) y el CMS pondrá una provisional con esa
-  descripción como pie. Nunca inventes rutas.
+  imágenes, una entrada por imagen, en orden, opcionalmente "#N | pie de foto"). Si es un elemento vectorial que no
+  está en la lista (logotipo, icono grande, ilustración de trazo, sello), pide un recorte de la pantalla donde se ve:
+  "@S:x,y,ancho,alto", con S el número de pantalla y las coordenadas en píxeles de esa pantalla (1400 de ancho),
+  con un poco de margen alrededor. Solo si no hay forma de recortarla, escribe una descripción breve y el CMS pondrá
+  una provisional con esa descripción como pie. Nunca inventes rutas.
 - style: solo cuando el diseño lo pide claramente. bg según el fondo de la banda; text "light" solo sobre fondos
   oscuros; align "center" si todo el bloque va centrado; pad si la banda es notablemente más alta o más baja de lo
   normal. Deja "" (vacío) para lo que no aplica. En el hero, "shader" solo si el fondo es animado o con ondas o
@@ -212,16 +214,25 @@ TXT . cms_import_catalog()['catalog'] . $imgList . "\n## Capa de texto del archi
  * Convierte la respuesta del modelo en un elemento del tipo $type (borrador). Devuelve [item, notas[]].
  * $extra: campos adicionales del elemento (brand, parent…). $source: nombre del archivo importado.
  */
-function cms_import_materialize(array $result, string $type, string $slug, string $lang, array $extra = [], string $source = '', string $placeholder = '', array $imagePaths = []): array
+function cms_import_materialize(array $result, string $type, string $slug, string $lang, array $extra = [], string $source = '', string $placeholder = '', array $imagePaths = [], array $screens = []): array
 {
-    $used = [];
-    // "#N", "N" o "imagen N" → ruta de la imagen extraída del diseño; devuelve null si no es una referencia
-    $ref = function ($v) use ($imagePaths, &$used) {
-        if (!is_string($v) || !preg_match('/^\s*(?:#|imagen\s*)?(\d{1,3})\s*$/iu', $v, $m)) return null;
-        $n = (int) $m[1];
-        if (!isset($imagePaths[$n])) return null;
-        $used[$n] = true;
-        return $imagePaths[$n];
+    $used = []; $crops = 0;
+    // "#N", "N" o "imagen N" → ruta de la imagen extraída; "@S:x,y,w,h" → recorte de la pantalla S; null si no es referencia
+    $ref = function ($v) use ($imagePaths, $screens, $slug, &$used, &$crops) {
+        if (!is_string($v)) return null;
+        if (preg_match('/^\s*(?:#|imagen\s*)?(\d{1,3})\s*$/iu', $v, $m)) {
+            $n = (int) $m[1];
+            if (!isset($imagePaths[$n])) return null;
+            $used[$n] = true;
+            return $imagePaths[$n];
+        }
+        if (preg_match('/^\s*@\s*(?:pantalla\s*)?(\d{1,2})\s*[:;]\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*$/iu', $v, $m)) {
+            $path = cms_import_crop($screens, (int) $m[1], (int) $m[2], (int) $m[3], (int) $m[4], (int) $m[5], $slug, ++$crops);
+            if ($path === null) { $crops--; return null; }
+            $used['c' . $crops] = true;
+            return $path;
+        }
+        return null;
     };
     $meta = cms_import_catalog()['meta'];
     $langs = cms_langs();
@@ -281,11 +292,37 @@ function cms_import_materialize(array $result, string $type, string $slug, strin
     $item += ['created' => $today, 'updated' => $today];
     $item['import'] = [
         'source' => $source, 'date' => $today, 'lang' => $lang,
-        'images' => array_values($imagePaths), 'images_used' => count($used),
+        'images' => array_values($imagePaths), 'images_used' => count(array_filter(array_keys($used), 'is_int')), 'crops' => $crops,
         'palette' => $result['palette'] ?? null, 'fonts' => $result['fonts'] ?? [],
         'notes' => $notes, 'unmapped' => (array) ($result['unmapped'] ?? []),
     ];
     return [$item, $notes];
+}
+
+/**
+ * Recorta una zona de una pantalla de referencia (para logotipos y otros elementos vectoriales que no se extraen como
+ * archivo). $screens: rutas de las pantallas en orden; coordenadas en píxeles de esa pantalla. Devuelve la ruta relativa
+ * (uploads/import/<slug>/recorte-N.png) o null.
+ */
+function cms_import_crop(array $screens, int $s, int $x, int $y, int $w, int $h, string $slug, int $n): ?string
+{
+    $file = $screens[$s - 1] ?? null;
+    if (!$file || !is_file($file) || $w < 8 || $h < 8 || !function_exists('imagecreatefrompng')) return null;
+    $im = @imagecreatefrompng($file);
+    if (!$im) return null;
+    $W = imagesx($im); $H = imagesy($im);
+    $pad = (int) round(max($w, $h) * 0.04);   // un poco de aire alrededor
+    $x0 = max(0, $x - $pad); $y0 = max(0, $y - $pad); $x1 = min($W, $x + $w + $pad); $y1 = min($H, $y + $h + $pad);
+    if ($x1 - $x0 < 8 || $y1 - $y0 < 8) { imagedestroy($im); return null; }
+    $out = imagecrop($im, ['x' => $x0, 'y' => $y0, 'width' => $x1 - $x0, 'height' => $y1 - $y0]);
+    imagedestroy($im);
+    if (!$out) return null;
+    $dest = dirname($file) . '/recorte-' . str_pad((string) $n, 2, '0', STR_PAD_LEFT) . '.png';
+    $ok = imagepng($out, $dest, 6);
+    imagedestroy($out);
+    if (!$ok) return null;
+    if (function_exists('cms_webp_make')) cms_webp_make($dest);
+    return 'uploads/import/' . $slug . '/' . basename($dest);
 }
 
 /** Guarda una imagen extraída del diseño en $dest (jpg o png): reduce al ancho máximo del sitio y genera su WebP. */

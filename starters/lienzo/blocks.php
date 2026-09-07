@@ -10,6 +10,7 @@ return [
         'label' => 'Cabecera del sitio', 'group' => 'Estructura', 'desc' => 'Logotipo, menú de navegación y botón. Va al principio de la página.',
         'wrap_class' => 'lz-header', 'styles' => ['bg', 'text', 'class', 'hide_mobile'], 'animate' => 'none',
         'fields' => [
+            'topbar'      => ['type' => 'lines', 'i18n' => true, 'label' => 'Barra superior (opcional), un dato por línea: Texto | URL | derecha (para alinear a la derecha)', 'rows' => 3],
             'logo'        => ['type' => 'image', 'label' => 'Logotipo (imagen)'],
             'name'        => ['type' => 'text', 'i18n' => true, 'label' => 'Nombre o texto del logotipo (si no hay imagen)'],
             'menu'        => ['type' => 'lines', 'i18n' => true, 'label' => 'Menú, una entrada por línea: Texto | URL o #ancla', 'rows' => 5, 'default' => ['Inicio | /']],
@@ -84,11 +85,11 @@ return [
     ],
     'tarjetas' => [
         'label' => 'Tarjetas', 'group' => 'Contenido', 'desc' => 'Rejilla de tarjetas con icono, título y texto: servicios, características, beneficios, pasos.',
-        'wrap_class' => 'lz-sec', 'effects' => ['visual/spotlight'],
+        'wrap_class' => 'lz-sec', 'effects' => ['visual/spotlight'], 'libs' => ['tabler'],
         'fields' => [
             'title'    => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
             'subtitle' => ['type' => 'text', 'i18n' => true, 'label' => 'Subtítulo'],
-            'items'    => ['type' => 'lines', 'i18n' => true, 'label' => 'Tarjetas, una por línea: Título | Texto | emoji o número (opcional)', 'rows' => 6, 'required' => true],
+            'items'    => ['type' => 'lines', 'i18n' => true, 'label' => 'Tarjetas, una por línea: Título | Texto | icono (emoji, o nombre de Tabler Icons como ti-rocket, ti-shield-check, ti-users; catálogo en tabler.io/icons)', 'rows' => 6, 'required' => true],
             'columns'  => ['type' => 'select', 'label' => 'Columnas', 'options' => ['2' => '2', '3' => '3', '4' => '4'], 'default' => '3'],
             'variant'  => ['type' => 'select', 'label' => 'Estilo', 'options' => ['card' => 'Tarjeta con fondo', 'plain' => 'Sin fondo', 'steps' => 'Pasos numerados'], 'default' => 'card'],
         ],
@@ -117,6 +118,25 @@ return [
         'fields' => [
             'title' => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
             'items' => ['type' => 'lines', 'i18n' => true, 'label' => 'Testimonios, uno por línea: Cita | Nombre | Cargo o empresa', 'rows' => 4, 'required' => true],
+        ],
+    ],
+    'equipo' => [
+        'label' => 'Equipo', 'group' => 'Contenido', 'desc' => 'Personas con foto, nombre, cargo y texto breve.',
+        'wrap_class' => 'lz-sec',
+        'fields' => [
+            'title' => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
+            'text'  => ['type' => 'textarea', 'i18n' => true, 'label' => 'Texto introductorio', 'rows' => 2],
+            'items' => ['type' => 'lines', 'i18n' => true, 'label' => 'Personas, una por línea: Nombre | Cargo | ruta de la foto | texto breve', 'rows' => 6, 'required' => true],
+        ],
+    ],
+    'boletin' => [
+        'label' => 'Boletín', 'group' => 'Contenido', 'desc' => 'Título, texto y un campo de correo para suscribirse.',
+        'wrap_class' => 'lz-sec',
+        'fields' => [
+            'title'       => ['type' => 'text', 'i18n' => true, 'label' => 'Título', 'required' => true],
+            'text'        => ['type' => 'textarea', 'i18n' => true, 'label' => 'Texto', 'rows' => 2],
+            'button_text' => ['type' => 'text', 'i18n' => true, 'label' => 'Texto del botón', 'default' => 'Suscribirme'],
+            'note'        => ['type' => 'text', 'i18n' => true, 'label' => 'Nota pequeña (privacidad)'],
         ],
     ],
     'planes' => [

@@ -173,6 +173,14 @@ preguntas, llamado a la acción, contacto y los paquetes visual y motion. Con é
 completo, menú y pie incluidos: si el catálogo tiene los bloques `cabecera` y `pie`, el importador los usa en lugar
 de ignorar esas bandas. Colores y tipografía se ajustan en Ajustes → Diseño. Ver `starters/lienzo/LEEME.md`.
 
+## Paquete media y librerías nuevas (1.11)
+
+`cms/packs/media`: video de YouTube o Vimeo que carga al hacer clic (dominio sin cookies hasta entonces), mapa de
+OpenStreetMap con Leaflet (sin clave) y animaciones Lottie. Librerías registradas en el núcleo para cualquier tema:
+`tabler` (Tabler Icons, MIT; `<i class="ti ti-home">`), `leaflet` (BSD-2) y `lottie` (MIT), cargadas solo en las
+páginas cuyos bloques las declaran. El importador admite además Fable como modelo y recorta de la pantalla los
+logotipos e ilustraciones vectoriales que el PDF no trae como mapa de bits (`@pantalla:x,y,ancho,alto`).
+
 ## Vistas previas de bloques y Respaldos (1.8)
 
 Cada bloque y efecto puede llevar una imagen o GIF (`site/assets/previews/<clave>.*`, `cms/packs/<paquete>/assets/

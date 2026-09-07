@@ -16,17 +16,20 @@ completa, incluidos el menú y el pie.
 
 ## Bloques
 
-Estructura: cabecera, pie. Cabeceras: hero (imagen a un lado, debajo o de fondo; fondo animado opcional), encabezado.
-Contenido: texto, columnas (texto e imagen), imagen, tarjetas (tarjeta, sin fondo o pasos numerados), lista de puntos,
-logotipos, testimonios, planes de precios, preguntas frecuentes, llamado a la acción, contacto (con formulario al
-endpoint del núcleo), separador, HTML. Además, los paquetes visual (galería 3D, carrusel, lightbox, efectos) y motion
-(marquesina, cifras, titular, parallax).
+Estructura: cabecera (con barra superior opcional de teléfono, correo y horario), pie. Cabeceras: hero (imagen a un
+lado, debajo o de fondo; fondo animado opcional), encabezado. Contenido: texto, columnas (texto e imagen), imagen,
+tarjetas (tarjeta, sin fondo o pasos numerados; icono emoji o de Tabler Icons, `ti-rocket`), lista de puntos,
+logotipos, testimonios, equipo, planes de precios, preguntas frecuentes, llamado a la acción, contacto (con formulario
+al endpoint del núcleo), boletín, separador, HTML. Además, los paquetes visual (galería 3D, carrusel, lightbox,
+efectos), motion (marquesina, cifras, titular, parallax) y media (video de YouTube o Vimeo al clic, mapa de
+OpenStreetMap, animación Lottie).
 
 Los campos de líneas separan celdas con ` | `; un enlace dentro de una celda se escribe `Texto > URL`.
 
 ## Estilo
 
-`assets/css/lienzo.css` usa variables `--lz-*`; los colores y la fuente salen de Ajustes. Los estilos de sección del
+`assets/css/lienzo.css` usa variables `--lz-*`; los colores y las tipografías (una para títulos y otra para texto,
+elegidas de una lista de Google Fonts o escritas a mano) salen de Ajustes → Diseño. Los estilos de sección del
 constructor (fondo, color de texto, espacio, ancho, alineación) están implementados con las clases `sec-*` del núcleo.
 Para un diseño propio, sustituye la hoja o añade reglas al final.
 

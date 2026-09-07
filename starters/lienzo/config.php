@@ -37,7 +37,7 @@ return [
     'pages' => [],
 
     // Paquetes de bloques y efectos compartidos (cms/packs): galería 3D, carrusel, lightbox, marquesina, cifras…
-    'packs' => ['visual', 'motion'],
+    'packs' => ['visual', 'motion', 'media'],
     'sections' => [
         'palette' => ['white' => 'Blanco', 'light' => 'Gris claro', 'dark' => 'Oscuro', 'primary' => 'Color principal', 'accent' => 'Color de acento'],
         'classes' => ['container' => 'lz-container', 'header' => 'lz-head', 'title' => '', 'subtitle' => '', 'btn' => 'lz-btn'],
@@ -45,13 +45,16 @@ return [
 
     'settings' => [
         'Diseño' => [
-            'color_primary' => ['type' => 'text', 'label' => 'Color principal (hex)', 'placeholder' => '#1f2937'],
-            'color_accent'  => ['type' => 'text', 'label' => 'Color de acento (hex)', 'placeholder' => '#2563eb'],
-            'font'          => ['type' => 'text', 'label' => 'Tipografía de Google Fonts', 'placeholder' => 'Inter'],
+            'color_primary' => ['type' => 'text', 'label' => 'Color principal (hex)', 'placeholder' => '#1f2937', 'half' => true],
+            'color_accent'  => ['type' => 'text', 'label' => 'Color de acento (hex)', 'placeholder' => '#2563eb', 'half' => true],
+            'font_heading'  => ['type' => 'select', 'label' => 'Tipografía de títulos (Google Fonts)', 'options' => ['' => 'La misma que el texto', 'Inter' => 'Inter', 'Poppins' => 'Poppins', 'Montserrat' => 'Montserrat', 'Manrope' => 'Manrope', 'DM Sans' => 'DM Sans', 'Plus Jakarta Sans' => 'Plus Jakarta Sans', 'Space Grotesk' => 'Space Grotesk', 'Sora' => 'Sora', 'Outfit' => 'Outfit', 'Raleway' => 'Raleway', 'Playfair Display' => 'Playfair Display', 'Merriweather' => 'Merriweather', 'Lora' => 'Lora', 'Fraunces' => 'Fraunces'], 'half' => true],
+            'font'          => ['type' => 'select', 'label' => 'Tipografía del texto (Google Fonts)', 'options' => ['' => 'Inter', 'Inter' => 'Inter', 'Poppins' => 'Poppins', 'Montserrat' => 'Montserrat', 'Manrope' => 'Manrope', 'DM Sans' => 'DM Sans', 'Plus Jakarta Sans' => 'Plus Jakarta Sans', 'Nunito' => 'Nunito', 'Open Sans' => 'Open Sans', 'Lato' => 'Lato', 'Roboto' => 'Roboto', 'Source Sans 3' => 'Source Sans 3', 'Work Sans' => 'Work Sans', 'Lora' => 'Lora', 'Merriweather' => 'Merriweather'], 'half' => true],
+            'font_custom'   => ['type' => 'text', 'label' => 'Otra tipografía de Google Fonts (nombre exacto; tiene prioridad para el texto)', 'placeholder' => 'Figtree'],
+            'font_heading_custom' => ['type' => 'text', 'label' => 'Otra tipografía para títulos', 'placeholder' => 'Cormorant Garamond'],
         ],
     ],
     'strings_groups' => ['Navegación' => ['not_found_title', 'not_found_text', 'go_home', 'f_ok', 'f_err']],
-    'form' => ['required' => ['nombre', 'correo'], 'email_field' => 'correo', 'name_field' => 'nombre', 'honeypot' => 'empresa_web2'],
+    'form' => ['required' => ['correo'], 'email_field' => 'correo', 'name_field' => 'nombre', 'honeypot' => 'empresa_web2'],
     'max_image_width' => 1800,
     'code_editor' => true,
 ];

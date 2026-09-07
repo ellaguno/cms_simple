@@ -35,6 +35,12 @@ function cms_libs(): array
                             'css' => ['https://cdn.jsdelivr.net/npm/glightbox@3.3.0/dist/css/glightbox.min.css'], 'js' => ['https://cdn.jsdelivr.net/npm/glightbox@3.3.0/dist/js/glightbox.min.js']],
         'aos'           => ['version' => '2.3.1', 'license' => 'MIT', 'global' => 'AOS',
                             'css' => ['https://unpkg.com/aos@2.3.1/dist/aos.css'], 'js' => ['https://unpkg.com/aos@2.3.1/dist/aos.js']],
+        'tabler'        => ['version' => '3', 'license' => 'MIT', 'global' => '',
+                            'css' => ['https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css']],   // iconos: <i class="ti ti-home">
+        'lottie'        => ['version' => '5.12.2', 'license' => 'MIT', 'global' => 'lottie',
+                            'js' => ['https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js']],
+        'leaflet'       => ['version' => '1.9.4', 'license' => 'BSD-2', 'global' => 'L',
+                            'css' => ['https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'], 'js' => ['https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js']],
     ];
     $extra = (array) cms_config('libs', []);
     foreach ($extra as $k => $d) $libs[$k] = (array) $d + ($libs[$k] ?? []);

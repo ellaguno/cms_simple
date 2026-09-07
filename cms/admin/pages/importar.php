@@ -146,7 +146,7 @@ if (admin_is_post()) {
             // imagen provisional junto a las pantallas de referencia: los bloques con imágenes se ven y se sustituyen desde Medios
             $ph = '';
             if (is_file(CMS_DIR . '/assets/img/pendiente.png') && copy(CMS_DIR . '/assets/img/pendiente.png', $dir . '/pendiente.png')) $ph = 'uploads/import/' . $slug . '/pendiente.png';
-            [$item, $notes] = cms_import_materialize($result, $type, $slug, $lang, $extra, admin_post('source'), $ph, $imagePaths);
+            [$item, $notes] = cms_import_materialize($result, $type, $slug, $lang, $extra, admin_post('source'), $ph, $imagePaths, $screens);
             if ($title !== '') $item[$def['title_field'] ?? 'title'] = [$lang => $title] + (array) $item[$def['title_field'] ?? 'title'];
             $item['import']['screens'] = array_map(fn($p) => 'uploads/import/' . $slug . '/' . basename($p), $screens);
             $item['import']['stats'] = $stats;
@@ -213,7 +213,7 @@ admin_header('Importar diseño', 'importar');
     </div>
     <div data-import-if="claude-cli" class="ad-field"><label>Modelo de Claude Code</label>
       <select name="model" data-cli-model disabled>
-<?php foreach (['sonnet' => 'Sonnet (recomendado)', 'opus' => 'Opus (diseños complejos)', 'haiku' => 'Haiku (rápido, menos fiel)'] as $k => $l): ?>        <option value="<?= $k ?>"<?= $k === $model ? ' selected' : '' ?>><?= $l ?></option>
+<?php foreach (['sonnet' => 'Sonnet (recomendado)', 'opus' => 'Opus (diseños complejos)', 'fable' => 'Fable (el más capaz; más caro)', 'haiku' => 'Haiku (rápido, menos fiel)'] as $k => $l): ?>        <option value="<?= $k ?>"<?= $k === $model ? ' selected' : '' ?>><?= $l ?></option>
 <?php endforeach; ?>
       </select></div>
     <button class="ad-btn" type="submit">Guardar ajustes</button>

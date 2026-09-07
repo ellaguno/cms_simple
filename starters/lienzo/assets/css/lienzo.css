@@ -6,7 +6,7 @@ html { scroll-behavior: smooth; }
 body { margin: 0; font-family: var(--lz-font); color: var(--lz-text); background: var(--lz-bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
 img { max-width: 100%; height: auto; display: block; }
 a { color: var(--lz-accent); }
-h1, h2, h3, h4 { color: var(--lz-primary); line-height: 1.15; margin: 0 0 .6em; letter-spacing: -.015em; }
+h1, h2, h3, h4 { font-family: var(--lz-font-heading, var(--lz-font)); color: var(--lz-primary); line-height: 1.15; margin: 0 0 .6em; letter-spacing: -.015em; }
 h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; }
 h2 { font-size: clamp(1.7rem, 3.2vw, 2.5rem); font-weight: 700; }
 h3 { font-size: 1.2rem; font-weight: 600; }
@@ -152,3 +152,19 @@ p { margin: 0 0 1em; }
 .lz-empty { max-width: 700px; margin: 6rem auto; padding: 0 var(--lz-gutter); text-align: center; }
 /* vistas previas del panel (?cmsbare=1) */
 .cms-bare .lz-header { position: static; }
+
+/* barra superior de la cabecera */
+.lz-topbar { background: var(--lz-light); border-bottom: 1px solid var(--lz-line); font-size: .85rem; color: var(--lz-muted); }
+.lz-topbar-in { display: flex; justify-content: space-between; align-items: center; min-height: 36px; gap: 1rem; flex-wrap: wrap; }
+.lz-topbar-left, .lz-topbar-right { display: flex; gap: 1.25rem; flex-wrap: wrap; } .lz-topbar a { color: inherit; text-decoration: none; } .lz-topbar a:hover { color: var(--lz-accent); }
+.sec.sec-bg-dark .lz-topbar { background: rgba(0,0,0,.25); color: rgba(255,255,255,.8); border-color: rgba(255,255,255,.1); }
+@media (max-width: 640px) { .lz-topbar-right { display: none; } }
+/* iconos Tabler en tarjetas */
+.lz-card-icon .ti { font-size: 1.7rem; color: var(--lz-accent); }
+/* equipo y boletín */
+.lz-team { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); text-align: center; }
+.lz-person img, .lz-person-initial { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; background: var(--lz-light); font-size: 2.5rem; font-weight: 700; color: var(--lz-accent); }
+.lz-person h3 { margin-bottom: .2rem; } .lz-person-role { color: var(--lz-accent); font-weight: 500; margin-bottom: .5rem; } .lz-person p { color: var(--lz-muted); font-size: .95rem; }
+.lz-newsletter { text-align: center; }
+.lz-form-inline { display: flex; gap: .6rem; max-width: 520px; margin: 0 auto; flex-wrap: wrap; justify-content: center; } .lz-form-inline input[type=email] { flex: 1; min-width: 240px; } .lz-form-inline .lz-form-msg { width: 100%; }
+.lz-note { color: var(--lz-muted); font-size: .85rem; margin-top: .75rem; }

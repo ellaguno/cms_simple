@@ -1,0 +1,2 @@
+<?php /** Portada mientras no existe la página con URL "inicio". */ declare(strict_types=1); ?>
+<main class="lz-empty"><h1>Sitio en blanco</h1><p>Todavía no hay portada. Crea en el panel una página con la URL <strong>inicio</strong>, o importa un diseño desde un PDF en Admin → Importar diseño y dale esa URL.</p><p><a class="lz-btn lz-btn-primary" href="<?= CMS_BASE ?>/admin/">Entrar al panel</a></p></main>

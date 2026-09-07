@@ -29,7 +29,11 @@ if (admin_is_post()) {
 
     if ($action === 'ajustes') {
         $S['import_provider'] = isset(cms_import_providers()[admin_post('provider')]) ? admin_post('provider') : 'openrouter';
-        $S['import_model'] = trim(admin_post('model_custom')) !== '' ? trim(admin_post('model_custom')) : admin_post('model');
+        $custom = trim(admin_post('model_custom'));
+        $u = admin_user();
+        if ($custom !== '' && (!str_contains($custom, '/') || $custom === (string) ($u['user'] ?? ''))) $custom = '';   // autorrelleno del navegador o id sin proveedor
+        $S['import_model'] = $custom !== '' ? $custom : admin_post('model');
+        if ($S['import_provider'] === 'claude-cli' && !in_array($S['import_model'], ['sonnet', 'opus', 'haiku', 'fable'], true)) $S['import_model'] = 'sonnet';
         $k = admin_post('openrouter_key');
         if ($k !== '' && $k !== '••••') $S['openrouter_key'] = $k;
         if (admin_post('forget_key') === '1') unset($S['openrouter_key']);
@@ -196,7 +200,7 @@ admin_header('Importar diseño', 'importar');
       </select></div>
     <div data-import-if="openrouter">
       <div class="ad-field"><label>Clave de OpenRouter <small class="ad-help">(openrouter.ai → Keys; se guarda en data/settings.json)</small></label>
-        <input type="password" name="openrouter_key" value="<?= $hasKey ? '••••' : '' ?>" placeholder="sk-or-v1-…" autocomplete="off">
+        <input type="password" name="openrouter_key" value="<?= $hasKey ? '••••' : '' ?>" placeholder="sk-or-v1-…" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" data-lpignore="true">
         <?php if ($hasKey): ?><label class="ad-check" style="margin-top:6px"><input type="checkbox" name="forget_key" value="1"> Borrar la clave guardada</label><?php endif; ?></div>
       <div class="ad-field"><label>Modelo <small class="ad-help">(con visión; precio por millón de tokens de entrada / salida en USD)</small></label>
         <select name="model" data-import-models>
@@ -205,7 +209,7 @@ admin_header('Importar diseño', 'importar');
 <?php endforeach; ?>
         </select>
         <div class="ad-btnrow" style="margin-top:8px"><button type="button" class="ad-btn ad-btn-light ad-btn-sm" data-import-refresh>Actualizar lista</button><span class="ad-help" data-import-models-info><?= $models ? count($models) . ' modelos con visión' : '' ?></span></div></div>
-      <div class="ad-field"><label>Otro modelo <small class="ad-help">(id exacto de OpenRouter; tiene prioridad sobre la lista)</small></label><input type="text" name="model_custom" value="<?= !isset($models[$model]) ? cms_e($model) : '' ?>" placeholder="proveedor/modelo"></div>
+      <div class="ad-field"><label>Otro modelo <small class="ad-help">(id exacto de OpenRouter; tiene prioridad sobre la lista)</small></label><input type="text" name="model_custom" value="<?= !isset($models[$model]) ? cms_e($model) : '' ?>" placeholder="proveedor/modelo" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" data-lpignore="true"></div>
     </div>
     <div data-import-if="claude-cli" class="ad-field"><label>Modelo de Claude Code</label>
       <select name="model" data-cli-model disabled>

@@ -46,8 +46,12 @@ function cms_import_field(string $name, array $f): array
             $human = "opción ($label): $optHuman";
             break;
         case 'image':
-            $prop = ['type' => 'string', 'description' => $desc . '. Deja vacío; si el diseño trae una imagen aquí, descríbela en "note" de la sección.'];
-            $human = "imagen: $label (dejar vacío y describir en note)";
+            $prop = ['type' => 'string', 'description' => $desc . '. No pongas una ruta: escribe una descripción breve de la imagen que va aquí (contenido, orientación), o vacío si no hay.'];
+            $human = "imagen: $label (escribe una descripción breve de la imagen del diseño; se pone una imagen provisional)";
+            break;
+        case 'images':
+            $prop = ['type' => 'array', 'items' => ['type' => 'string'], 'description' => $desc . '. Una entrada por imagen del diseño, con una descripción breve de cada una (no rutas).'];
+            $human = "lista de imágenes: $label (una descripción breve por imagen; se ponen imágenes provisionales)";
             break;
         case 'html':
         case 'code':
@@ -99,6 +103,8 @@ function cms_import_catalog(): array
             'label' => (string) ($def['label'] ?? $key),
             'i18n'  => array_keys(array_filter((array) ($def['fields'] ?? []), fn($f) => !empty($f['i18n']))),
             'lines' => array_keys(array_filter((array) ($def['fields'] ?? []), fn($f) => ($f['type'] ?? '') === 'lines')),
+            'image' => array_keys(array_filter((array) ($def['fields'] ?? []), fn($f) => ($f['type'] ?? '') === 'image')),
+            'images' => array_keys(array_filter((array) ($def['fields'] ?? []), fn($f) => ($f['type'] ?? '') === 'images')),
         ];
         $variants[] = [
             'type' => 'object',
@@ -106,7 +112,7 @@ function cms_import_catalog(): array
                 'type'   => ['type' => 'string', 'enum' => [$key]],
                 'data'   => ['type' => 'object', 'properties' => $props ?: new stdClass, 'required' => $req, 'additionalProperties' => false],
                 'style'  => ['type' => 'object', 'properties' => $styleProps ?: new stdClass, 'additionalProperties' => false],
-                'note'   => ['type' => 'string', 'description' => 'Qué del diseño no cupo en este bloque, imágenes que faltan (descríbelas), o dudas. Vacío si todo encajó.'],
+                'note'   => ['type' => 'string', 'description' => 'Qué del diseño no cupo en este bloque, o dudas. Vacío si todo encajó.'],
                 'screen' => ['type' => 'integer', 'description' => 'Número de pantalla (imagen) donde empieza esta sección'],
             ],
             'required' => ['type', 'data', 'style', 'note', 'screen'],
@@ -170,7 +176,9 @@ Reglas:
 - Los bloques planes, faq, equipo y articulos toman su contenido de colecciones del sitio; úsalos si el diseño
   muestra precios, preguntas frecuentes, equipo o artículos, y describe en "note" lo que el diseño muestra (planes,
   precios, preguntas) para cargarlo después en la colección.
-- Imágenes: deja el campo vacío y describe en "note" qué imagen va (contenido, orientación, tamaño aproximado).
+- Imágenes: en cada campo de imagen escribe una descripción breve de la que va ahí (contenido, orientación, tamaño
+  aproximado), nunca una ruta; en los campos de lista de imágenes, una descripción por imagen del diseño, en orden.
+  El CMS pone imágenes provisionales con esa descripción como pie para que quien edita las sustituya.
 - style: solo cuando el diseño lo pide claramente. bg según el fondo de la banda; text "light" solo sobre fondos
   oscuros; align "center" si todo el bloque va centrado; pad si la banda es notablemente más alta o más baja de lo
   normal. Deja "" (vacío) para lo que no aplica. En el hero, "shader" solo si el fondo es animado o con ondas o
@@ -192,26 +200,41 @@ TXT . cms_import_catalog()['catalog'] . "\n## Capa de texto del archivo (en orde
  * Convierte la respuesta del modelo en un elemento del tipo $type (borrador). Devuelve [item, notas[]].
  * $extra: campos adicionales del elemento (brand, parent…). $source: nombre del archivo importado.
  */
-function cms_import_materialize(array $result, string $type, string $slug, string $lang, array $extra = [], string $source = ''): array
+function cms_import_materialize(array $result, string $type, string $slug, string $lang, array $extra = [], string $source = '', string $placeholder = ''): array
 {
     $meta = cms_import_catalog()['meta'];
     $langs = cms_langs();
+    $dl = cms_default_lang();
     $lang = in_array(substr((string) ($result['lang'] ?? ''), 0, 2), $langs, true) ? substr((string) $result['lang'], 0, 2) : $lang;
-    $i18n = fn($v) => [$lang => $v];
+    // el texto va en el idioma del diseño y, si es otro, también en el predeterminado (si no, el sitio lo mostraría vacío); se traduce después
+    $i18n = fn($v) => $lang === $dl ? [$lang => $v] : [$dl => $v, $lang => $v];
     $notes = []; $sections = [];
     foreach ((array) ($result['sections'] ?? []) as $s) {
         $t = (string) ($s['type'] ?? '');
         $m = $meta[$t] ?? null;
         if (!$m) { $notes[] = "Bloque desconocido «$t» descartado."; continue; }
-        $data = [];
+        $data = []; $imgNotes = [];
         foreach ((array) ($s['data'] ?? []) as $k => $v) {
             if ($v === '' || $v === null || $v === []) continue;
             if (in_array($k, $m['lines'], true) && is_string($v)) $v = array_values(array_filter(array_map('trim', explode("\n", $v)), 'strlen'));
+            if (in_array($k, $m['image'], true)) {
+                // el modelo describe la imagen; se pone la provisional y la descripción va a las notas
+                if (!preg_match('#^(uploads/|site/|https?://)#', (string) $v)) { $imgNotes[] = 'imagen «' . $k . '»: ' . $v; $v = $placeholder; }
+                if ($v === '') continue;
+            } elseif (in_array($k, $m['images'], true)) {
+                $lines = is_array($v) ? $v : array_filter(array_map('trim', explode("\n", (string) $v)), 'strlen');
+                $v = [];
+                foreach ($lines as $i => $d) { $d = trim((string) $d); if ($d === '') continue; $v[] = preg_match('#^(uploads/|site/|https?://)#', $d) ? $d : ($placeholder !== '' ? $placeholder . ' | ' . $d : $d); }
+                if (!$v) continue;
+                if ($placeholder !== '') $imgNotes[] = count($v) . ' imágenes provisionales en «' . $k . '»; el pie de cada una dice cuál va';
+            }
             $data[$k] = in_array($k, $m['i18n'], true) ? $i18n($v) : $v;
         }
-        $style = array_filter((array) ($s['style'] ?? []), fn($v) => $v !== '' && $v !== null && $v !== false);
+        $style = array_filter((array) ($s['style'] ?? []), fn($v) => $v !== '' && $v !== null && $v !== false && $v !== 0 && $v !== '0');
         $sections[] = ['id' => substr(bin2hex(random_bytes(4)), 0, 6), 'type' => $t, 'data' => $data, 'style' => $style, 'hidden' => false];
-        if (!empty($s['note'])) $notes[] = '[' . $m['label'] . '] pantalla ' . (int) ($s['screen'] ?? 0) . ': ' . $s['note'];
+        $n = trim((string) ($s['note'] ?? ''));
+        if ($imgNotes) $n = trim($n . ($n !== '' ? ' ' : '') . implode('. ', $imgNotes) . '.');
+        if ($n !== '') $notes[] = '[' . $m['label'] . '] pantalla ' . (int) ($s['screen'] ?? 0) . ': ' . $n;
     }
     $today = date('Y-m-d');
     $def = cms_type($type) ?: [];

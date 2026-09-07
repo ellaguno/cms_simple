@@ -108,7 +108,10 @@ if (admin_is_post()) {
             foreach ((array) ($def['fields'] ?? []) as $name => $fd) {
                 if (($fd['type'] ?? '') === 'select' && !empty($fd['sidebar']) && isset($_POST['f_' . $name]) && isset($fd['options'][admin_post('f_' . $name)])) $extra[$name] = admin_post('f_' . $name);
             }
-            [$item, $notes] = cms_import_materialize($result, $type, $slug, $lang, $extra, admin_post('source'));
+            // imagen provisional junto a las pantallas de referencia: los bloques con imágenes se ven y se sustituyen desde Medios
+            $ph = '';
+            if (is_file(CMS_DIR . '/assets/img/pendiente.png') && copy(CMS_DIR . '/assets/img/pendiente.png', $dir . '/pendiente.png')) $ph = 'uploads/import/' . $slug . '/pendiente.png';
+            [$item, $notes] = cms_import_materialize($result, $type, $slug, $lang, $extra, admin_post('source'), $ph);
             if ($title !== '') $item[$def['title_field'] ?? 'title'] = [$lang => $title] + (array) $item[$def['title_field'] ?? 'title'];
             $item['import']['screens'] = array_map(fn($p) => 'uploads/import/' . $slug . '/' . basename($p), $screens);
             $item['import']['stats'] = $stats;

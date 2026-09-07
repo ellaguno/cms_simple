@@ -11,3 +11,4 @@ uploads/*
 # Sistema
 .DS_Store
 Thumbs.db
+data/import-tmp/

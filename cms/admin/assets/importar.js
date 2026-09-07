@@ -186,13 +186,25 @@
       say("Cortando pantallas…");
       return tile(pages).then(function (blobs) { return { blobs: blobs, text: r.text }; });
     }).then(function (r) {
-      say("Analizando " + r.blobs.length + " pantallas con el modelo. Suele tardar de 1 a 3 minutos; no cierres esta página.");
-      var fd = new FormData(form);
-      fd.append("_csrf", A.csrf); fd.append("action", "analizar"); fd.append("source", picked.name); fd.append("text", r.text);
-      fd.delete("file");
-      r.blobs.forEach(function (b, i) { fd.append("screens[]", b, "pantalla-" + (i + 1) + ".png"); });
-      var timer = setInterval(function () { status.textContent = status.textContent.endsWith("…") ? status.textContent.slice(0, -1) : status.textContent + "…"; }, 1500);
-      return fetch(C.endpoint, { method: "POST", body: fd, credentials: "same-origin" }).then(function (res) { clearInterval(timer); return res.json(); });
+      // subir las pantallas de una en una (los servidores limitan el tamaño de cada petición)
+      var token = "", chain = Promise.resolve();
+      r.blobs.forEach(function (b, i) {
+        chain = chain.then(function () {
+          say("Subiendo pantalla " + (i + 1) + " de " + r.blobs.length + "…");
+          var fd = new FormData();
+          fd.append("_csrf", A.csrf); fd.append("action", "subir"); fd.append("token", token); fd.append("index", i + 1);
+          fd.append("screen", b, "pantalla-" + (i + 1) + ".png");
+          return postJson(fd).then(function (j) { if (!j.ok) throw new Error(j.error || "No se pudo subir una pantalla"); token = j.token; });
+        });
+      });
+      return chain.then(function () {
+        say("Analizando " + r.blobs.length + " pantallas con el modelo. Suele tardar de 1 a 3 minutos; no cierres esta página.");
+        var fd = new FormData(form);
+        fd.append("_csrf", A.csrf); fd.append("action", "analizar"); fd.append("source", picked.name); fd.append("text", r.text); fd.append("token", token);
+        fd.delete("file");
+        var timer = setInterval(function () { status.textContent = status.textContent.endsWith("…") ? status.textContent.slice(0, -1) : status.textContent + "…"; }, 1500);
+        return postJson(fd).finally(function () { clearInterval(timer); });
+      });
     }).then(function (j) {
       if (!j.ok) throw new Error(j.error || "Error desconocido");
       progress.hidden = true;
@@ -211,6 +223,18 @@
       go.disabled = false;
     });
   });
+
+  /** POST al panel; si la respuesta no es JSON (aviso de PHP, sesión caducada, límite del servidor), lo dice con el texto recibido. */
+  function postJson(fd) {
+    return fetch(C.endpoint, { method: "POST", body: fd, credentials: "same-origin" }).then(function (res) {
+      return res.text().then(function (t) {
+        try { return JSON.parse(t); } catch (e) {
+          var plain = t.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300);
+          throw new Error("el servidor respondió " + res.status + (plain ? ": " + plain : " sin contenido"));
+        }
+      });
+    });
+  }
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 })();

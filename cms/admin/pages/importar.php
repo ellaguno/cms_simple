@@ -2,7 +2,7 @@
 /**
  * Importar diseño: de un PDF o imagen de una página (diseñador, Figma, Word exportado…) a un borrador del constructor.
  * El navegador rasteriza el archivo (pdf.js) en pantallas y extrae el texto; aquí se llama al modelo (cms/lib/import.php)
- * y se guarda el borrador. Peticiones JSON: action=analizar (multipart), action=modelos.
+ * y se guarda el borrador. Peticiones JSON: action=subir (una pantalla), action=analizar, action=modelos.
  */
 declare(strict_types=1);
 require_once CMS_DIR . '/lib/import.php';
@@ -43,10 +43,31 @@ if (admin_is_post()) {
         importar_json(['ok' => (bool) $m, 'count' => count($m), 'models' => $m, 'default' => cms_import_default_model()]);
     }
 
+    // las pantallas se suben de una en una (evita post_max_size y max_file_uploads) a data/import-tmp/<token>/
+    if ($action === 'subir') {
+        try {
+            $token = preg_replace('/[^a-f0-9]/', '', admin_post('token'));
+            if (strlen($token) !== 16) $token = bin2hex(random_bytes(8));
+            $tmp = CMS_DATA . '/import-tmp/' . $token;
+            if (!is_dir($tmp) && !@mkdir($tmp, 0755, true)) throw new RuntimeException('No se puede escribir en data/import-tmp/.');
+            $f = $_FILES['screen'] ?? null;
+            if (!$f || !is_uploaded_file($f['tmp_name'] ?? '')) throw new RuntimeException('No llegó la pantalla' . (!empty($f['error']) ? ' (error ' . $f['error'] . ': ¿supera upload_max_filesize?)' : '') . '.');
+            $info = @getimagesize($f['tmp_name']);
+            if (!$info || $info[2] !== IMAGETYPE_PNG) throw new RuntimeException('Las pantallas deben ser PNG.');
+            $n = max(1, min(60, (int) admin_post('index')));
+            if (!move_uploaded_file($f['tmp_name'], $tmp . '/pantalla-' . str_pad((string) $n, 2, '0', STR_PAD_LEFT) . '.png')) throw new RuntimeException('No se pudo guardar la pantalla.');
+            importar_json(['ok' => true, 'token' => $token, 'n' => count(glob($tmp . '/pantalla-*.png') ?: [])]);
+        } catch (Throwable $e) {
+            importar_json(['ok' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
     if ($action === 'analizar') {
         @set_time_limit(900);
         ignore_user_abort(true);
         $dir = ''; $saved = false;
+        // limpiar subidas a medias de otros días
+        foreach (glob(CMS_DATA . '/import-tmp/*', GLOB_ONLYDIR) ?: [] as $d) if (filemtime($d) < time() - 86400) { foreach (glob($d . '/*') ?: [] as $f) @unlink($f); @rmdir($d); }
         try {
             $type = admin_post('type');
             if (!isset($targets[$type])) throw new RuntimeException('Tipo de contenido no válido.');
@@ -62,20 +83,20 @@ if (admin_is_post()) {
             if ($prov === 'claude-cli' && $mod === '') $mod = 'sonnet';
             $lang = admin_post('lang'); if (!in_array($lang, cms_langs(), true)) $lang = cms_default_lang();
 
-            $files = $_FILES['screens'] ?? null;
-            if (!$files || !is_array($files['tmp_name'] ?? null) || !$files['tmp_name']) throw new RuntimeException('No llegaron las pantallas del diseño.');
+            $token = preg_replace('/[^a-f0-9]/', '', admin_post('token'));
+            $tmp = CMS_DATA . '/import-tmp/' . $token;
+            $uploaded = strlen($token) === 16 && is_dir($tmp) ? (glob($tmp . '/pantalla-*.png') ?: []) : [];
+            if (!$uploaded) throw new RuntimeException('No llegaron las pantallas del diseño. Vuelve a intentarlo.');
+            sort($uploaded);
             $dir = CMS_UPLOADS . '/import/' . $slug;
             if (!is_dir($dir) && !@mkdir($dir, 0755, true)) throw new RuntimeException('No se puede escribir en uploads/import/.');
             $screens = [];
-            foreach ($files['tmp_name'] as $i => $tmp) {
-                if (!is_uploaded_file($tmp)) continue;
-                $info = @getimagesize($tmp);
-                if (!$info || $info[2] !== IMAGETYPE_PNG) throw new RuntimeException('Las pantallas deben ser PNG.');
-                $dest = $dir . '/pantalla-' . str_pad((string) (count($screens) + 1), 2, '0', STR_PAD_LEFT) . '.png';
-                if (!move_uploaded_file($tmp, $dest)) throw new RuntimeException('No se pudo guardar una pantalla.');
+            foreach ($uploaded as $i => $src) {
+                $dest = $dir . '/pantalla-' . str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) . '.png';
+                if (!@rename($src, $dest) && !copy($src, $dest)) throw new RuntimeException('No se pudo guardar una pantalla.');
                 $screens[] = $dest;
             }
-            if (!$screens) throw new RuntimeException('No llegaron las pantallas del diseño.');
+            @rmdir($tmp);
             if (count($screens) > 40) throw new RuntimeException('Demasiadas pantallas (' . count($screens) . '). El diseño es demasiado largo para una sola página.');
             $text = admin_post('text');
             if (mb_strlen($text) > 60000) $text = mb_substr($text, 0, 60000);

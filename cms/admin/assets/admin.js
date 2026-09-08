@@ -474,6 +474,12 @@
     hex.addEventListener("input", function () { if (/^#[0-9a-f]{6}$/i.test(hex.value)) { pick.value = hex.value; pick.classList.remove("is-empty"); } });
     clear.addEventListener("click", function () { hex.value = ""; pick.classList.add("is-empty"); hex.dispatchEvent(new Event("input", { bubbles: true })); });
   });
+  /* un campo obligatorio oculto (otro idioma, sección plegada) no debe bloquear el guardado: el navegador no puede enfocarlo */
+  document.querySelectorAll("form").forEach(function (f) {
+    f.addEventListener("submit", function () {
+      f.querySelectorAll("[required]").forEach(function (el) { if (!el.offsetParent && el.type !== "hidden") el.removeAttribute("required"); });
+    }, true);
+  });
   document.querySelectorAll("form[data-confirm]").forEach(function (f) {
     f.addEventListener("submit", function (e) { if (!window.confirm(f.getAttribute("data-confirm"))) e.preventDefault(); });
   });

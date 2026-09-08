@@ -80,7 +80,9 @@ function admin_field(string $name, array $def, $value): void
         echo '<div class="ad-langs">';
         foreach (cms_langs() as $l) {
             $v = is_array($value) && !isset($value[0]) ? ($value[$l] ?? '') : ($l === cms_default_lang() ? $value : '');
-            echo '<div class="ad-lang" data-lang="' . $l . '"><span class="ad-lang-tag">' . strtoupper($l) . '</span>' . admin_control($name . '[' . $l . ']', $def, $v) . '</div>';
+            // "obligatorio" solo en el idioma predeterminado: los demás pueden quedar vacíos (se muestra el predeterminado)
+            $d = $l === cms_default_lang() ? $def : ['required' => false] + $def;
+            echo '<div class="ad-lang" data-lang="' . $l . '"><span class="ad-lang-tag">' . strtoupper($l) . '</span>' . admin_control($name . '[' . $l . ']', $d, $v) . '</div>';
         }
         echo '</div>';
     } else {

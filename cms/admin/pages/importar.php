@@ -76,12 +76,21 @@ if (admin_is_post()) {
         }
     }
 
+    // resultado de un análisis ya terminado (el navegador o un proxy pueden cortar la conexión larga; el trabajo sigue en el servidor)
+    if ($action === 'resultado') {
+        $token = preg_replace('/[^a-f0-9]/', '', admin_post('token'));
+        $rf = CMS_DATA . '/import-tmp/resultado-' . $token . '.json';
+        if (strlen($token) === 16 && is_file($rf)) { $r = cms_json_read($rf, []); @unlink($rf); importar_json($r ?: ['ok' => false, 'error' => 'Resultado ilegible.']); }
+        importar_json(['ok' => false, 'pending' => strlen($token) === 16 && is_dir(CMS_DATA . '/import-tmp/' . $token)]);
+    }
+
     if ($action === 'analizar') {
         @set_time_limit(900);
         ignore_user_abort(true);
         $dir = ''; $tmp = ''; $saved = false;
         // limpiar subidas a medias de otros días
         foreach (glob(CMS_DATA . '/import-tmp/*', GLOB_ONLYDIR) ?: [] as $d) if (filemtime($d) < time() - 86400) { foreach (glob($d . '/*') ?: [] as $f) @unlink($f); @rmdir($d); }
+        foreach (glob(CMS_DATA . '/import-tmp/resultado-*.json') ?: [] as $f) if (filemtime($f) < time() - 86400) @unlink($f);
         try {
             $type = admin_post('type');
             if (!isset($targets[$type])) throw new RuntimeException('Tipo de contenido no válido.');
@@ -155,7 +164,7 @@ if (admin_is_post()) {
             $saved = true;
             if (!empty($def['tree'])) cms_tree_rebuild($type);
             $labels = cms_import_catalog()['meta'];
-            importar_json([
+            $respuesta = [
                 'ok' => true,
                 'title' => cms_f($item, $def['title_field'] ?? 'title', $lang),
                 'images_total' => count($imagePaths), 'images_used' => (int) ($item['import']['images_used'] ?? 0),
@@ -165,7 +174,10 @@ if (admin_is_post()) {
                 'notes' => $notes, 'unmapped' => (array) ($result['unmapped'] ?? []),
                 'palette' => $result['palette'] ?? null, 'fonts' => $result['fonts'] ?? [],
                 'stats' => $stats,
-            ]);
+            ];
+            // copia del resultado por si la conexión ya no existe cuando terminamos (se recoge con action=resultado)
+            if (strlen($token) === 16) cms_json_write(CMS_DATA . '/import-tmp/resultado-' . $token . '.json', $respuesta);
+            importar_json($respuesta);
         } catch (Throwable $e) {
             // sin borrador no hay que conservar las pantallas subidas
             if (!empty($dir) && is_dir($dir) && empty($saved)) { foreach (glob($dir . '/*.*') ?: [] as $f) @unlink($f); @rmdir($dir); }

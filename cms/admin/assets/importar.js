@@ -348,7 +348,26 @@
     fd.delete("file");
     if (gi > 1) { fd.set("title", ""); fd.set("slug", ""); fd.append("auto_slug", "1"); }   // el título y la URL salen del propio diseño
     var timer = setInterval(function () { status.textContent = status.textContent.endsWith("…") ? status.textContent.slice(0, -1) : status.textContent + "…"; }, 1500);
-    return postJson(fd).finally(function () { clearInterval(timer); });
+    return postJson(fd).catch(function (e) {
+      // el navegador o un proxy cortaron la conexión larga; el servidor sigue trabajando: esperar y recoger el resultado
+      say((gn > 1 ? "Página web " + gi + " de " + gn + ": " : "") + "la conexión se cortó, pero el análisis sigue en el servidor. Esperando el resultado…");
+      return waitResult(token, 600).catch(function () { throw e; });
+    }).finally(function () { clearInterval(timer); });
+  }
+
+  /** Consulta el resultado de un análisis por su token cada 5 s hasta que exista (o hasta agotar los segundos). */
+  function waitResult(token, seconds) {
+    return new Promise(function (res, rej) {
+      var t0 = Date.now();
+      (function tick() {
+        var fd = new FormData(); fd.append("_csrf", csrf()); fd.append("action", "resultado"); fd.append("token", token);
+        postJson(fd).then(function (j) {
+          if (j.ok || (j.error && !j.pending)) return res(j);
+          if (Date.now() - t0 > seconds * 1000) return rej(new Error("tiempo de espera agotado"));
+          setTimeout(tick, 5000);
+        }).catch(function () { if (Date.now() - t0 > seconds * 1000) rej(new Error("tiempo de espera agotado")); else setTimeout(tick, 5000); });
+      })();
+    });
   }
 
   function renderResult(j, gi, gn) {

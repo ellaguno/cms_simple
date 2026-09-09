@@ -5,7 +5,13 @@ html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5
 a { color: var(--ink); }
 code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
 .ad-shell { display: flex; min-height: 100vh; }
-.ad-side { width: 240px; flex: 0 0 240px; background: #fff; border-right: 1px solid var(--line); padding: 24px 18px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 0; height: 100vh; }
+.ad-side { width: 240px; flex: 0 0 240px; background: #fff; border-right: 1px solid var(--line); padding: 24px 18px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.22) transparent; }
+.ad-side::-webkit-scrollbar { width: 8px; }
+.ad-side::-webkit-scrollbar-thumb { background: rgba(0,0,0,.18); border-radius: 8px; }
+.ad-side::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.32); }
+.ad-side::-webkit-scrollbar-track { background: transparent; }
+/* el pie del menú (usuario, salir, versión) se queda abajo mientras haya sitio, y baja con el resto cuando no lo hay */
+.ad-nav { flex: 0 0 auto; }
 .ad-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; }
 .ad-brand img { width: 110px; }
 .ad-brand span { font-size: 12px; background: #000; color: #fff; border-radius: 20px; padding: 2px 9px; }
@@ -146,7 +152,7 @@ form[data-edit-lang] .ad-lang-tag { display: none; }
 
 @media (max-width: 1000px) {
   .ad-shell { flex-direction: column; }
-  .ad-side { width: auto; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .ad-side { width: auto; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; overflow: visible; }
   .ad-nav { flex-direction: row; flex-wrap: wrap; }
   .ad-nav-group a { display: inline-block; margin: 4px 4px 0 0; }
   .ad-side-foot { margin: 0; flex-direction: row; flex-wrap: wrap; gap: 12px; width: 100%; }

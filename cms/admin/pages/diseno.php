@@ -64,6 +64,8 @@ if (admin_is_post() && admin_post('action') === 'install') {
             else {
                 $dst = CMS_THEMES . '/' . $name;
                 @mkdir($dst, 0775, true);
+                cms_protect_dir(CMS_THEMES);
+                cms_protect_dir($dst);
                 $n = 0; $bad = 0;
                 for ($i = 0; $i < $z->numFiles; $i++) {
                     $entry = (string) $z->getNameIndex($i);
@@ -80,7 +82,6 @@ if (admin_is_post() && admin_post('action') === 'install') {
                     fclose($src);
                 }
                 $z->close();
-                if (!is_file($dst . '/.htaccess') && is_file(CMS_ROOT . '/site/.htaccess')) @copy(CMS_ROOT . '/site/.htaccess', $dst . '/.htaccess');
                 admin_flash($n . ' archivos instalados en themes/' . $name . ($bad ? ' (' . $bad . ' omitidos por seguridad)' : '') . '. Actívalo cuando quieras.');
             }
         }

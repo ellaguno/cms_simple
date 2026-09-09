@@ -23,6 +23,21 @@ declare(strict_types=1);
 const CMS_REGISTRY_DEFAULT = 'https://raw.githubusercontent.com/ellaguno/cms_simple/main/catalog.json';
 const CMS_REGISTRY_TTL = 21600;   // 6 horas
 
+/**
+ * Deja en una carpeta el .htaccess que impide servir por HTTP el PHP y el JSON de temas y paquetes.
+ * Se llama al instalar, porque un sitio que solo copió cms/ no tiene todavía themes/ ni packs/.
+ */
+function cms_protect_dir(string $dir): void
+{
+    $f = $dir . '/.htaccess';
+    if (is_file($f) || !is_dir($dir)) return;
+    @file_put_contents($f, "# Generado por cms_simple: el PHP y el JSON de temas y paquetes no se sirven por HTTP; sus assets sí.\n"
+        . "<FilesMatch \"\\.(php|json)$\">\n"
+        . "  <IfModule mod_authz_core.c>\n    Require all denied\n  </IfModule>\n"
+        . "  <IfModule !mod_authz_core.c>\n    Order deny,allow\n    Deny from all\n  </IfModule>\n"
+        . "</FilesMatch>\n");
+}
+
 /** URLs de catálogo activas. */
 function cms_registries(): array
 {
@@ -182,6 +197,7 @@ function cms_registry_install(array $it): array
     $base = $it['kind'] === 'pack' ? CMS_ROOT . '/packs' : CMS_THEMES;
     $dst = $base . '/' . $it['key'];
     if (!is_dir($base) && !@mkdir($base, 0775, true)) { $z->close(); @unlink($tmp); return [false, 'No se pudo crear la carpeta ' . basename($base) . '/ (permisos).']; }
+    cms_protect_dir($base);
     @mkdir($dst, 0775, true);
     $n = 0; $skipped = 0;
     for ($i = 0; $i < $z->numFiles; $i++) {
@@ -200,7 +216,7 @@ function cms_registry_install(array $it): array
     }
     $z->close();
     @unlink($tmp);
-    if ($it['kind'] === 'theme' && !is_file($dst . '/.htaccess') && is_file(CMS_ROOT . '/site/.htaccess')) @copy(CMS_ROOT . '/site/.htaccess', $dst . '/.htaccess');
+    cms_protect_dir($dst);
     if ($n === 0) return [false, 'No se copió ningún archivo (revisa los permisos de la carpeta).'];
     return [true, $n . ' archivos instalados en ' . basename($base) . '/' . $it['key'] . ($skipped ? ' (' . $skipped . ' omitidos)' : '') . '.'];
 }

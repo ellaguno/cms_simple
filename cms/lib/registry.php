@@ -38,6 +38,63 @@ function cms_protect_dir(string $dir): void
         . "</FilesMatch>\n");
 }
 
+/** Extensiones que se admiten dentro de un tema, un paquete o el núcleo. */
+const CMS_ZIP_EXT = '/\\.(php|json|css|js|md|html|txt|svg|png|jpe?g|webp|gif|ico|woff2?|mp4|webm)$/i';
+
+/**
+ * Extrae de un zip la carpeta $subdir (o su raíz) dentro de $dst, saltando rutas peligrosas y archivos ajenos.
+ * $marker es un archivo que debe existir para dar el zip por bueno. Devuelve [copiados, omitidos, error].
+ */
+function cms_zip_extract(string $zipFile, string $subdir, string $dst, array $markers): array
+{
+    if (!class_exists('ZipArchive')) return [0, 0, 'Este servidor no tiene la extensión Zip de PHP.'];
+    $z = new ZipArchive();
+    if ($z->open($zipFile) !== true) return [0, 0, 'El archivo no es un zip válido.'];
+    // raíz: la carpeta única que envuelve el zip (la que crea GitHub), más el subdirectorio pedido
+    $root = '';
+    $first = (string) ($z->getNameIndex(0) ?: '');
+    if (strpos($first, '/') !== false) {
+        $cand = explode('/', $first)[0] . '/';
+        $all = true;
+        for ($i = 0; $i < $z->numFiles; $i++) if (strpos((string) $z->getNameIndex($i), $cand) !== 0) { $all = false; break; }
+        if ($all) $root = $cand;
+    }
+    if ($subdir !== '') {
+        $want = $root . trim($subdir, '/') . '/';
+        $found = false;
+        for ($i = 0; $i < $z->numFiles; $i++) if (strpos((string) $z->getNameIndex($i), $want) === 0) { $found = true; break; }
+        if (!$found) { $z->close(); return [0, 0, 'El zip no contiene la carpeta ' . $subdir . '.']; }
+        $root = $want;
+    }
+    if ($markers) {
+        $ok = false;
+        for ($i = 0; $i < $z->numFiles && !$ok; $i++) {
+            $n = (string) $z->getNameIndex($i);
+            if (strpos($n, $root) !== 0) continue;
+            if (in_array(substr($n, strlen($root)), $markers, true)) $ok = true;
+        }
+        if (!$ok) { $z->close(); return [0, 0, 'El contenido del zip no es el esperado (falta ' . implode(' o ', $markers) . ').']; }
+    }
+    if (!is_dir($dst) && !@mkdir($dst, 0775, true)) { $z->close(); return [0, 0, 'No se pudo crear ' . basename($dst) . ' (permisos).']; }
+    $n = 0; $skipped = 0;
+    for ($i = 0; $i < $z->numFiles; $i++) {
+        $entry = (string) $z->getNameIndex($i);
+        if (strpos($entry, $root) !== 0) continue;
+        $rel = substr($entry, strlen($root));
+        if ($rel === '' || strpos($rel, '..') !== false || $rel[0] === '/' || strpos($rel, "\0") !== false) { $skipped++; continue; }
+        if (substr($rel, -1) === '/') { @mkdir($dst . '/' . $rel, 0775, true); continue; }
+        if (!preg_match(CMS_ZIP_EXT, $rel) && basename($rel) !== '.htaccess') { $skipped++; continue; }
+        @mkdir(dirname($dst . '/' . $rel), 0775, true);
+        $src = $z->getStream($entry);
+        if (!$src) { $skipped++; continue; }
+        $out = @fopen($dst . '/' . $rel, 'wb');
+        if ($out) { stream_copy_to_stream($src, $out); fclose($out); $n++; } else $skipped++;
+        fclose($src);
+    }
+    $z->close();
+    return [$n, $skipped, ''];
+}
+
 /** URLs de catálogo activas. */
 function cms_registries(): array
 {
@@ -165,57 +222,15 @@ function cms_registry_install(array $it): array
 
     $tmp = tempnam(sys_get_temp_dir(), 'cmsreg') ?: '';
     if ($tmp === '' || file_put_contents($tmp, $zipBody) === false) return [false, 'No se pudo guardar la descarga.'];
-    $z = new ZipArchive();
-    if ($z->open($tmp) !== true) { @unlink($tmp); return [false, 'El archivo descargado no es un zip válido.']; }
-
-    // raíz dentro del zip: la carpeta indicada en 'subdir', o la única carpeta que lo envuelve
-    $root = '';
-    $first = (string) ($z->getNameIndex(0) ?: '');
-    if (strpos($first, '/') !== false) {
-        $cand = explode('/', $first)[0] . '/';
-        $all = true;
-        for ($i = 0; $i < $z->numFiles; $i++) if (strpos((string) $z->getNameIndex($i), $cand) !== 0) { $all = false; break; }
-        if ($all) $root = $cand;
-    }
-    if ($it['subdir'] !== '') {
-        $want = $root . $it['subdir'] . '/';
-        $found = false;
-        for ($i = 0; $i < $z->numFiles; $i++) if (strpos((string) $z->getNameIndex($i), $want) === 0) { $found = true; break; }
-        if (!$found) { $z->close(); @unlink($tmp); return [false, 'El zip no contiene la carpeta ' . $it['subdir'] . '.']; }
-        $root = $want;
-    }
-    $marker = $it['kind'] === 'pack' ? 'pack.php' : null;
-    $ok = false;
-    for ($i = 0; $i < $z->numFiles; $i++) {
-        $n = (string) $z->getNameIndex($i);
-        if (strpos($n, $root) !== 0) continue;
-        $rel = substr($n, strlen($root));
-        if ($marker === null ? ($rel === 'config.php' || $rel === 'theme.json') : $rel === $marker) { $ok = true; break; }
-    }
-    if (!$ok) { $z->close(); @unlink($tmp); return [false, $it['kind'] === 'pack' ? 'No parece un paquete: falta pack.php.' : 'No parece un tema: falta config.php o theme.json.']; }
 
     $base = $it['kind'] === 'pack' ? CMS_ROOT . '/packs' : CMS_THEMES;
     $dst = $base . '/' . $it['key'];
-    if (!is_dir($base) && !@mkdir($base, 0775, true)) { $z->close(); @unlink($tmp); return [false, 'No se pudo crear la carpeta ' . basename($base) . '/ (permisos).']; }
+    if (!is_dir($base) && !@mkdir($base, 0775, true)) { @unlink($tmp); return [false, 'No se pudo crear la carpeta ' . basename($base) . '/ (permisos).']; }
     cms_protect_dir($base);
-    @mkdir($dst, 0775, true);
-    $n = 0; $skipped = 0;
-    for ($i = 0; $i < $z->numFiles; $i++) {
-        $entry = (string) $z->getNameIndex($i);
-        if (strpos($entry, $root) !== 0) continue;
-        $rel = substr($entry, strlen($root));
-        if ($rel === '' || strpos($rel, '..') !== false || $rel[0] === '/') { $skipped++; continue; }
-        if (substr($rel, -1) === '/') { @mkdir($dst . '/' . $rel, 0775, true); continue; }
-        if (!preg_match('/\.(php|json|css|js|md|html|txt|svg|png|jpe?g|webp|gif|ico|woff2?|mp4|webm)$/i', $rel) && basename($rel) !== '.htaccess') { $skipped++; continue; }
-        @mkdir(dirname($dst . '/' . $rel), 0775, true);
-        $src = $z->getStream($entry);
-        if (!$src) { $skipped++; continue; }
-        $out = @fopen($dst . '/' . $rel, 'wb');
-        if ($out) { stream_copy_to_stream($src, $out); fclose($out); $n++; } else $skipped++;
-        fclose($src);
-    }
-    $z->close();
+    $markers = $it['kind'] === 'pack' ? ['pack.php'] : ['config.php', 'theme.json'];
+    [$n, $skipped, $err2] = cms_zip_extract($tmp, $it['subdir'], $dst, $markers);
     @unlink($tmp);
+    if ($err2 !== '') return [false, $err2];
     cms_protect_dir($dst);
     if ($n === 0) return [false, 'No se copió ningún archivo (revisa los permisos de la carpeta).'];
     return [true, $n . ' archivos instalados en ' . basename($base) . '/' . $it['key'] . ($skipped ? ' (' . $skipped . ' omitidos)' : '') . '.'];

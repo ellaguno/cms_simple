@@ -32,6 +32,7 @@ function admin_nav(): array
         'password'  => ['Contraseña', admin_url('password')],
     ];
     if (cms_config('code_editor', true) !== false) $nav['code'] = ['Código del tema', admin_url('code')];
+    $nav['actualizar'] = ['Actualizar', admin_url('actualizar')];
     $nav['manual'] = ['Manual', admin_url('manual')];
     return $nav;
 }
@@ -82,7 +83,7 @@ function admin_header(string $title, string $active = ''): void
 <?php endforeach; ?>
       <span class="ad-user"><?= cms_e($u['name'] ?? $u['user']) ?></span>
       <a href="<?= admin_url('logout') ?>">Salir</a>
-      <small class="ad-version">cms_simple <?= CMS_VERSION ?></small>
+      <small class="ad-version">cms_simple <?= CMS_VERSION ?><?php [$u] = cms_update_check(false); if ($u && $u['newer']): ?> · <a href="<?= admin_url('actualizar') ?>">actualizar a <?= cms_e($u['version']) ?></a><?php endif; ?></small>
     </div>
   </aside>
 <?php endif; ?>

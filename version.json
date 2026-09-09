@@ -1,0 +1,9 @@
+{
+  "version": "1.22.0",
+  "date": "2026-09-09",
+  "notes": "Actualización del núcleo desde el panel: Admin → Actualizar comprueba si hay versión nueva, la instala y guarda la anterior por si hay que volver.\nAntes: catálogo remoto de temas y paquetes, varios temas instalables, variaciones de estilo, efectos con ajustes y buscador en los listados.",
+  "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+  "subdir": "cms",
+  "min_version": "1.10.0",
+  "min_php": "7.4"
+}

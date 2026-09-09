@@ -1,0 +1,21 @@
+{
+  "name": "Catálogo de cms_simple",
+  "desc": "Temas y paquetes de bloques listos para instalar desde Admin → Catálogo.",
+  "updated": "2026-09-09",
+  "items": [
+    {
+      "kind": "theme",
+      "key": "lienzo",
+      "label": "Lienzo",
+      "desc": "Tema en blanco para el constructor: la cabecera y el pie son bloques, y el catálogo cubre las secciones habituales de un sitio. Trae seis variaciones de estilo.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": ["general", "constructor", "portafolio", "empresa"],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/lienzo/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/lienzo",
+      "requires": { "cms": "1.20.0" }
+    }
+  ]
+}

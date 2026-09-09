@@ -105,4 +105,5 @@ require_once CMS_DIR . '/lib/map.php';
 require_once CMS_DIR . '/lib/sections.php';
 require_once CMS_DIR . '/lib/packs.php';
 require_once CMS_DIR . '/lib/styles.php';
+require_once CMS_DIR . '/lib/registry.php';
 if (is_file(CMS_SITE . '/inc/functions.php')) require_once CMS_SITE . '/inc/functions.php';

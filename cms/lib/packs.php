@@ -53,11 +53,9 @@ function cms_packs(): array
     static $packs = null;
     if ($packs !== null) return $packs;
     $packs = [];
-    foreach ((array) cms_config('packs', []) as $k => $v) {
-        $name = is_int($k) ? (string) $v : (string) $k;
-        $opts = is_int($k) ? [] : (array) $v;
+    foreach (cms_packs_enabled() as $name => $opts) {
         if (!preg_match('/^[a-z0-9_-]+$/i', $name)) continue;
-        foreach ([[CMS_SITE . '/packs/' . $name, CMS_BASE . '/site/packs/' . $name], [CMS_DIR . '/packs/' . $name, CMS_BASE . '/cms/packs/' . $name]] as [$dir, $url]) {
+        foreach (cms_pack_dirs($name) as [$dir, $url]) {
             if (!is_file($dir . '/pack.php')) continue;
             $m = (array) require $dir . '/pack.php';
             $packs[$name] = $m + ['name' => $name, 'label' => ucfirst($name), 'dir' => $dir, 'url' => $url, 'options' => $opts, 'assets' => [], 'effects' => []];
@@ -65,6 +63,52 @@ function cms_packs(): array
         }
     }
     return $packs;
+}
+
+/** Dónde se busca un paquete, por orden: el del sitio (packs/), el del tema y el del núcleo. */
+function cms_pack_dirs(string $name): array
+{
+    return [
+        [CMS_ROOT . '/packs/' . $name, CMS_BASE . '/packs/' . $name],
+        [CMS_SITE . '/packs/' . $name, CMS_SITE_BASE . '/packs/' . $name],
+        [CMS_DIR . '/packs/' . $name, CMS_BASE . '/cms/packs/' . $name],
+    ];
+}
+
+/** Paquetes instalados (en cualquiera de las tres carpetas): nombre => ['dir', 'url', 'manifest']. */
+function cms_packs_available(): array
+{
+    static $out = null;
+    if ($out !== null) return $out;
+    $out = [];
+    foreach ([CMS_ROOT . '/packs', CMS_SITE . '/packs', CMS_DIR . '/packs'] as $base) {
+        foreach (glob($base . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+            $name = basename($dir);
+            if (isset($out[$name]) || !preg_match('/^[a-z0-9_-]+$/i', $name) || !is_file($dir . '/pack.php')) continue;
+            $m = (array) require $dir . '/pack.php';
+            [$d, $url] = cms_pack_dirs($name)[0];
+            foreach (cms_pack_dirs($name) as [$dd, $uu]) if ($dd === $dir) { $url = $uu; break; }
+            $out[$name] = $m + ['name' => $name, 'label' => ucfirst($name), 'dir' => $dir, 'url' => $url, 'core' => strpos($dir, CMS_DIR) === 0];
+        }
+    }
+    return $out;
+}
+
+/**
+ * Paquetes activos: los del tema (config 'packs') más los que se activen en Ajustes ('packs_on'),
+ * menos los que Ajustes desactive ('packs_off'). Devuelve nombre => opciones.
+ */
+function cms_packs_enabled(): array
+{
+    $out = [];
+    foreach ((array) cms_config('packs', []) as $k => $v) {
+        $name = is_int($k) ? (string) $v : (string) $k;
+        $out[$name] = is_int($k) ? [] : (array) $v;
+    }
+    $S = cms_settings();
+    foreach ((array) ($S['packs_on'] ?? []) as $name) if (is_string($name) && !isset($out[$name])) $out[$name] = [];
+    foreach ((array) ($S['packs_off'] ?? []) as $name) if (is_string($name)) unset($out[$name]);
+    return $out;
 }
 
 /** Ruta pública de un recurso de un paquete (relativa al paquete, o URL absoluta tal cual). */

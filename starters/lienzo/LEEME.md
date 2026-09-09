@@ -24,7 +24,8 @@ al endpoint del núcleo), boletín, separador, HTML. Además, los paquetes visua
 efectos), motion (marquesina, cifras, titular, parallax), media (video de YouTube o Vimeo al clic, mapa de
 OpenStreetMap, animación Lottie) y marketing (hero con palabras rotativas, cuadrícula bento, pestañas con imagen,
 comparador antes y después, cintas de testimonios y logotipos, precios con interruptor mensual/anual, línea de tiempo,
-y fondos aurora, rejilla, partículas y meteoros).
+y fondos aurora, rejilla, partículas y meteoros) y contenido (listado de una colección, catálogo de tarjetas, banda
+de aviso, acordeón y pasos numerados).
 
 Los campos de líneas separan celdas con ` | `; un enlace dentro de una celda se escribe `Texto > URL`.
 

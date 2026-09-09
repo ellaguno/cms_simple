@@ -189,6 +189,25 @@ OpenStreetMap con Leaflet (sin clave) y animaciones Lottie. Librerías registrad
 páginas cuyos bloques las declaran. El importador admite además Fable como modelo y recorta de la pantalla los
 logotipos e ilustraciones vectoriales que el PDF no trae como mapa de bits (`@pantalla:x,y,ancho,alto`).
 
+## Paquete contenido (1.17)
+
+`cms/packs/contenido`: cinco bloques que conectan las páginas con las colecciones del sitio.
+
+- **Listado de una colección**: los últimos elementos publicados de cualquier tipo (artículos, proyectos, productos)
+  en rejilla de 2, 3 o 4, en lista con imagen a un lado, o con uno destacado y el resto en columna. Filtra por
+  categoría o etiqueta, elige cuántos y en qué orden, y añade un botón al índice de la colección. La página se
+  actualiza sola al publicar. El selector de colección se llena desde los tipos de `site/config.php`.
+- **Catálogo de tarjetas**: rejilla con imagen, etiqueta o precio, título, texto y enlace, escrita a mano.
+- **Banda de aviso**: franja estrecha con anuncio, enlace y equis para cerrarla; quien la cierra no la vuelve a ver
+  (queda en `localStorage`, con un nombre que el editor cambia para volver a mostrarla).
+- **Acordeón** de apartados plegables y **pasos numerados** unidos por una línea.
+
+El marcado sigue patrones de [HyperUI](https://hyperui.dev) (Tailwind CSS, MIT, © Mark Mead), reescritos con CSS
+propio y variables del tema; el aviso de copyright está en `cms/packs/contenido/LICENSES.md`.
+
+Para que los ejemplos del manual se entiendan aunque la colección esté vacía, `cms_is_demo()` indica a un bloque que
+se está dibujando un ejemplo del panel; el listado de colección inventa entonces sus tarjetas.
+
 ## Paquete marketing (1.16)
 
 `cms/packs/marketing`: ocho secciones de página de venta y cuatro fondos animados, en PHP, CSS y JS propios, sin

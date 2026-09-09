@@ -17,6 +17,7 @@ $slug = 'ejemplo-en-vivo';
 $item = ['slug' => $slug, 'status' => 'published', 'title' => 'Ejemplo', 'parent' => '', 'path' => $slug, 'order' => 999,
     'created' => date('Y-m-d'), 'updated' => date('Y-m-d'), 'sections' => [$sec]];
 $GLOBALS['cms_item_override'] = [$type => [$slug => $item]];
+$GLOBALS['cms_demo'] = true;   // los bloques que listan contenido dibujan elementos de muestra si la colección está vacía
 cms_items_flush();
 
 $lang = cms_default_lang();

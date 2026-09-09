@@ -223,6 +223,12 @@ function cms_builder_type(): ?string
     return null;
 }
 
+/** ¿Se está dibujando un ejemplo del panel (manual o selector)? Los bloques que listan contenido lo usan para mostrar elementos de muestra. */
+function cms_is_demo(): bool
+{
+    return !empty($GLOBALS['cms_demo']);
+}
+
 /** Imágenes de muestra que trae el núcleo (cms/assets/img/demo/). $kind: foto, persona, logo. */
 function cms_demo_image(string $kind = 'foto', int $n = 1): string
 {

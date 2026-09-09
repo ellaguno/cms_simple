@@ -31,11 +31,21 @@
 | Precios con opción mensual y anual | Precios con interruptor |
 | Explicar un proceso paso a paso | Línea de tiempo |
 | Enseñar logotipos de clientes | Cinta de logotipos |
+| Enseñar los últimos artículos o proyectos | Listado de una colección |
+| Un catálogo de servicios o productos a mano | Catálogo de tarjetas |
+| Anunciar algo arriba de la página | Banda de aviso |
+| Condiciones o temarios largos | Acordeón |
+| Explicar un método en tres movimientos | Pasos numerados |
 | Algo que ningún bloque cubre | HTML, solo para quien sabe lo que hace |
 
 ## Efectos
 
 Los efectos se eligen en la pestaña Estilo de cualquier sección. Algunos bloques los traen activados por defecto, como el hero con su fondo de ondas. Todos respetan la preferencia del sistema de "reducir movimiento" y se desactivan solos en pantallas táctiles cuando dependen del ratón.
+
+El **Listado de una colección** es distinto a los demás: no escribes su contenido, lo eliges. Le dices de qué
+colección tirar (artículos, proyectos, productos), cuántos mostrar y con qué forma, y a partir de ahí la página se
+mantiene sola: cada vez que publiques un elemento nuevo aparecerá ahí, y los viejos irán saliendo. Si solo quieres los
+de una categoría, escríbela en el campo de filtro tal como la escribes en los elementos.
 
 Los fondos animados (aurora, rejilla, partículas, meteoros) lucen sobre todo en secciones con fondo oscuro: elige
 Oscuro en Fondo y Claro en Color del texto, en la misma pestaña Estilo.

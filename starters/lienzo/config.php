@@ -37,7 +37,7 @@ return [
     'pages' => [],
 
     // Paquetes de bloques y efectos compartidos (cms/packs): galería 3D, carrusel, lightbox, marquesina, cifras…
-    'packs' => ['visual', 'motion', 'media', 'marketing'],
+    'packs' => ['visual', 'motion', 'media', 'marketing', 'contenido'],
     'sections' => [
         'palette' => ['white' => 'Blanco', 'light' => 'Gris claro', 'dark' => 'Oscuro', 'primary' => 'Color principal', 'accent' => 'Color de acento'],
         'classes' => ['container' => 'lz-container', 'header' => 'lz-head', 'title' => '', 'subtitle' => '', 'btn' => 'lz-btn'],

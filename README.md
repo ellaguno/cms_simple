@@ -189,6 +189,23 @@ OpenStreetMap con Leaflet (sin clave) y animaciones Lottie. Librerías registrad
 páginas cuyos bloques las declaran. El importador admite además Fable como modelo y recorta de la pantalla los
 logotipos e ilustraciones vectoriales que el PDF no trae como mapa de bits (`@pantalla:x,y,ancho,alto`).
 
+## Variaciones de estilo (1.19)
+
+Un tema puede traer **pieles**: `<tema>/styles/<clave>.json` con `label`, `desc`, `fonts` (familias de Google Fonts),
+`vars` (las variables CSS que cambia) y `settings` (los colores y tipografías que sugiere para Ajustes → Diseño).
+El núcleo las emite en el `<head>` con `cms_style_head()`, así que funcionan con cualquier tema sin tocarlo.
+
+Admin → **Diseño** es una galería: cada variación se ve dibujada de verdad con los bloques del tema (el mismo sistema
+de ejemplos en vivo), con su paleta y sus tipografías, y se aplica con un clic. Al aplicarla se copian sus colores y
+tipografías a Ajustes → Diseño, salvo que marques «conservar mis colores». El contenido y las páginas no se tocan.
+
+El tema lienzo trae seis: **Nítido** (el de serie), **Editorial** (serif y esquinas rectas), **Brutalista** (negro,
+amarillo y bordes duros), **Suave** (muy redondeado, lila), **Corporativo** (azul marino, compacto) y **Oscuro**
+(fondo casi negro y acento cian). Añadir una variación es añadir un JSON.
+
+Precedencia de las variables: la hoja del tema, encima la variación (`:root:root`), y encima lo que el usuario haya
+elegido a mano en Ajustes (`:root:root:root`). En la vista previa del panel la variación gana a todo para verse tal cual.
+
 ## Efectos con ajustes y color de acento por sección (1.18)
 
 Los efectos dejan de ser un interruptor: cada uno declara en su paquete `'fields' => […]` (los mismos tipos de campo

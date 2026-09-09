@@ -47,3 +47,12 @@ La sección **Código del tema** permite editar plantillas, CSS y JS desde el pa
 - **Una página da 404 después de moverla o renombrarla**: crea la redirección 301 desde la ruta vieja.
 - **El sitio se ve sin estilos después de actualizar**: recarga forzando (Ctrl+Shift+R); el navegador tenía el CSS anterior en caché.
 - **Un cambio en Ajustes no se ve**: comprueba que guardaste; el panel muestra "Ajustes guardados" arriba.
+
+## Cambiar el aspecto del sitio sin tocar el contenido
+
+En **Diseño** están las variaciones de estilo que trae el tema: cada una cambia colores, tipografías, esquinas y
+espacios de todo el sitio de una vez. La tarjeta muestra el sitio dibujado de verdad con esa variación, así que puedes
+compararlas antes de decidir. Al pulsar **Usar esta** se aplica y sus colores y tipografías pasan a Ajustes → Diseño,
+donde puedes seguir afinándolos. Si ya tienes tus colores y solo quieres el resto, marca «conservar mis colores».
+
+Las páginas, los artículos y las imágenes no se tocan: es solo la piel.

@@ -1,0 +1,32 @@
+{
+  "label": "Editorial",
+  "desc": "Titulares con serif, esquinas rectas y mucho aire. Para revistas, despachos y estudios de diseño.",
+  "fonts": [
+    "Fraunces",
+    "Inter"
+  ],
+  "vars": {
+    "--lz-font": "Inter, system-ui, sans-serif",
+    "--lz-font-heading": "Fraunces, Georgia, serif",
+    "--lz-radius": "0px",
+    "--cms-radius": "0px",
+    "--cms-radius-lg": "0px",
+    "--lz-max": "1080px",
+    "--lz-space": "clamp(4rem, 9vw, 8rem)",
+    "--lz-light": "#f4f1ec",
+    "--lz-line": "#ddd6cb",
+    "--lz-bg": "#fdfcfa",
+    "--lz-primary": "#1c1917",
+    "--cms-text": "#1c1917",
+    "--lz-accent": "#9a3412",
+    "--cms-accent": "#9a3412",
+    "--lz-text": "#292524",
+    "--lz-muted": "#78716c"
+  },
+  "settings": {
+    "color_primary": "#1c1917",
+    "color_accent": "#9a3412",
+    "font": "Inter",
+    "font_heading": "Fraunces"
+  }
+}

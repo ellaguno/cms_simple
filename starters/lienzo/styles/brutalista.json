@@ -1,0 +1,31 @@
+{
+  "label": "Brutalista",
+  "desc": "Negro sobre amarillo, bordes gruesos y sin curvas. Para marcas que quieren gritar.",
+  "fonts": [
+    "Space Grotesk"
+  ],
+  "vars": {
+    "--lz-font": "\"Space Grotesk\", ui-monospace, monospace",
+    "--lz-font-heading": "\"Space Grotesk\", ui-monospace, monospace",
+    "--lz-radius": "0px",
+    "--cms-radius": "0px",
+    "--cms-radius-lg": "0px",
+    "--lz-max": "1240px",
+    "--lz-space": "clamp(3rem, 7vw, 6rem)",
+    "--lz-light": "#fde047",
+    "--lz-line": "#111111",
+    "--lz-bg": "#fffdf5",
+    "--lz-primary": "#111111",
+    "--cms-text": "#111111",
+    "--lz-accent": "#dc2626",
+    "--cms-accent": "#dc2626",
+    "--lz-text": "#1c1c1c",
+    "--lz-muted": "#57534e"
+  },
+  "settings": {
+    "color_primary": "#111111",
+    "color_accent": "#dc2626",
+    "font": "Space Grotesk",
+    "font_heading": "Space Grotesk"
+  }
+}

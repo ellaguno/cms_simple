@@ -1,0 +1,32 @@
+{
+  "label": "Oscuro",
+  "desc": "Fondo casi negro, texto claro y acento cian. Luce con los fondos animados y las galerías.",
+  "fonts": [
+    "Sora"
+  ],
+  "vars": {
+    "--lz-font": "Sora, system-ui, sans-serif",
+    "--lz-font-heading": "Sora, system-ui, sans-serif",
+    "--lz-radius": "16px",
+    "--cms-radius": "12px",
+    "--cms-radius-lg": "18px",
+    "--lz-max": "1200px",
+    "--lz-space": "clamp(3rem, 7vw, 6rem)",
+    "--lz-bg": "#0b1020",
+    "--lz-text": "#d7dcea",
+    "--lz-muted": "#98a2b8",
+    "--lz-light": "#141b2f",
+    "--lz-line": "#25304d",
+    "--cms-muted": "#98a2b8",
+    "--lz-primary": "#f3f5fb",
+    "--cms-text": "#f3f5fb",
+    "--lz-accent": "#22d3ee",
+    "--cms-accent": "#22d3ee"
+  },
+  "settings": {
+    "color_primary": "#f3f5fb",
+    "color_accent": "#22d3ee",
+    "font": "Sora",
+    "font_heading": "Sora"
+  }
+}

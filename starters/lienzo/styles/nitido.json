@@ -1,0 +1,30 @@
+{
+  "label": "Nítido",
+  "desc": "El de serie: Inter, azul, esquinas suaves y mucho blanco. Sirve para casi todo.",
+  "default": true,
+  "fonts": [
+    "Inter"
+  ],
+  "vars": {
+    "--lz-font": "Inter, system-ui, sans-serif",
+    "--lz-font-heading": "Inter, system-ui, sans-serif",
+    "--lz-radius": "14px",
+    "--cms-radius": "10px",
+    "--lz-max": "1180px",
+    "--lz-space": "clamp(3rem, 7vw, 6rem)",
+    "--lz-light": "#f5f6f8",
+    "--lz-line": "#e5e7eb",
+    "--lz-primary": "#111827",
+    "--cms-text": "#111827",
+    "--lz-accent": "#2563eb",
+    "--cms-accent": "#2563eb",
+    "--lz-text": "#1f2937",
+    "--lz-muted": "#6b7280"
+  },
+  "settings": {
+    "color_primary": "#111827",
+    "color_accent": "#2563eb",
+    "font": "Inter",
+    "font_heading": "Inter"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "label": "Corporativo",
+  "desc": "Azul marino, líneas finas y ritmo compacto. Para consultoras, industria y servicios profesionales.",
+  "fonts": [
+    "IBM Plex Sans"
+  ],
+  "vars": {
+    "--lz-font": "\"IBM Plex Sans\", system-ui, sans-serif",
+    "--lz-font-heading": "\"IBM Plex Sans\", system-ui, sans-serif",
+    "--lz-radius": "6px",
+    "--cms-radius": "4px",
+    "--cms-radius-lg": "6px",
+    "--lz-max": "1240px",
+    "--lz-space": "clamp(2.5rem, 5.5vw, 4.5rem)",
+    "--lz-light": "#f1f5f9",
+    "--lz-line": "#dbe3ec",
+    "--lz-bg": "#ffffff",
+    "--lz-primary": "#0f2749",
+    "--cms-text": "#0f2749",
+    "--lz-accent": "#0369a1",
+    "--cms-accent": "#0369a1",
+    "--lz-text": "#243b53",
+    "--lz-muted": "#627d98"
+  },
+  "settings": {
+    "color_primary": "#0f2749",
+    "color_accent": "#0369a1",
+    "font": "IBM Plex Sans",
+    "font_heading": "IBM Plex Sans"
+  }
+}

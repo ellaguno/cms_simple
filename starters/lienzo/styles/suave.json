@@ -1,0 +1,31 @@
+{
+  "label": "Suave",
+  "desc": "Esquinas muy redondeadas, lila y menta, tipografía amable. Para salud, educación e infancia.",
+  "fonts": [
+    "Nunito"
+  ],
+  "vars": {
+    "--lz-font": "Nunito, system-ui, sans-serif",
+    "--lz-font-heading": "Nunito, system-ui, sans-serif",
+    "--lz-radius": "26px",
+    "--cms-radius": "20px",
+    "--cms-radius-lg": "28px",
+    "--lz-max": "1140px",
+    "--lz-space": "clamp(3.5rem, 8vw, 7rem)",
+    "--lz-light": "#f6f2ff",
+    "--lz-line": "#e6dcff",
+    "--lz-bg": "#ffffff",
+    "--lz-primary": "#3b2f5c",
+    "--cms-text": "#3b2f5c",
+    "--lz-accent": "#7c3aed",
+    "--cms-accent": "#7c3aed",
+    "--lz-text": "#463a68",
+    "--lz-muted": "#7c7391"
+  },
+  "settings": {
+    "color_primary": "#3b2f5c",
+    "color_accent": "#7c3aed",
+    "font": "Nunito",
+    "font_heading": "Nunito"
+  }
+}

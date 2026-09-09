@@ -72,6 +72,7 @@ function cms_head(array $page): void
     $og = cms_abs_url(cms_img(!empty($page['og_image']) ? (string) $page['og_image'] : (string) ($S['og_image'] ?? ($S['logo'] ?? ''))));
     echo '<meta charset="utf-8">' . "\n";
     echo '<meta name="viewport" content="width=device-width, initial-scale=1">' . "\n";
+    echo cms_style_head();
     echo '<title>' . cms_e($title) . '</title>' . "\n";
     echo '<meta name="description" content="' . cms_e($desc) . '">' . "\n";
     if (!empty($page['canonical'])) echo '<link rel="canonical" href="' . cms_e($page['canonical']) . '">' . "\n";

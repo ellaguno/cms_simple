@@ -9,13 +9,28 @@ $type = cms_builder_type();
 if ($type === null) { http_response_code(404); exit('Este tema no usa el constructor de secciones.'); }
 $ek = (string) ($_GET['effect'] ?? '');
 $bk = (string) ($_GET['block'] ?? '');
-if ($ek !== '') { $ed = cms_effects()[$ek] ?? null; $sec = $ed ? cms_effect_sample($ed) : null; }
-else { $bd = $bk !== '' ? cms_block($bk) : null; $sec = $bd ? ['id' => 'demo01', 'type' => (string) $bd['key'], 'data' => cms_block_sample($bd), 'style' => []] : null; }
-if (!$sec) { http_response_code(404); exit('Bloque o efecto desconocido.'); }
+$sk = (string) ($_GET['style'] ?? '');
+$secs = [];
+if ($sk !== '') {
+    // muestra de la variación de estilo: unas cuantas secciones representativas del tema
+    if (!isset(cms_styles()[$sk])) { http_response_code(404); exit('Variación de estilo desconocida.'); }
+    $GLOBALS['cms_style_override'] = $sk;
+    $i = 0;
+    foreach (['hero', 'tarjetas', 'planes', 'cta', 'texto'] as $k) {
+        $bd = cms_block($k);
+        if (!$bd) continue;
+        $secs[] = ['id' => 'st' . (++$i), 'type' => (string) $bd['key'], 'data' => cms_block_sample($bd), 'style' => []];
+        if (count($secs) >= 3) break;
+    }
+    if (!$secs) { http_response_code(404); exit('El tema no tiene bloques para la muestra.'); }
+} elseif ($ek !== '') { $ed = cms_effects()[$ek] ?? null; $sec = $ed ? cms_effect_sample($ed) : null; if ($sec) $secs = [$sec]; }
+else { $bd = $bk !== '' ? cms_block($bk) : null; if ($bd) $secs = [['id' => 'demo01', 'type' => (string) $bd['key'], 'data' => cms_block_sample($bd), 'style' => []]]; }
+if (!$secs) { http_response_code(404); exit('Bloque, efecto o variación desconocidos.'); }
+$sec = $secs[0];
 
 $slug = 'ejemplo-en-vivo';
 $item = ['slug' => $slug, 'status' => 'published', 'title' => 'Ejemplo', 'parent' => '', 'path' => $slug, 'order' => 999,
-    'created' => date('Y-m-d'), 'updated' => date('Y-m-d'), 'sections' => [$sec]];
+    'created' => date('Y-m-d'), 'updated' => date('Y-m-d'), 'sections' => $secs];
 $GLOBALS['cms_item_override'] = [$type => [$slug => $item]];
 $GLOBALS['cms_demo'] = true;   // los bloques que listan contenido dibujan elementos de muestra si la colección está vacía
 cms_items_flush();
@@ -33,7 +48,7 @@ ob_start();
 require CMS_DIR . '/router.php';
 $html = ob_get_clean();
 // avisa al panel de su altura (iframe escalado) y neutraliza los enlaces del ejemplo
-$key = $ek !== '' ? $ek : (string) $sec['type'];
+$key = $sk !== '' ? 'style:' . $sk : ($ek !== '' ? $ek : (string) $sec['type']);
 $js = '<script>(function(){var k=' . json_encode($key) . ';function h(){var s=document.querySelectorAll("section.sec"),b=0;s.forEach(function(e){var r=e.getBoundingClientRect();b=Math.max(b,r.bottom+window.scrollY)});return Math.ceil(b||document.documentElement.scrollHeight)+8}'
     . 'function send(){if(window.parent!==window)window.parent.postMessage({cmsDemo:k,height:h()},location.origin)}'
     . 'window.addEventListener("load",send);setTimeout(send,500);setTimeout(send,1500);setTimeout(send,3000);'

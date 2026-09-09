@@ -56,3 +56,14 @@ compararlas antes de decidir. Al pulsar **Usar esta** se aplica y sus colores y 
 donde puedes seguir afinándolos. Si ya tienes tus colores y solo quieres el resto, marca «conservar mis colores».
 
 Las páginas, los artículos y las imágenes no se tocan: es solo la piel.
+
+## Cambiar de tema
+
+En **Diseño**, arriba, están los temas instalados. Cada ficha dice de qué va el tema y, si no es el que usas, avisa de
+lo que ese tema no trae y tu contenido sí usa. Al activarlo, el sitio cambia de plantillas, de bloques y de estilo;
+el contenido no se borra. Las secciones hechas con bloques que el tema nuevo no conozca dejan de verse, pero siguen
+guardadas y reaparecen si vuelves al tema anterior.
+
+Desde ahí también puedes **instalar un tema** desde un archivo zip y **descargar el que estás usando**, que es la forma
+de llevarlo a otro sitio. Un tema contiene programación que se ejecuta en tu servidor: instala solo los que te dé
+alguien de confianza.

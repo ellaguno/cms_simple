@@ -12,13 +12,34 @@
  */
 declare(strict_types=1);
 
-const CMS_VERSION = '1.19.0';
+const CMS_VERSION = '1.20.0';
 
 define('CMS_DIR', __DIR__);
 define('CMS_ROOT', dirname(__DIR__));
-define('CMS_SITE', CMS_ROOT . '/site');
 define('CMS_DATA', CMS_ROOT . '/data');
 define('CMS_UPLOADS', CMS_ROOT . '/uploads');
+define('CMS_THEMES', CMS_ROOT . '/themes');
+
+/**
+ * Carpeta del tema activo. Un sitio puede tener varios temas en themes/<clave>/ y elegir uno en Admin → Diseño
+ * (queda en data/settings.json → 'theme'); si no hay ninguno, se usa site/ como toda la vida.
+ * Se resuelve aquí, antes que nada, porque CMS_SITE es una constante que usa todo el núcleo.
+ */
+function cms_active_theme_dir(): string
+{
+    $legacy = CMS_ROOT . '/site';
+    $ok = fn(string $d) => is_dir($d) && (is_file($d . '/config.php') || is_file($d . '/theme.json'));
+    $s = @file_get_contents(CMS_DATA . '/settings.json');
+    $k = '';
+    if (is_string($s) && $s !== '') { $j = json_decode($s, true); if (is_array($j)) $k = (string) ($j['theme'] ?? ''); }
+    if ($k !== '' && preg_match('/^[a-z0-9_-]+$/i', $k) && $ok(CMS_THEMES . '/' . $k)) return CMS_THEMES . '/' . $k;
+    if ($ok($legacy)) return $legacy;
+    foreach (glob(CMS_THEMES . '/*', GLOB_ONLYDIR) ?: [] as $d) if ($ok($d)) return $d;
+    return $legacy;
+}
+define('CMS_SITE', cms_active_theme_dir());
+/** Ruta relativa del tema activo desde la raíz del sitio: "site" o "themes/<clave>". */
+define('CMS_SITE_REL', trim(str_replace('\\', '/', substr(CMS_SITE, strlen(CMS_ROOT))), '/') ?: 'site');
 
 /** Ruta base donde está instalado el sitio ("" en la raíz, "/pruebas" en una subcarpeta). */
 function cms_detect_base(): string
@@ -32,6 +53,8 @@ function cms_detect_base(): string
     return ($dir === '/' || $dir === '.') ? '' : rtrim($dir, '/');
 }
 define('CMS_BASE', cms_detect_base());
+/** URL pública de la carpeta del tema activo ("/site" o "/themes/<clave>"). */
+define('CMS_SITE_BASE', CMS_BASE . '/' . CMS_SITE_REL);
 
 /** Configuración del sitio (site/config.php) con valores por defecto. */
 function cms_config(?string $key = null, $default = null)

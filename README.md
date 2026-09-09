@@ -189,6 +189,26 @@ OpenStreetMap con Leaflet (sin clave) y animaciones Lottie. Librerías registrad
 páginas cuyos bloques las declaran. El importador admite además Fable como modelo y recorta de la pantalla los
 logotipos e ilustraciones vectoriales que el PDF no trae como mapa de bits (`@pantalla:x,y,ancho,alto`).
 
+## Varios temas y librería de temas (1.20)
+
+Un sitio puede tener varios temas instalados en `themes/<clave>/` (cada uno con lo que hay en `site/`: `config.php`,
+`inc/`, `templates/`, `blocks/`, `assets/`, `styles/`, y opcionalmente `theme.json` con nombre, descripción, versión y
+autor, más `screenshot.jpg`). El activo se elige en **Admin → Diseño** y queda en `data/settings.json` (`theme`);
+`CMS_SITE` se resuelve al arrancar. Un sitio con un solo tema sigue usando `site/` sin cambiar nada.
+
+Desde esa página se puede **instalar un tema desde un zip** (admite el tema en la raíz del zip o dentro de una única
+carpeta; filtra rutas con `..` y extensiones que no sean de un tema) y **descargar el tema en uso**, que es la forma
+de llevarlo a otro sitio o de armar una librería propia. Un tema trae PHP que se ejecuta en el servidor: instala solo
+los de confianza.
+
+Antes de activar, la ficha avisa de lo que el tema destino **no** trae y tu contenido sí usa (tipos de contenido y
+bloques). El contenido no se toca nunca: las secciones con bloques que el tema nuevo no conoce dejan de dibujarse y
+vuelven si regresas al anterior. Los bloques de paquetes (`visual/…`, `motion/…`, `marketing/…`, `contenido/…`) los
+pone el núcleo, así que funcionan en todos los temas. Al cambiar de tema se retiran los colores y tipografías que
+hubiera copiado una variación anterior, para que la piel del nuevo se vea tal cual.
+
+Rutas: `cms_asset()` y las imágenes por nombre apuntan al tema activo (`CMS_SITE_BASE`, `CMS_SITE_REL`).
+
 ## Variaciones de estilo (1.19)
 
 Un tema puede traer **pieles**: `<tema>/styles/<clave>.json` con `label`, `desc`, `fonts` (familias de Google Fonts),

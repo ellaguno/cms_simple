@@ -1,0 +1,10 @@
+# Los archivos de los temas (PHP y JSON) no se sirven por HTTP; sus assets sí.
+<FilesMatch "\.(php|json)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+  </IfModule>
+</FilesMatch>

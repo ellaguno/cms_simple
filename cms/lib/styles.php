@@ -1,6 +1,12 @@
 <?php
 /**
- * cms_simple — variaciones de estilo del tema ("la piel" del sitio).
+ * cms_simple — temas del sitio y variaciones de estilo ("la piel").
+ *
+ * Un sitio puede tener varios temas en themes/<clave>/ (cada uno con lo que tiene site/: config.php, inc/, templates/,
+ * blocks/, assets/) y elegir el activo en Admin → Diseño; queda en Ajustes ('theme') y lo resuelve CMS_SITE al arrancar.
+ * Un sitio con un solo tema sigue usando site/ sin más, como siempre.
+ *
+ * Variaciones de estilo del tema activo:
  *
  * Un tema declara variaciones en <tema>/styles/<clave>.json:
  *   {
@@ -85,4 +91,104 @@ function cms_style_head(?string $key = null): string
     $sel = !empty($GLOBALS['cms_style_override']) ? ':root:root:root:root' : ':root:root';
     if ($css !== '') $h .= '<style id="cms-style">' . $sel . '{' . $css . '}</style>' . "\n";
     return $h;
+}
+
+/** Claves de Ajustes que gobiernan las variaciones de un tema (para poder devolverlas a su sitio al cambiar de tema). */
+function cms_style_setting_keys(string $dir): array
+{
+    $keys = [];
+    foreach (glob($dir . '/styles/*.json') ?: [] as $f) {
+        $d = cms_json_read($f, null);
+        if (is_array($d)) foreach ((array) ($d['settings'] ?? []) as $k => $v) if (preg_match('/^[a-z0-9_]+$/i', (string) $k)) $keys[$k] = true;
+    }
+    return array_keys($keys);
+}
+
+/* ------------------------------------------------------------------ temas instalados */
+
+/** Ficha de un tema a partir de su carpeta. */
+function cms_theme_info(string $dir, string $key): array
+{
+    $j = is_file($dir . '/theme.json') ? (cms_json_read($dir . '/theme.json', []) ?: []) : [];
+    $shot = '';
+    foreach (['screenshot.png', 'screenshot.jpg', 'screenshot.webp'] as $f) if (is_file($dir . '/' . $f)) { $shot = $f; break; }
+    return [
+        'key' => $key,
+        'label' => (string) ($j['label'] ?? ucfirst($key)),
+        'desc' => (string) ($j['desc'] ?? ''),
+        'version' => (string) ($j['version'] ?? ''),
+        'author' => (string) ($j['author'] ?? ''),
+        'dir' => $dir,
+        'url' => CMS_BASE . '/' . ($key === 'site' ? 'site' : 'themes/' . $key),
+        'screenshot' => $shot,
+        'styles' => count(glob($dir . '/styles/*.json') ?: []),
+    ];
+}
+
+/** Temas instalados: 'site' (el clásico, si existe) y los de themes/. */
+function cms_themes(): array
+{
+    static $out = null;
+    if ($out !== null) return $out;
+    $out = [];
+    $ok = fn(string $d) => is_dir($d) && (is_file($d . '/config.php') || is_file($d . '/theme.json'));
+    if ($ok(CMS_ROOT . '/site')) $out['site'] = cms_theme_info(CMS_ROOT . '/site', 'site');
+    foreach (glob(CMS_THEMES . '/*', GLOB_ONLYDIR) ?: [] as $d) {
+        $k = basename($d);
+        if (!preg_match('/^[a-z0-9_-]+$/i', $k) || isset($out[$k]) || !$ok($d)) continue;
+        $out[$k] = cms_theme_info($d, $k);
+    }
+    return $out;
+}
+
+/** Clave del tema activo. */
+function cms_theme_key(): string
+{
+    return CMS_SITE_REL === 'site' ? 'site' : basename(CMS_SITE);
+}
+
+/** Devuelve lo que un archivo PHP del tema exporta con return, en un ámbito aislado. */
+function cms_php_array(string $file): array
+{
+    if (!is_file($file)) return [];
+    try { $v = require $file; } catch (\Throwable $e) { return []; }
+    return is_array($v) ? $v : [];
+}
+
+/** Tipos de contenido y bloques que declara un tema (sin activarlo), para avisar antes de cambiar. */
+function cms_theme_contract(string $dir): array
+{
+    $cfg = cms_php_array($dir . '/config.php');
+    return [
+        'types' => array_keys((array) ($cfg['types'] ?? [])),
+        'blocks' => array_keys(cms_php_array($dir . '/blocks.php')),
+    ];
+}
+
+/** Tipos y bloques que el contenido usa hoy, para compararlos con los del tema destino. */
+function cms_content_usage(): array
+{
+    static $cache = null;
+    if ($cache !== null) return $cache;
+    $types = [];
+    foreach (cms_config('types') as $k => $d) if (glob(cms_content_dir($k) . '/*.json')) $types[] = (string) $k;
+    $blocks = [];
+    foreach ($types as $t) foreach (cms_items($t, false) as $it) foreach ((array) ($it['sections'] ?? []) as $sec) {
+        $b = (string) ($sec['type'] ?? '');
+        if ($b !== '' && strpos($b, '/') === false) $blocks[$b] = true;   // los de paquetes viajan con el núcleo
+    }
+    return $cache = ['types' => $types, 'blocks' => array_keys($blocks)];
+}
+
+/** Qué se perdería al cambiar a un tema: ['types' => [...], 'blocks' => [...]] con lo que el tema destino no trae. */
+function cms_theme_warnings(string $dir): array
+{
+    $c = cms_theme_contract($dir);
+    $u = cms_content_usage();
+    if (!$c['types'] && !$c['blocks']) return ['types' => [], 'blocks' => [], 'unknown' => true];
+    return [
+        'types' => $c['types'] ? array_values(array_diff($u['types'], $c['types'])) : [],
+        'blocks' => $c['blocks'] ? array_values(array_diff($u['blocks'], $c['blocks'])) : [],
+        'unknown' => false,
+    ];
 }

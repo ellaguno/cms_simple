@@ -409,3 +409,14 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-style-swatches span { width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--line); }
 .ad-style-swatches small { color: var(--grey); font-size: 12px; margin-left: 4px; }
 .ad-style-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.ad-subtitle { font-size: 18px; font-weight: 600; margin: 26px 0 4px; }
+.ad-themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; margin: 6px 0 16px; }
+.ad-theme { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; background: #fff; }
+.ad-theme.is-on { border-color: #000; box-shadow: 0 0 0 1px #000; }
+.ad-theme img, .ad-theme-noshot { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; background: var(--bg); }
+.ad-theme-noshot { display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 26px; color: var(--grey); letter-spacing: .05em; }
+.ad-theme-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.ad-theme-body .ad-help { margin: 0; flex: 1; }
+.ad-theme-warn { color: #7a5200; background: #fff4d6; padding: 6px 8px; border-radius: 8px; flex: 0; }
+.ad-theme-install { display: flex; align-items: center; gap: 8px; }
+.ad-theme-install input[type=text] { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; max-width: 240px; }

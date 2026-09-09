@@ -34,6 +34,6 @@ Un consejo: un efecto por página llama la atención; cinco cansan.
 
 ## Catálogo instalado en este sitio
 
-Esta lista se genera desde la configuración actual, así que siempre está al día.
+Esta lista se genera desde la configuración actual, así que siempre está al día. Cada tarjeta muestra el bloque **dibujado de verdad con el diseño de este sitio** y datos de ejemplo; los efectos se mueven y responden al ratón como en la página real. Pasa el cursor sobre una tarjeta y pulsa **Abrir** para verlo a tamaño completo en otra pestaña. En el constructor verás el mismo ejemplo al pasar el ratón por el selector de bloques y al elegir un efecto en la pestaña Estilo.
 
 {{bloques}}

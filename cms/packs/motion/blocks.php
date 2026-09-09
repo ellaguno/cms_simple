@@ -4,6 +4,7 @@ return [
     'marquesina' => [
         'label' => 'Marquesina', 'desc' => 'Textos o logotipos que se desplazan en una cinta continua.',
         'wrap_class' => 'cms-sec', 'styles' => ['bg', 'text', 'pad', 'anchor', 'class', 'hide_mobile'],
+        'sample' => ['items' => ['Branding', 'Diseño web', 'Estrategia', 'Contenido'], 'outline' => true, 'size' => 'l'],
         'assets' => ['js' => ['assets/marquesina.js']],
         'fields' => [
             'items'     => ['type' => 'lines', 'label' => 'Elementos, uno por línea: texto, o ruta de imagen (logotipo)', 'rows' => 6, 'required' => true, 'default' => ['Diseño', 'Estrategia', 'Desarrollo']],
@@ -17,6 +18,7 @@ return [
     'cifras' => [
         'label' => 'Cifras animadas', 'desc' => 'Números que cuentan desde cero al entrar en pantalla.',
         'wrap_class' => 'cms-sec', 'libs' => ['gsap', 'scrolltrigger'], 'assets' => ['js' => ['assets/cifras.js']],
+        'sample' => ['title' => 'En números', 'subtitle' => 'Lo que hemos hecho hasta hoy'],
         'fields' => [
             'title'    => ['type' => 'text', 'label' => 'Título (opcional)'],
             'subtitle' => ['type' => 'text', 'label' => 'Subtítulo (opcional)'],
@@ -27,6 +29,7 @@ return [
     'titular' => [
         'label' => 'Titular grande', 'desc' => 'Una frase enorme, con texto de apoyo y botón opcionales; ideal con el efecto de texto revelado.',
         'wrap_class' => 'cms-sec', 'effects' => ['motion/reveal'],
+        'sample' => ['text' => 'Diseñamos marcas que <em>se mueven</em>', 'sub' => 'Estrategia, identidad y web para empresas que quieren crecer.', 'button_text' => 'Hablemos', 'button_url' => '#'],
         'fields' => [
             'text'        => ['type' => 'textarea', 'label' => 'Frase (admite <em> para resaltar)', 'rows' => 2, 'required' => true],
             'sub'         => ['type' => 'textarea', 'label' => 'Texto de apoyo (opcional)', 'rows' => 2],
@@ -39,6 +42,7 @@ return [
     'parallax' => [
         'label' => 'Galería con parallax', 'desc' => 'Columnas de imágenes que se mueven a distinta velocidad con el scroll.',
         'wrap_class' => 'cms-sec', 'libs' => ['gsap', 'scrolltrigger'], 'assets' => ['js' => ['assets/parallax.js']],
+        'sample' => ['title' => 'Trabajo reciente', 'images' => ['cms/assets/img/demo/foto-1.jpg | Panel', 'cms/assets/img/demo/foto-2.jpg | Casos', 'cms/assets/img/demo/foto-3.jpg | Documentos', 'cms/assets/img/demo/foto-4.jpg', 'cms/assets/img/demo/foto-5.jpg', 'cms/assets/img/demo/foto-6.jpg']],
         'fields' => [
             'title'    => ['type' => 'text', 'label' => 'Título (opcional)'],
             'subtitle' => ['type' => 'text', 'label' => 'Subtítulo (opcional)'],

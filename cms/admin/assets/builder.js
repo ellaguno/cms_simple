@@ -52,7 +52,13 @@
       var eff = card.querySelector('select[name$="[style][effect]"]'), effPv = card.querySelector("[data-effect-preview]");
       if (eff && effPv) {
         var map = {}; try { map = JSON.parse(effPv.getAttribute("data-effect-preview") || "{}"); } catch (e) {}
-        var showEff = function () { var u = map[eff.value]; effPv.hidden = !u; if (u) effPv.querySelector("img").src = u; };
+        var effBox = effPv.querySelector("[data-demo-box]"), effImg = effPv.querySelector("img");
+        var showEff = function () {
+          var u = map[eff.value]; effPv.hidden = !u; if (!u) return;
+          var live = u.indexOf("p=demo") !== -1;
+          effImg.hidden = live; if (effBox) effBox.hidden = !live;
+          if (live) { if (window.CMS_ADMIN_DEMO) CMS_ADMIN_DEMO.show(effBox, u); } else effImg.src = u;
+        };
         eff.addEventListener("change", showEff); showEff();
       }
       card.addEventListener("focusin", function () { select(card, true); });
@@ -116,11 +122,15 @@
 
     // selector de bloques (con vista previa al pasar el ratón)
     box.querySelector("[data-add-section]").addEventListener("click", function () { picker.hidden = false; });
-    var pv = picker.querySelector("[data-picker-preview]");
+    var pv = picker.querySelector("[data-picker-preview]"), pvBox = pv && pv.querySelector("[data-demo-box]"), pvImg = pv && pv.querySelector("img"), hoverT = null;
     picker.querySelectorAll("[data-block]").forEach(function (b) {
       b.addEventListener("mouseenter", function () {
-        var u = b.getAttribute("data-preview"); if (!u || !pv) { if (pv) pv.hidden = true; return; }
-        pv.querySelector("img").src = u; pv.querySelector("p").textContent = b.querySelector("strong").textContent; pv.hidden = false;
+        var demo = b.getAttribute("data-demo"), img = b.getAttribute("data-preview");
+        if (!pv || (!demo && !img)) { if (pv) pv.hidden = true; return; }
+        pv.querySelector("p").textContent = b.querySelector("strong").textContent; pv.hidden = false;
+        pvImg.hidden = !!demo; if (pvBox) pvBox.hidden = !demo;
+        if (demo) { clearTimeout(hoverT); hoverT = setTimeout(function () { if (window.CMS_ADMIN_DEMO) CMS_ADMIN_DEMO.show(pvBox, demo); }, 200); }   // pequeña espera: no cargar al pasar de largo
+        else pvImg.src = img;
       });
     });
     picker.querySelector(".ad-picker-body").addEventListener("mouseleave", function () { if (pv) pv.hidden = true; });

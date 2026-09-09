@@ -53,11 +53,14 @@ $keys = array_keys($chapters);
         $list = '';
         $groups = [];
         foreach (cms_blocks() as $k => $bd) $groups[(string) ($bd['group'] ?? 'Bloques')][] = $bd;
-        $card = function (string $label, string $desc, string $key, string $img): string {
-            return '<figure>' . ($img ? '<img src="' . cms_e($img) . '" alt="' . cms_e($label) . '" loading="lazy">' : '') . '<figcaption><strong>' . cms_e($label) . '</strong>' . ($desc ? cms_e($desc) . ' ' : '') . '<code>' . cms_e($key) . '</code></figcaption></figure>';
+        // ejemplo en vivo (iframe con el tema real, admin/?p=demo) o, si el tema no usa el constructor, la imagen estática si la hay
+        $card = function (string $label, string $desc, string $key, string $demo, string $img): string {
+            $media = $demo !== '' ? '<div class="ad-demo" data-demo="' . cms_e($demo) . '"><a class="ad-demo-open" href="' . cms_e($demo) . '" target="_blank" rel="noopener" title="Abrir el ejemplo a tamaño real">Abrir ↗</a></div>'
+                : ($img ? '<img src="' . cms_e($img) . '" alt="' . cms_e($label) . '" loading="lazy">' : '');
+            return '<figure>' . $media . '<figcaption><strong>' . cms_e($label) . '</strong>' . ($desc ? cms_e($desc) . ' ' : '') . '<code>' . cms_e($key) . '</code></figcaption></figure>';
         };
-        foreach ($groups as $g => $bs) { $list .= '<h4>' . cms_e($g) . '</h4><div class="ad-manual-catalog">'; foreach ($bs as $bd) $list .= $card((string) $bd['label'], (string) ($bd['desc'] ?? ''), (string) $bd['key'], cms_block_preview($bd)); $list .= '</div>'; }
-        if (cms_effects()) { $list .= '<h4>Efectos (pestaña Estilo)</h4><div class="ad-manual-catalog">'; foreach (cms_effects() as $e) $list .= $card((string) $e['label'], (string) ($e['desc'] ?? ''), (string) $e['key'], cms_effect_preview($e)); $list .= '</div>'; }
+        foreach ($groups as $g => $bs) { $list .= '<h4>' . cms_e($g) . '</h4><div class="ad-manual-catalog">'; foreach ($bs as $bd) $list .= $card((string) $bd['label'], (string) ($bd['desc'] ?? ''), (string) $bd['key'], cms_demo_url((string) $bd['key']), cms_block_preview($bd)); $list .= '</div>'; }
+        if (cms_effects()) { $list .= '<h4>Efectos (pestaña Estilo)</h4><div class="ad-manual-catalog">'; foreach (cms_effects() as $e) $list .= $card((string) $e['label'], (string) ($e['desc'] ?? ''), (string) $e['key'], cms_demo_url((string) $e['key'], true), cms_effect_preview($e)); $list .= '</div>'; }
         $html = str_replace('{{bloques}}', $list, $html);
     }
     echo $html;

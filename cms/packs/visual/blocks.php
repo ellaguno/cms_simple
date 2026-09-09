@@ -4,6 +4,7 @@ return [
     'galeria3d' => [
         'label' => 'Galería 3D', 'desc' => 'Imágenes flotando en un espacio 3D que se recorre con el scroll (three.js, se carga solo al llegar).',
         'wrap_class' => 'cms-sec', 'styles' => ['bg', 'text', 'pad', 'anchor', 'class', 'hide_mobile'],
+        'sample' => ['title' => 'Conoce la plataforma', 'subtitle' => 'Recorre las pantallas con el scroll', 'images' => ['cms/assets/img/demo/foto-1.jpg', 'cms/assets/img/demo/foto-2.jpg', 'cms/assets/img/demo/foto-3.jpg', 'cms/assets/img/demo/foto-4.jpg', 'cms/assets/img/demo/foto-5.jpg', 'cms/assets/img/demo/foto-6.jpg']],
         'assets' => ['js' => ['assets/galeria3d.js']],
         'fields' => [
             'title'    => ['type' => 'text', 'label' => 'Título'],
@@ -16,6 +17,7 @@ return [
     'carrusel' => [
         'label' => 'Carrusel', 'desc' => 'Imágenes en un carrusel deslizable con flechas y puntos (Swiper).',
         'wrap_class' => 'cms-sec', 'libs' => ['swiper'], 'assets' => ['js' => ['assets/carrusel.js']],
+        'sample' => ['title' => 'Carrusel', 'subtitle' => 'Flechas, puntos y avance automático', 'images' => ['cms/assets/img/demo/foto-1.jpg | Uno', 'cms/assets/img/demo/foto-2.jpg | Dos', 'cms/assets/img/demo/foto-3.jpg | Tres', 'cms/assets/img/demo/foto-4.jpg | Cuatro'], 'per_view' => '2'],
         'fields' => [
             'title'    => ['type' => 'text', 'label' => 'Título'],
             'subtitle' => ['type' => 'text', 'label' => 'Subtítulo'],
@@ -27,6 +29,7 @@ return [
     'lightbox' => [
         'label' => 'Galería con lightbox', 'desc' => 'Rejilla de imágenes que se abren a pantalla completa (GLightbox).',
         'wrap_class' => 'cms-sec', 'libs' => ['glightbox'], 'assets' => ['js' => ['assets/lightbox.js']],
+        'sample' => ['title' => 'Galería', 'subtitle' => 'Haz clic en una imagen para abrirla', 'images' => ['cms/assets/img/demo/foto-1.jpg', 'cms/assets/img/demo/foto-2.jpg', 'cms/assets/img/demo/foto-3.jpg', 'cms/assets/img/demo/foto-4.jpg', 'cms/assets/img/demo/foto-5.jpg', 'cms/assets/img/demo/foto-6.jpg']],
         'fields' => [
             'title'    => ['type' => 'text', 'label' => 'Título'],
             'subtitle' => ['type' => 'text', 'label' => 'Subtítulo'],

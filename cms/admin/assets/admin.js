@@ -13,6 +13,40 @@
     d.addEventListener("toggle", function () { try { localStorage.setItem(key, d.open ? "1" : "0"); } catch (e) {} });
   });
 
+  /* ---------------- ejemplos en vivo de bloques y efectos (admin/?p=demo): iframe a 1200 px escalado a su caja; la página avisa su altura ---------------- */
+  var DEMO_W = 1200, DEMO_MAX_H = 900;
+  function demoFit(box) {
+    var f = box.querySelector("iframe"); if (!f) return;
+    var s = (box.clientWidth || DEMO_W) / DEMO_W, h = Math.min(parseInt(box.getAttribute("data-h") || "0", 10) || 0, DEMO_MAX_H);
+    f.style.transform = "scale(" + s + ")";
+    if (h) { f.style.height = h + "px"; box.style.height = Math.max(120, Math.round(h * s)) + "px"; box.classList.add("is-sized"); }
+  }
+  function demoShow(box, url) {
+    if (!box) return;
+    if (box.getAttribute("data-url") === url) return;
+    box.setAttribute("data-url", url); box.removeAttribute("data-h"); box.classList.remove("is-sized"); box.style.height = "";
+    var old = box.querySelector("iframe"); if (old) old.remove();
+    var f = document.createElement("iframe"); f.src = url; f.title = "Ejemplo"; f.tabIndex = -1; f.setAttribute("loading", "lazy");
+    box.appendChild(f); demoFit(box);
+  }
+  window.CMS_ADMIN_DEMO = { show: demoShow, fit: demoFit };
+  window.addEventListener("message", function (e) {
+    if (e.origin !== location.origin || !e.data || !e.data.cmsDemo) return;
+    document.querySelectorAll(".ad-demo").forEach(function (box) {
+      var f = box.querySelector("iframe");
+      if (f && f.contentWindow === e.source) { box.setAttribute("data-h", String(Math.max(120, e.data.height | 0))); demoFit(box); }
+    });
+  });
+  window.addEventListener("resize", function () { document.querySelectorAll(".ad-demo").forEach(demoFit); });
+  // catálogo del manual: cada ejemplo se carga al acercarse a la pantalla
+  var lazy = document.querySelectorAll(".ad-demo[data-demo]");
+  if (lazy.length) {
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (entries) { entries.forEach(function (en) { if (en.isIntersecting) { io.unobserve(en.target); demoShow(en.target, en.target.getAttribute("data-demo")); } }); }, { rootMargin: "300px 0px" });
+      lazy.forEach(function (b) { io.observe(b); });
+    } else lazy.forEach(function (b) { demoShow(b, b.getAttribute("data-demo")); });
+  }
+
   /* ---------------- listados: el selector de filtro (categoría, autor…) aplica al cambiar ---------------- */
   document.querySelectorAll("[data-filter-auto]").forEach(function (sel) { sel.addEventListener("change", function () { sel.form && sel.form.submit(); }); });
 

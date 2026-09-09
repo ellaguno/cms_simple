@@ -5,6 +5,7 @@ return [
     'video' => [
         'label' => 'Video', 'group' => 'Media', 'desc' => 'Video de YouTube o Vimeo con título; se carga al hacer clic sobre la portada.',
         'wrap_class' => 'cms-sec',
+        'sample' => ['title' => 'Video', 'subtitle' => 'Se carga al hacer clic sobre la portada', 'url' => 'https://www.youtube.com/watch?v=SAdlFVYjVI0'],
         'fields' => [
             'title'    => ['type' => 'text', 'label' => 'Título (opcional)'],
             'subtitle' => ['type' => 'text', 'label' => 'Subtítulo (opcional)'],
@@ -15,6 +16,7 @@ return [
     'mapa' => [
         'label' => 'Mapa', 'group' => 'Media', 'desc' => 'Mapa de OpenStreetMap con un marcador, sin clave de API.',
         'wrap_class' => 'cms-sec', 'libs' => ['leaflet'],
+        'sample' => ['title' => 'Dónde estamos', 'lat' => '19.4326', 'lng' => '-99.1332', 'label' => 'Zócalo, Ciudad de México'],
         'fields' => [
             'title'   => ['type' => 'text', 'label' => 'Título (opcional)'],
             'lat'     => ['type' => 'text', 'label' => 'Latitud', 'required' => true, 'placeholder' => '19.4326', 'half' => true],
@@ -27,6 +29,7 @@ return [
     'lottie' => [
         'label' => 'Animación Lottie', 'group' => 'Media', 'desc' => 'Animación vectorial (archivo .json de LottieFiles) con texto opcional al lado.',
         'wrap_class' => 'cms-sec', 'libs' => ['lottie'],
+        'sample' => ['file' => 'cms/assets/img/demo/animacion.json', 'title' => 'Animación Lottie', 'text' => 'Un archivo .json de LottieFiles, ligero y vectorial.'],
         'fields' => [
             'file'  => ['type' => 'text', 'label' => 'Archivo .json (ruta en uploads/ o URL)', 'required' => true],
             'title' => ['type' => 'text', 'label' => 'Título (opcional)'],

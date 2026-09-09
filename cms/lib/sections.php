@@ -213,3 +213,78 @@ function cms_block_header(string $title, string $subtitle = '', string $extraCla
     if (trim($subtitle) !== '') $h .= '<p class="' . cms_e(cms_block_class('subtitle')) . '">' . $clean($subtitle) . '</p>';
     return $h . '</div>';
 }
+
+/* ------------------------------------------------------------------ ejemplos en vivo (manual y selector del constructor) */
+
+/** Tipo de contenido que usa el constructor (el primero con un campo 'sections'), o null. */
+function cms_builder_type(): ?string
+{
+    foreach (cms_config('types') as $k => $d) foreach ((array) ($d['fields'] ?? []) as $fd) if (($fd['type'] ?? '') === 'sections') return (string) $k;
+    return null;
+}
+
+/** Imágenes de muestra que trae el núcleo (cms/assets/img/demo/). $kind: foto, persona, logo. */
+function cms_demo_image(string $kind = 'foto', int $n = 1): string
+{
+    $max = ['foto' => 6, 'persona' => 4, 'logo' => 6][$kind] ?? 6;
+    return 'cms/assets/img/demo/' . $kind . '-' . (($n - 1) % $max + 1) . '.' . ($kind === 'logo' ? 'png' : 'jpg');
+}
+
+/**
+ * Datos de ejemplo de un bloque: lo que declare en 'sample' completa lo que se deduce de la definición
+ * (valores por defecto, imágenes de muestra, textos genéricos). Los campos bilingües reciben el mismo texto en todos los idiomas.
+ */
+function cms_block_sample(array $def): array
+{
+    $sample = (array) ($def['sample'] ?? []);
+    $data = [];
+    $img = 0;
+    foreach ((array) ($def['fields'] ?? []) as $k => $fd) {
+        $t = (string) ($fd['type'] ?? 'text');
+        if (array_key_exists($k, $sample)) { $data[$k] = $sample[$k]; continue; }
+        if (array_key_exists('default', $fd)) { $data[$k] = $fd['default']; continue; }
+        switch (true) {
+            case $t === 'image': $data[$k] = cms_demo_image('foto', ++$img); break;
+            case $t === 'images': $data[$k] = [cms_demo_image('foto', 1), cms_demo_image('foto', 2), cms_demo_image('foto', 3)]; break;
+            case in_array($t, ['lines', 'tags'], true): $data[$k] = []; break;
+            case $t === 'html': $data[$k] = '<p>Texto de ejemplo con <strong>negritas</strong> y un <a href="#">enlace</a>.</p>'; break;
+            case $t === 'checkbox': $data[$k] = false; break;
+            case $t === 'number': $data[$k] = (int) ($fd['min'] ?? 3); break;
+            case $t === 'select': $data[$k] = (string) array_key_first((array) ($fd['options'] ?? [''])); break;
+            case $k === 'title': $data[$k] = 'Título de ejemplo'; break;
+            case $k === 'subtitle': $data[$k] = 'Un subtítulo de apoyo para el bloque'; break;
+            case $k === 'text' || $k === 'sub': $data[$k] = 'Texto breve que acompaña al bloque y explica de qué trata.'; break;
+            default: $data[$k] = '';
+        }
+    }
+    foreach ($sample as $k => $v) if (!array_key_exists($k, $data)) $data[$k] = $v;
+    return $data;
+}
+
+/**
+ * Sección de demostración de un efecto: el efecto declara en 'sample' uno o varios candidatos
+ * [['block' => 'tarjetas', 'data' => […], 'style' => […]], …]; se usa el primero cuyo bloque exista en este sitio.
+ * Sin candidatos válidos, el primer bloque del tema que no sea cabecera ni pie.
+ */
+function cms_effect_sample(array $def): ?array
+{
+    $cands = (array) ($def['sample'] ?? []);
+    if ($cands && isset($cands['block'])) $cands = [$cands];
+    $blocks = cms_blocks();
+    $chosen = null;
+    foreach ($cands as $c) if (($bd = cms_block((string) ($c['block'] ?? ''))) !== null) { $chosen = (array) $c + ['data' => [], 'style' => []]; $chosen['def'] = $bd; break; }
+    if (!$chosen) {
+        foreach ($blocks as $k => $bd) if (!in_array((string) ($bd['group'] ?? ''), ['Estructura'], true) && !isset($bd['pack'])) { $chosen = ['def' => $bd, 'data' => [], 'style' => []]; break; }
+        if (!$chosen && $blocks) $chosen = ['def' => reset($blocks), 'data' => [], 'style' => []];
+    }
+    if (!$chosen) return null;
+    $bd = $chosen['def'];
+    return ['id' => 'demo01', 'type' => (string) $bd['key'], 'data' => (array) $chosen['data'] + cms_block_sample($bd), 'style' => ['effect' => (string) $def['key']] + (array) $chosen['style']];
+}
+
+/** URL del ejemplo en vivo de un bloque o un efecto (página del panel que lo dibuja con el tema, sin cabecera ni pie), o '' si el tema no usa el constructor. */
+function cms_demo_url(string $key, bool $effect = false): string
+{
+    if (!defined('ADMIN_URL') || cms_builder_type() === null) return '';
+    return ADMIN_URL . '/?p=demo&' . ($effect ? 'effect' : 'block') . '=' . rawurlencode($key);
+}

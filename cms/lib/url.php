@@ -72,7 +72,7 @@ function cms_img(string $path): string
 {
     if ($path === '') return '';
     if (preg_match('#^(https?:)?//#i', $path)) return $path;
-    if (strpos($path, 'uploads/') === 0 || strpos($path, 'site/') === 0) return CMS_BASE . '/' . $path;
+    if (strpos($path, 'uploads/') === 0 || strpos($path, 'site/') === 0 || strpos($path, 'cms/') === 0) return CMS_BASE . '/' . $path;
     if (strpos($path, 'assets/') === 0) return CMS_BASE . '/site/' . $path;
     return CMS_BASE . '/site/assets/img/' . ltrim($path, '/');
 }
@@ -81,7 +81,7 @@ function cms_img(string $path): string
 function cms_local_path(string $path): ?string
 {
     if ($path === '' || preg_match('#^(https?:)?//#i', $path)) return null;
-    if (strpos($path, 'uploads/') === 0 || strpos($path, 'site/') === 0) return CMS_ROOT . '/' . $path;
+    if (strpos($path, 'uploads/') === 0 || strpos($path, 'site/') === 0 || strpos($path, 'cms/') === 0) return CMS_ROOT . '/' . $path;
     if (strpos($path, 'assets/') === 0) return CMS_SITE . '/' . $path;
     return CMS_SITE . '/assets/img/' . ltrim($path, '/');
 }

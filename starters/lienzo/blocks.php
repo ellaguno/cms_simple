@@ -9,6 +9,7 @@ return [
     'cabecera' => [
         'label' => 'Cabecera del sitio', 'group' => 'Estructura', 'desc' => 'Logotipo, menú de navegación y botón. Va al principio de la página.',
         'wrap_class' => 'lz-header', 'styles' => ['bg', 'text', 'class', 'hide_mobile'], 'animate' => 'none',
+        'sample' => ['topbar' => ['📞 55 1234 5678 | tel:5512345678', 'hola@tumarca.com | mailto:hola@tumarca.com | derecha'], 'name' => 'Tu marca', 'menu' => ['Inicio | /', 'Servicios | #servicios', 'Nosotros | #nosotros', 'Blog | /blog', 'Contacto | #contacto'], 'button_text' => 'Cotizar', 'button_url' => '#contacto'],
         'fields' => [
             'topbar'      => ['type' => 'lines', 'i18n' => true, 'label' => 'Barra superior (opcional), un dato por línea: Texto | URL | derecha (para alinear a la derecha)', 'rows' => 3],
             'logo'        => ['type' => 'image', 'label' => 'Logotipo (imagen)'],
@@ -22,6 +23,7 @@ return [
     'pie' => [
         'label' => 'Pie de página', 'group' => 'Estructura', 'desc' => 'Logotipo o nombre, texto, columnas de enlaces, contacto, redes y derechos. Va al final.',
         'wrap_class' => 'lz-footer', 'styles' => ['bg', 'text', 'pad', 'class'], 'animate' => 'none',
+        'sample' => ['name' => 'Tu marca', 'text' => 'Diseño y desarrollo con calma y buen gusto.', 'columns' => ['Empresa | Nosotros > # | Equipo > # | Blog > #', 'Servicios | Branding > # | Sitios web > # | Contenido > #'], 'contact' => ['hola@tumarca.com', '55 1234 5678', 'Ciudad de México'], 'social' => ['Instagram | #', 'LinkedIn | #']],
         'fields' => [
             'logo'    => ['type' => 'image', 'label' => 'Logotipo (imagen)'],
             'name'    => ['type' => 'text', 'i18n' => true, 'label' => 'Nombre'],
@@ -37,6 +39,7 @@ return [
     'hero' => [
         'label' => 'Hero', 'group' => 'Cabeceras', 'desc' => 'Titular grande con texto de apoyo, botones e imagen. La primera banda de una portada.',
         'wrap_class' => 'lz-hero', 'effects' => ['visual/shader', 'visual/gradient'],
+        'sample' => ['badge' => 'Nuevo', 'title' => 'Diseñamos sitios que <span class="lz-accent">venden</span>', 'subtitle' => 'Estrategia, diseño y desarrollo para empresas que quieren crecer sin complicarse.', 'buttons' => ['Empezar ahora | # | primary', 'Ver el portafolio | # | outline'], 'image' => 'cms/assets/img/demo/foto-1.jpg'],
         'fields' => [
             'badge'    => ['type' => 'text', 'i18n' => true, 'label' => 'Etiqueta pequeña sobre el título (opcional)'],
             'title'    => ['type' => 'text', 'i18n' => true, 'label' => 'Título (admite <span class="lz-accent">…</span> para resaltar)', 'required' => true],
@@ -50,6 +53,7 @@ return [
     'encabezado' => [
         'label' => 'Encabezado de página', 'group' => 'Cabeceras', 'desc' => 'Título centrado con texto de apoyo, para páginas interiores.',
         'wrap_class' => 'lz-pagehead',
+        'sample' => ['title' => 'Nuestros servicios', 'text' => 'Todo lo que hacemos, explicado sin rodeos.'],
         'fields' => [
             'title' => ['type' => 'text', 'i18n' => true, 'label' => 'Título', 'required' => true],
             'text'  => ['type' => 'textarea', 'i18n' => true, 'label' => 'Texto de apoyo', 'rows' => 2],
@@ -60,11 +64,13 @@ return [
     'texto' => [
         'label' => 'Texto', 'group' => 'Contenido', 'desc' => 'Texto libre con el editor visual (títulos, listas, imágenes, videos).',
         'wrap_class' => 'lz-sec',
+        'sample' => ['body' => '<h2>Un subtítulo</h2><p>Texto libre con el editor visual: <strong>negritas</strong>, <em>cursivas</em>, enlaces, listas e imágenes.</p><ul><li>Primer punto</li><li>Segundo punto</li><li>Tercer punto</li></ul>'],
         'fields' => ['body' => ['type' => 'html', 'i18n' => true, 'label' => 'Contenido', 'size' => 'lg']],
     ],
     'columnas' => [
         'label' => 'Texto e imagen', 'group' => 'Contenido', 'desc' => 'Dos columnas: texto a un lado e imagen al otro.',
         'wrap_class' => 'lz-sec',
+        'sample' => ['title' => 'Texto a un lado, imagen al otro', 'body' => '<p>Explica una idea con apoyo visual. La imagen puede ir a la derecha o a la izquierda, y el botón es opcional.</p>', 'image' => 'cms/assets/img/demo/foto-2.jpg', 'button_text' => 'Saber más', 'button_url' => '#'],
         'fields' => [
             'title' => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
             'body'  => ['type' => 'html', 'i18n' => true, 'label' => 'Texto'],
@@ -77,6 +83,7 @@ return [
     'imagen' => [
         'label' => 'Imagen', 'group' => 'Contenido', 'desc' => 'Una imagen grande con pie opcional.',
         'wrap_class' => 'lz-sec',
+        'sample' => ['image' => 'cms/assets/img/demo/foto-3.jpg', 'alt' => 'Imagen de ejemplo', 'caption' => 'Un pie de imagen opcional'],
         'fields' => [
             'image'   => ['type' => 'image', 'label' => 'Imagen', 'required' => true],
             'alt'     => ['type' => 'text', 'i18n' => true, 'label' => 'Texto alternativo'],
@@ -86,6 +93,7 @@ return [
     'tarjetas' => [
         'label' => 'Tarjetas', 'group' => 'Contenido', 'desc' => 'Rejilla de tarjetas con icono, título y texto: servicios, características, beneficios, pasos.',
         'wrap_class' => 'lz-sec', 'effects' => ['visual/spotlight'], 'libs' => ['tabler'],
+        'sample' => ['title' => 'Todo lo que necesitas', 'subtitle' => 'Cuatro ventajas en tarjetas', 'items' => ['Rápido | Sitios que cargan en menos de un segundo. | ti-rocket', 'Seguro | Copias y actualizaciones incluidas. | ti-shield-check', 'A tu medida | Bloques que se adaptan a tu marca. | ti-adjustments', 'Con soporte | Personas reales que responden. | ti-users'], 'columns' => '4'],
         'fields' => [
             'title'    => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
             'subtitle' => ['type' => 'text', 'i18n' => true, 'label' => 'Subtítulo'],
@@ -97,6 +105,7 @@ return [
     'lista' => [
         'label' => 'Lista de puntos', 'group' => 'Contenido', 'desc' => 'Título y lista de ventajas o puntos con marca, en una o dos columnas.',
         'wrap_class' => 'lz-sec',
+        'sample' => ['title' => 'Por qué elegirnos', 'text' => 'Cuatro razones, sin letra pequeña.', 'items' => ['Sin permanencia | Cancela cuando quieras', 'Entrega en dos semanas | Con revisiones incluidas', 'Diseño propio | Nada de plantillas genéricas', 'Soporte humano | Por correo y WhatsApp']],
         'fields' => [
             'title'   => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
             'text'    => ['type' => 'textarea', 'i18n' => true, 'label' => 'Texto introductorio', 'rows' => 2],
@@ -107,6 +116,7 @@ return [
     'logos' => [
         'label' => 'Logotipos', 'group' => 'Contenido', 'desc' => 'Fila de logotipos de clientes o aliados.',
         'wrap_class' => 'lz-sec',
+        'sample' => ['title' => 'Confían en nosotros', 'images' => ['cms/assets/img/demo/logo-1.png', 'cms/assets/img/demo/logo-2.png', 'cms/assets/img/demo/logo-3.png', 'cms/assets/img/demo/logo-4.png', 'cms/assets/img/demo/logo-5.png', 'cms/assets/img/demo/logo-6.png']],
         'fields' => [
             'title'  => ['type' => 'text', 'i18n' => true, 'label' => 'Título pequeño (opcional)'],
             'images' => ['type' => 'images', 'label' => 'Logotipos (una imagen por línea; opcional "ruta | nombre")', 'rows' => 6, 'required' => true],
@@ -115,6 +125,7 @@ return [
     'testimonios' => [
         'label' => 'Testimonios', 'group' => 'Contenido', 'desc' => 'Una o varias citas de clientes con nombre y cargo.',
         'wrap_class' => 'lz-sec',
+        'sample' => ['title' => 'Lo que dicen nuestros clientes', 'items' => ['En tres semanas teníamos el sitio nuevo listo. Antes eran meses. | Ana Torres | Directora de marketing, Nordic', 'El equipo entendió la marca a la primera y el resultado se nota. | Luis Pérez | Fundador, Vertex']],
         'fields' => [
             'title' => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
             'items' => ['type' => 'lines', 'i18n' => true, 'label' => 'Testimonios, uno por línea: Cita | Nombre | Cargo o empresa', 'rows' => 4, 'required' => true],
@@ -123,6 +134,7 @@ return [
     'equipo' => [
         'label' => 'Equipo', 'group' => 'Contenido', 'desc' => 'Personas con foto, nombre, cargo y texto breve.',
         'wrap_class' => 'lz-sec',
+        'sample' => ['title' => 'El equipo', 'text' => 'Personas que preguntan antes de proponer.', 'items' => ['Ana Torres | Dirección creativa | cms/assets/img/demo/persona-1.jpg | Quince años diseñando marcas.', 'Luis Pérez | Desarrollo | cms/assets/img/demo/persona-2.jpg | Hace que todo funcione.', 'María Ruiz | Estrategia | cms/assets/img/demo/persona-3.jpg | Convierte ideas en planes.']],
         'fields' => [
             'title' => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
             'text'  => ['type' => 'textarea', 'i18n' => true, 'label' => 'Texto introductorio', 'rows' => 2],
@@ -132,6 +144,7 @@ return [
     'boletin' => [
         'label' => 'Boletín', 'group' => 'Contenido', 'desc' => 'Título, texto y un campo de correo para suscribirse.',
         'wrap_class' => 'lz-sec',
+        'sample' => ['title' => 'Recibe novedades', 'text' => 'Un correo al mes con lo que aprendemos. Sin spam.', 'note' => 'Puedes darte de baja cuando quieras.'],
         'fields' => [
             'title'       => ['type' => 'text', 'i18n' => true, 'label' => 'Título', 'required' => true],
             'text'        => ['type' => 'textarea', 'i18n' => true, 'label' => 'Texto', 'rows' => 2],
@@ -142,6 +155,7 @@ return [
     'planes' => [
         'label' => 'Planes de precios', 'group' => 'Contenido', 'desc' => 'Tarjetas de precio con características y botón.',
         'wrap_class' => 'lz-sec',
+        'sample' => ['title' => 'Planes', 'subtitle' => 'Sin sorpresas ni letra pequeña', 'items' => ['Básico | $499 | al mes | 1 sitio; Soporte por correo; Actualizaciones | Elegir | # |', 'Pro | $999 | al mes | 5 sitios; Soporte prioritario; Dominio incluido | Elegir | # | si', 'Empresa | A medida | | Sitios ilimitados; Gestor dedicado; Acuerdo de servicio | Hablar | # |']],
         'fields' => [
             'title'    => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
             'subtitle' => ['type' => 'text', 'i18n' => true, 'label' => 'Subtítulo'],
@@ -151,6 +165,7 @@ return [
     'faq' => [
         'label' => 'Preguntas frecuentes', 'group' => 'Contenido', 'desc' => 'Preguntas desplegables con su respuesta.',
         'wrap_class' => 'lz-sec',
+        'sample' => ['title' => 'Preguntas frecuentes', 'items' => ['¿Cuánto tarda un sitio? | Entre dos y cuatro semanas según el alcance.', '¿Puedo editar el contenido yo? | Sí, el panel está pensado para eso.', '¿Incluye hosting? | Podemos alojarlo o instalarlo en tu servidor.']],
         'fields' => [
             'title' => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
             'items' => ['type' => 'lines', 'i18n' => true, 'label' => 'Preguntas, una por línea: Pregunta | Respuesta', 'rows' => 6, 'required' => true],
@@ -159,6 +174,7 @@ return [
     'cta' => [
         'label' => 'Llamado a la acción', 'group' => 'Contenido', 'desc' => 'Banda destacada con título, texto y uno o dos botones.',
         'wrap_class' => 'lz-cta', 'effects' => ['visual/gradient'],
+        'sample' => ['title' => '¿Listo para empezar?', 'text' => 'Agenda una llamada de 20 minutos y te decimos por dónde ir.', 'button_text' => 'Agendar llamada', 'button_url' => '#', 'button2_text' => 'Escribir por WhatsApp', 'button2_url' => '#'],
         'fields' => [
             'title'        => ['type' => 'text', 'i18n' => true, 'label' => 'Título', 'required' => true],
             'text'         => ['type' => 'textarea', 'i18n' => true, 'label' => 'Texto', 'rows' => 2],
@@ -171,6 +187,7 @@ return [
     'contacto' => [
         'label' => 'Contacto', 'group' => 'Contenido', 'desc' => 'Datos de contacto y formulario (nombre, correo, mensaje).',
         'wrap_class' => 'lz-sec',
+        'sample' => ['title' => 'Hablemos', 'text' => 'Respondemos el mismo día.', 'email' => 'hola@tumarca.com', 'phone' => '55 1234 5678', 'address' => 'Ciudad de México'],
         'fields' => [
             'title'   => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
             'text'    => ['type' => 'textarea', 'i18n' => true, 'label' => 'Texto', 'rows' => 2],
@@ -184,6 +201,7 @@ return [
     'separador' => [
         'label' => 'Separador', 'group' => 'Contenido', 'desc' => 'Espacio en blanco, con o sin línea.',
         'wrap_class' => 'lz-spacer', 'styles' => ['bg', 'class'], 'animate' => 'none',
+        'sample' => ['line' => true],
         'fields' => [
             'size' => ['type' => 'select', 'label' => 'Altura', 'options' => ['s' => 'Pequeño', 'm' => 'Medio', 'l' => 'Grande'], 'default' => 'm'],
             'line' => ['type' => 'checkbox', 'label' => 'Línea', 'text' => 'Mostrar una línea'],
@@ -192,6 +210,7 @@ return [
     'html' => [
         'label' => 'HTML', 'group' => 'Contenido', 'desc' => 'Código HTML tal cual (incrustados, mapas).',
         'wrap_class' => 'lz-sec',
+        'sample' => ['code' => '<div style="padding:2rem;border:2px dashed #999;border-radius:12px;text-align:center">Tu HTML tal cual</div>'],
         'fields' => ['code' => ['type' => 'code', 'label' => 'HTML', 'rows' => 10, 'i18n' => true]],
     ],
 ];

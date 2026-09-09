@@ -191,10 +191,14 @@ logotipos e ilustraciones vectoriales que el PDF no trae como mapa de bits (`@pa
 
 ## Vistas previas de bloques y Respaldos (1.8)
 
-Cada bloque y efecto puede llevar una imagen o GIF (`site/assets/previews/<clave>.*`, `cms/packs/<paquete>/assets/
-previews/<bloque>.*` y `efecto-<efecto>.*`) que se muestra en el manual y en el selector del constructor al pasar el
-ratón. Se generan con `tools/make-previews.sh` (Chrome sin interfaz; el tema debe dibujar solo el contenido cuando
-llega `?cmsbare=1`). Admin → Respaldos: zip de `data/` y `uploads/` en `/backups`, descargar, restaurar y eliminar.
+Desde 1.15 las vistas previas son **ejemplos en vivo**: `admin/?p=demo&block=<clave>` (o `&effect=<paquete/efecto>`)
+arma en memoria una página del constructor con esa sección y datos de muestra, y el tema la dibuja en modo `?cmsbare=1`
+(sin cabecera ni pie). El manual y el selector del constructor la muestran en un iframe escalado, así que siempre se ve
+con el diseño actual y con los efectos funcionando. Cada bloque declara sus datos de ejemplo en `'sample' => […]`
+(lo que falte se deduce de los valores por defecto y de las imágenes de muestra de `cms/assets/img/demo/`); cada efecto
+declara en `'sample'` con qué bloque se demuestra (`[['block' => 'tarjetas'], ['block' => 'motion/cifras']]`, el
+primero que exista en el sitio). Si el tema no usa el constructor, se sigue mostrando la imagen estática
+`site/assets/previews/<clave>.*` si la hay. Admin → Respaldos: zip de `data/` y `uploads/` en `/backups`, descargar, restaurar y eliminar.
 
 ## Manual embebido (1.7)
 

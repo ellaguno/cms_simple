@@ -338,13 +338,18 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-manual-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); }
 @media (max-width: 900px) { .ad-manual { grid-template-columns: 1fr; } .ad-manual-toc { position: static; flex-direction: row; flex-wrap: wrap; } }
 
-/* vistas previas de bloques y efectos */
+/* ejemplos en vivo de bloques y efectos (iframe a 1200 px escalado a la caja) y vistas previas estáticas */
+.ad-demo { position: relative; overflow: hidden; width: 100%; aspect-ratio: 16 / 10; min-height: 120px; background: #f3f3f5; }
+.ad-demo.is-sized { aspect-ratio: auto; }
+.ad-demo iframe { position: absolute; top: 0; left: 0; width: 1200px; height: 800px; border: 0; transform-origin: 0 0; background: #fff; }
+.ad-demo-open { position: absolute; right: 8px; top: 8px; z-index: 2; background: rgba(0,0,0,.72); color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 20px; text-decoration: none; opacity: 0; transition: opacity .15s; }
+.ad-demo:hover .ad-demo-open, .ad-demo-open:focus { opacity: 1; }
 .ad-picker-body { position: relative; }
 .ad-picker-preview { position: sticky; bottom: 0; margin-top: 12px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px; box-shadow: 0 -8px 24px rgba(0,0,0,.08); display: flex; gap: 12px; align-items: center; }
-.ad-picker-preview img { width: 360px; max-width: 60%; height: auto; border-radius: 8px; border: 1px solid var(--line); background: #f3f3f5; }
+.ad-picker-preview img, .ad-picker-preview .ad-demo { width: 420px; max-width: 60%; height: auto; border-radius: 8px; border: 1px solid var(--line); background: #f3f3f5; }
 .ad-picker-preview p { margin: 0; font-weight: 600; }
 .ad-picker-item:hover { background: var(--bg); }
-.ad-effect-preview img { width: 100%; max-width: 420px; border-radius: 8px; border: 1px solid var(--line); }
+.ad-effect-preview img, .ad-effect-preview .ad-demo { width: 100%; max-width: 420px; border-radius: 8px; border: 1px solid var(--line); }
 .ad-manual-catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin: 8px 0 20px; }
 .ad-manual-catalog figure { margin: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--bg); }
 .ad-manual-catalog img { margin: 0; border: 0; border-radius: 0; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; }

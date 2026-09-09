@@ -39,6 +39,6 @@
 /* efecto reveal: evitar el destello antes de animar */
 [data-effect~="motion/reveal"] .mo-reveal-pending { visibility: hidden; }
 /* cursor magnético */
-.mo-cursor { position: fixed; top: 0; left: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--cms-accent, #4f46e5); pointer-events: none; z-index: 99999; transform: translate(-50%, -50%); mix-blend-mode: difference; transition: width .25s, height .25s, opacity .25s; opacity: 0; }
-.mo-cursor.on { opacity: 1; } .mo-cursor.hover { width: 48px; height: 48px; background: #fff; }
+.mo-cursor { --mo-cursor-size: 30px; --mo-cursor-color: var(--cms-accent, #4f46e5); position: fixed; top: 0; left: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--mo-cursor-color); pointer-events: none; z-index: 99999; transform: translate(-50%, -50%); mix-blend-mode: difference; transition: width .25s, height .25s, opacity .25s; opacity: 0; }
+.mo-cursor.on { opacity: 1; } .mo-cursor.hover { width: var(--mo-cursor-size, 30px); height: var(--mo-cursor-size, 30px); background: #fff; }
 body.mo-has-cursor a, body.mo-has-cursor button { cursor: none; }

@@ -3,12 +3,13 @@
   "use strict";
   CMS.block("motion/cifras", function (sec) {
     var nums = sec.querySelectorAll(".mo-counter-value"); if (!nums.length) return;
+    var box = sec.querySelector(".mo-counters"), dur = parseFloat(box && box.getAttribute("data-duration")) || 1.8;
     CMS.inView(sec, function () {
       CMS.loadAll(["gsap", "scrolltrigger"]).then(function () {
         gsap.registerPlugin(ScrollTrigger);
         nums.forEach(function (el) {
           var target = parseFloat(el.getAttribute("data-count") || "0"), dec = parseInt(el.getAttribute("data-decimals") || "0", 10), o = { v: 0 };
-          gsap.to(o, { v: target, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 90%", once: true },
+          gsap.to(o, { v: target, duration: dur, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 90%", once: true },
             onUpdate: function () { el.textContent = o.v.toLocaleString("es-MX", { minimumFractionDigits: dec, maximumFractionDigits: dec }); } });
         });
       });

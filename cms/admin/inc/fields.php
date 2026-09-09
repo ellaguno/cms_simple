@@ -152,6 +152,18 @@ function admin_read_sections($raw): array
             $v = admin_read_field($k, $sd, (array) ($r['style'] ?? []));
             if ($v !== '' && $v !== false && $v !== null && $v !== []) $style[$k] = $v;
         }
+        // ajustes del efecto elegido (los de los demás no se guardan)
+        foreach (cms_section_effect_list($style) as $ek) {
+            $ff = cms_effect_fields($ek);
+            if (!$ff) continue;
+            $src = (array) ((($r['style']['fx'] ?? [])[$ek]) ?? []);
+            $opts = [];
+            foreach ($ff as $fk => $fd) {
+                $v = admin_read_field($fk, (array) $fd, $src);
+                if ($v !== '' && $v !== null && $v !== []) $opts[$fk] = $v;
+            }
+            if ($opts) $style['fx'][$ek] = $opts;
+        }
         $out[] = ['id' => $id, 'type' => $type, 'data' => $data, 'style' => $style, 'hidden' => !empty($r['hidden']) && $r['hidden'] !== '0'];
     }
     return $out;
@@ -276,7 +288,19 @@ function admin_section_card(string $name, string $idx, array $sec, array $bd): s
         echo '<div class="ad-sec-pane ad-sec-style" data-sec-pane="style" hidden><div class="ad-two">';
         foreach ($styles as $k => $sd) {
             admin_field($n . '[style][' . $k . ']', $sd, $style[$k] ?? '');
-            if ($k === 'effect') { $pv = []; foreach (cms_effects() as $ek => $ed) if (($u = cms_demo_url($ek, true) ?: cms_effect_preview($ed)) !== '') $pv[$ek] = $u; echo '<div class="ad-field ad-effect-preview" data-effect-preview=\'' . cms_e(json_encode($pv, JSON_UNESCAPED_SLASHES)) . '\' hidden><label>Así se ve el efecto</label><div class="ad-demo" data-demo-box></div><img alt="" hidden></div>'; }
+            if ($k === 'effect') {
+                $pv = []; foreach (cms_effects() as $ek => $ed) if (($u = cms_demo_url($ek, true) ?: cms_effect_preview($ed)) !== '') $pv[$ek] = $u;
+                echo '<div class="ad-field ad-effect-preview" data-effect-preview=\'' . cms_e(json_encode($pv, JSON_UNESCAPED_SLASHES)) . '\' hidden><label>Así se ve el efecto</label><div class="ad-demo" data-demo-box></div><img alt="" hidden></div>';
+                // ajustes del efecto: se dibujan los de todos y el JS muestra los del elegido
+                foreach (cms_effects() as $ek => $ed) {
+                    $ff = cms_effect_fields($ek);
+                    if (!$ff) continue;
+                    $saved = (array) (($style['fx'] ?? [])[$ek] ?? []);
+                    echo '<div class="ad-field ad-fx-fields" data-fx-fields="' . cms_e($ek) . '" hidden><label>Ajustes del efecto</label><div class="ad-two">';
+                    foreach ($ff as $fk => $fd) admin_field($n . '[style][fx][' . $ek . '][' . $fk . ']', ['label' => admin_field_label($fk, (array) $fd)] + (array) $fd, $saved[$fk] ?? ($fd['default'] ?? ''));
+                    echo '</div></div>';
+                }
+            }
         }
         echo '</div></div>';
     }

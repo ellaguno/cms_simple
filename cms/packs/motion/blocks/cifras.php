@@ -5,7 +5,7 @@ if (!$rows) return;
 ?>
         <div class="<?= cms_e(cms_block_class('container')) ?>">
             <?= cms_block_header((string) $b['title'], (string) $b['subtitle']) ?>
-            <div class="mo-counters mo-counters-<?= (int) $b['columns'] ?>">
+            <div class="mo-counters mo-counters-<?= (int) $b['columns'] ?>" data-duration="<?= cms_e((string) ($b['duration'] !== '' ? $b['duration'] : '1.8')) ?>">
 <?php foreach ($rows as [$n, $label, $suffix]): $num = (float) str_replace(',', '', $n); ?>
                 <div class="mo-counter">
                     <div class="mo-counter-num"><span class="mo-counter-value" data-count="<?= cms_e((string) $num) ?>" data-decimals="<?= strpos($n, '.') !== false ? strlen(explode('.', $n)[1]) : 0 ?>">0</span><?php if ($suffix !== ''): ?><span class="mo-counter-suffix"><?= cms_e($suffix) ?></span><?php endif; ?></div>

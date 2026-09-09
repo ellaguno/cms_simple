@@ -4,10 +4,15 @@ $words = array_values(array_filter(array_map('trim', (array) $b['words']), fn($w
 if (!$words) $words = ['—'];
 $img = trim((string) $b['image']);
 ?>
-        <div class="<?= cms_e(cms_block_class('container')) ?> mk-hero-in mk-hero-<?= cms_e((string) $b['align']) ?>">
+<?php
+$vars = '';
+if (preg_match('/^#[0-9a-f]{6}$/i', (string) $b['gradient2'])) $vars .= '--mk-grad-2:' . $b['gradient2'] . ';';
+if (preg_match('/^#[0-9a-f]{6}$/i', (string) $b['glow'])) $vars .= '--mk-glow:' . $b['glow'] . ';';
+?>
+        <div class="<?= cms_e(cms_block_class('container')) ?> mk-hero-in mk-hero-<?= cms_e((string) $b['align']) ?>"<?= $vars !== '' ? ' style="' . cms_e($vars) . '"' : '' ?>>
 <?php if (trim((string) $b['badge']) !== ''): ?>            <span class="mk-badge"><?= cms_e($b['badge']) ?></span>
 <?php endif; ?>
-            <h1 class="mk-hero-title"><?= mk_inline((string) $b['before']) ?> <span class="mk-rotate" data-words="<?= cms_e(json_encode($words, JSON_UNESCAPED_UNICODE)) ?>"><span class="mk-rotate-word<?= !empty($b['gradient']) ? ' mk-gradient-text' : '' ?>"><?= cms_e($words[0]) ?></span></span><?php if (trim((string) $b['after']) !== ''): ?> <?= mk_inline((string) $b['after']) ?><?php endif; ?></h1>
+            <h1 class="mk-hero-title"><?= mk_inline((string) $b['before']) ?> <span class="mk-rotate" data-interval="<?= (int) $b['interval'] ?>" data-words="<?= cms_e(json_encode($words, JSON_UNESCAPED_UNICODE)) ?>"><span class="mk-rotate-word<?= !empty($b['gradient']) ? ' mk-gradient-text' : '' ?>"><?= cms_e($words[0]) ?></span></span><?php if (trim((string) $b['after']) !== ''): ?> <?= mk_inline((string) $b['after']) ?><?php endif; ?></h1>
 <?php if (trim((string) $b['subtitle']) !== ''): ?>            <p class="mk-hero-sub"><?= nl2br(cms_e($b['subtitle'])) ?></p>
 <?php endif; ?>
 <?php if ((array) $b['buttons']): ?>            <div class="mk-btns"><?php foreach ((array) $b['buttons'] as $l) { [$t2, $u, $s] = mk_split((string) $l, 3); echo mk_btn($t2, $u, $s ?: 'primary'); } ?></div>

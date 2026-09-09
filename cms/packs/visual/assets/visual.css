@@ -35,18 +35,21 @@
 
 /* efecto: degradado animado */
 [data-effect~="visual/gradient"] { position: relative; overflow: hidden; }
-.vis-blobs { position: absolute; inset: 0; pointer-events: none; filter: blur(40px); z-index: 0; }
+.vis-blobs { position: absolute; inset: 0; pointer-events: none; filter: blur(var(--fx-visual-gradient-blur, 40px)); opacity: var(--fx-visual-gradient-opacity, .7); z-index: 0; }
 .vis-blob { position: absolute; border-radius: 50%; mix-blend-mode: hard-light; }
-.vis-blob-1 { width: 520px; height: 520px; top: -160px; left: -120px; background: radial-gradient(circle at 30% 30%, var(--vis-blob-1, #1f6feb), var(--vis-blob-1b, #0d3b8c)); animation: vis-drift 18s ease-in-out infinite; }
-.vis-blob-2 { width: 80%; height: 80%; top: 10%; left: 10%; background: radial-gradient(circle at center, var(--vis-blob-2, rgba(221,74,255,.8)) 0, transparent 50%); transform-origin: calc(50% - 400px); animation: vis-circle 20s reverse infinite; }
-.vis-blob-pointer { width: 100%; height: 100%; top: -50%; left: -50%; opacity: .7; background: radial-gradient(circle at center, var(--vis-blob-3, rgba(140,100,255,.8)) 0, transparent 50%); }
+.vis-blob-1 { width: 520px; height: 520px; top: -160px; left: -120px; background: radial-gradient(circle at 30% 30%, var(--fx-visual-gradient-color1, var(--vis-blob-1, #1f6feb)), color-mix(in srgb, var(--fx-visual-gradient-color1, #1f6feb) 55%, #000)); animation: vis-drift calc(18s / var(--fx-visual-gradient-speed, 1)) ease-in-out infinite; }
+.vis-blob-2 { width: 80%; height: 80%; top: 10%; left: 10%; background: radial-gradient(circle at center, var(--fx-visual-gradient-color2, var(--vis-blob-2, #dd4aff)) 0, transparent 50%); transform-origin: calc(50% - 400px); animation: vis-circle calc(20s / var(--fx-visual-gradient-speed, 1)) reverse infinite; }
+.vis-blob-pointer { width: 100%; height: 100%; top: -50%; left: -50%; opacity: .7; background: radial-gradient(circle at center, var(--fx-visual-gradient-color3, var(--vis-blob-3, #8c64ff)) 0, transparent 50%); }
 @keyframes vis-circle { 0% { transform: rotate(0deg); } 50% { transform: rotate(180deg); } 100% { transform: rotate(360deg); } }
 @keyframes vis-drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(60px, 40px); } }
 @media (prefers-reduced-motion: reduce) { .vis-blobs { display: none; } }
 
 /* efecto: tarjetas con luz (la clase vis-spot la pone el JS en cada tarjeta) */
-.vis-spot { --spot-base: 220; --spot-spread: 200; --spot-size: 200px; --spot-hue: calc(var(--spot-base) + (var(--xp, 0) * var(--spot-spread))); position: relative; overflow: hidden; }
+.vis-spot { --spot-base: 220; --spot-spread: 200; --spot-size: var(--fx-visual-spotlight-size, 200px); --spot-hue: calc(var(--spot-base) + (var(--xp, 0) * var(--spot-spread))); position: relative; overflow: hidden; }
 .vis-spot::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .4s ease; background: radial-gradient(var(--spot-size) var(--spot-size) at calc(var(--card-x, 50%) * 1px) calc(var(--card-y, 50%) * 1px), hsl(var(--spot-hue) 100% 70% / .12), transparent); }
 .vis-spot::after { content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .4s ease; background: radial-gradient(calc(var(--spot-size) * .6) calc(var(--spot-size) * .6) at calc(var(--card-x, 50%) * 1px) calc(var(--card-y, 50%) * 1px), hsl(var(--spot-hue) 100% 60% / .6), transparent 100%); mask: linear-gradient(transparent, transparent), linear-gradient(white, white); -webkit-mask: linear-gradient(transparent, transparent), linear-gradient(white, white); mask-clip: padding-box, border-box; -webkit-mask-clip: padding-box, border-box; mask-composite: exclude; -webkit-mask-composite: xor; }
 .vis-spot-active .vis-spot::before, .vis-spot-active .vis-spot::after { opacity: 1; }
+/* con el color de acento de la sección en vez del tono según la posición del ratón */
+.vis-spot-accent .vis-spot::before { background: radial-gradient(var(--spot-size) var(--spot-size) at calc(var(--card-x, 50%) * 1px) calc(var(--card-y, 50%) * 1px), color-mix(in srgb, var(--cms-accent, #4f46e5) 18%, transparent), transparent); }
+.vis-spot-accent .vis-spot::after { background: radial-gradient(calc(var(--spot-size) * .6) calc(var(--spot-size) * .6) at calc(var(--card-x, 50%) * 1px) calc(var(--card-y, 50%) * 1px), var(--cms-accent, #4f46e5), transparent 100%); }
 .vis-spot > * { position: relative; z-index: 1; }

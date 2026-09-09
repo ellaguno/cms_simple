@@ -21,11 +21,11 @@
 .mk-rotate-measure { position: absolute; visibility: hidden; pointer-events: none; white-space: nowrap; left: 0; top: 0; }
 .mk-rotate-word.is-out { opacity: 0; transform: translateY(-.45em); }
 .mk-rotate-word.is-in { opacity: 0; transform: translateY(.45em); transition: none; }
-.mk-gradient-text { background: linear-gradient(92deg, var(--cms-accent, #4f46e5), color-mix(in srgb, var(--cms-accent, #4f46e5) 35%, #ec4899)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.mk-gradient-text { background: linear-gradient(92deg, var(--cms-accent, #4f46e5), var(--mk-grad-2, color-mix(in srgb, var(--cms-accent, #4f46e5) 35%, #ec4899))); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .mk-hero-sub { font-size: clamp(1.05rem, 1.7vw, 1.3rem); color: var(--cms-muted, #6b7280); max-width: 640px; margin: 0 auto 1.75rem; }
 .mk-hero-left .mk-hero-sub { margin-left: 0; }
 .mk-hero-media { position: relative; margin-top: 3.5rem; }
-.mk-hero-glow { position: absolute; left: 5%; right: 5%; top: -12%; height: 60%; background: radial-gradient(ellipse at center, color-mix(in srgb, var(--cms-accent, #4f46e5) 55%, transparent), transparent 70%); filter: blur(50px); z-index: 0; }
+.mk-hero-glow { position: absolute; left: 5%; right: 5%; top: -12%; height: 60%; background: radial-gradient(ellipse at center, color-mix(in srgb, var(--mk-glow, var(--cms-accent, #4f46e5)) 55%, transparent), transparent 70%); filter: blur(50px); z-index: 0; }
 .mk-hero-media img { position: relative; z-index: 1; display: block; width: 100%; height: auto; border-radius: var(--cms-radius-lg, 1rem); border: 1px solid color-mix(in srgb, currentColor 10%, transparent); box-shadow: 0 40px 90px -30px rgba(0, 0, 0, .45); }
 
 /* bento */
@@ -165,25 +165,26 @@
 /* efectos de fondo */
 [data-effect~="marketing/aurora"], [data-effect~="marketing/rejilla"], [data-effect~="marketing/particulas"], [data-effect~="marketing/meteoros"] { position: relative; overflow: hidden; }
 .mk-fx { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-.mk-aurora { filter: blur(70px); opacity: .45; }
+.mk-aurora { filter: blur(var(--fx-marketing-aurora-blur, 70px)); opacity: var(--fx-marketing-aurora-opacity, .45); }
 .mk-aurora span { position: absolute; border-radius: 50%; width: 55vw; height: 55vw; max-width: 900px; max-height: 900px; }
-.sec-bg-dark .mk-aurora, .sec-text-light .mk-aurora { opacity: .7; }
+.sec-bg-dark .mk-aurora, .sec-text-light .mk-aurora { opacity: calc(var(--fx-marketing-aurora-opacity, .55) * 1.25); }
 .sec-bg-dark .mk-aurora span, .sec-text-light .mk-aurora span { mix-blend-mode: screen; }
-.mk-aurora span:nth-child(1) { background: var(--cms-accent, #4f46e5); top: -30%; left: -10%; animation: mk-aur1 16s ease-in-out infinite alternate; }
-.mk-aurora span:nth-child(2) { background: #ec4899; bottom: -40%; right: -10%; animation: mk-aur2 21s ease-in-out infinite alternate; }
-.mk-aurora span:nth-child(3) { background: #22d3ee; top: 15%; left: 40%; width: 40vw; height: 40vw; animation: mk-aur3 25s ease-in-out infinite alternate; }
+.mk-aurora span:nth-child(1) { background: var(--fx-marketing-aurora-color1, var(--cms-accent, #4f46e5)); top: -30%; left: -10%; animation: mk-aur1 calc(16s / var(--fx-marketing-aurora-speed, 1)) ease-in-out infinite alternate; }
+.mk-aurora span:nth-child(2) { background: var(--fx-marketing-aurora-color2, #ec4899); bottom: -40%; right: -10%; animation: mk-aur2 calc(21s / var(--fx-marketing-aurora-speed, 1)) ease-in-out infinite alternate; }
+.mk-aurora span:nth-child(3) { background: var(--fx-marketing-aurora-color3, #22d3ee); top: 15%; left: 40%; width: 40vw; height: 40vw; animation: mk-aur3 calc(25s / var(--fx-marketing-aurora-speed, 1)) ease-in-out infinite alternate; }
 @keyframes mk-aur1 { to { transform: translate(22%, 28%) scale(1.2); } }
 @keyframes mk-aur2 { to { transform: translate(-28%, -22%) scale(1.15); } }
 @keyframes mk-aur3 { to { transform: translate(-32%, 22%) scale(.85); } }
-.mk-grid { background-image: linear-gradient(to right, color-mix(in srgb, currentColor 9%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, currentColor 9%, transparent) 1px, transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, #000 35%, transparent 100%); mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, #000 35%, transparent 100%); }
+.mk-grid { --mk-grid-line: color-mix(in srgb, var(--fx-marketing-rejilla-color, currentColor) 9%, transparent); background-image: linear-gradient(to right, var(--mk-grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--mk-grid-line) 1px, transparent 1px); background-size: var(--fx-marketing-rejilla-size, 48px) var(--fx-marketing-rejilla-size, 48px); -webkit-mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, #000 var(--fx-marketing-rejilla-fade, 35%), transparent 100%); mask-image: radial-gradient(ellipse 75% 80% at 50% 50%, #000 var(--fx-marketing-rejilla-fade, 35%), transparent 100%); }
+.mk-grid[data-color] { --mk-grid-line: color-mix(in srgb, var(--fx-marketing-rejilla-color) 35%, transparent); }
 .mk-grid-beam { position: absolute; top: 0; bottom: 0; left: -2px; width: 2px; background: linear-gradient(to bottom, transparent, var(--cms-accent, #4f46e5), transparent); animation: mk-beam-x 8s linear infinite; }
 .mk-grid-beam-h { top: -2px; left: 0; right: 0; bottom: auto; width: auto; height: 2px; background: linear-gradient(to right, transparent, var(--cms-accent, #4f46e5), transparent); animation: mk-beam-y 11s linear infinite 3s; }
 @keyframes mk-beam-x { to { left: 100%; } }
 @keyframes mk-beam-y { to { top: 100%; } }
 .mk-sky { color: #fff; }
 .mk-sky-stars { position: absolute; top: 0; left: 0; width: 1px; height: 1px; border-radius: 50%; background: transparent; }
-.mk-meteor { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(255, 255, 255, .1); transform: rotate(215deg) translateX(0); opacity: 0; animation: mk-meteor var(--d, 5s) linear infinite; animation-delay: var(--delay, 0s); }
-.mk-meteor::before { content: ""; position: absolute; top: 50%; transform: translateY(-50%); width: 90px; height: 1px; background: linear-gradient(90deg, #fff, transparent); }
+.mk-meteor { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: var(--mk-star-color, #fff); box-shadow: 0 0 0 1px rgba(255, 255, 255, .1); transform: rotate(215deg) translateX(0); opacity: 0; animation: mk-meteor var(--d, 5s) linear infinite; animation-delay: var(--delay, 0s); }
+.mk-meteor::before { content: ""; position: absolute; top: 50%; transform: translateY(-50%); width: 90px; height: 1px; background: linear-gradient(90deg, var(--mk-star-color, #fff), transparent); }
 @keyframes mk-meteor { 0% { transform: rotate(215deg) translateX(0); opacity: 1; } 70% { opacity: 1; } 100% { transform: rotate(215deg) translateX(-700px); opacity: 0; } }
 .mk-particles { display: block; width: 100%; height: 100%; }
 @media (prefers-reduced-motion: reduce) {

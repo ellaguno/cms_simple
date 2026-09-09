@@ -13,6 +13,8 @@
     function widthOf(w) { ruler.textContent = w; return ruler.getBoundingClientRect().width; }
     box.style.width = widthOf(words[0]) + "px"; box.classList.add("is-live");
     var i = 0;
+    // la tipografía web cambia el ancho: se vuelve a medir cuando termina de cargar
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { box.style.width = widthOf(words[i]) + "px"; });
     setInterval(function () {
       word.classList.add("is-out");
       setTimeout(function () {
@@ -23,7 +25,7 @@
         void word.offsetWidth;
         word.classList.remove("is-in");
       }, 300);
-    }, 2600);
+    }, Math.max(800, parseInt(box.getAttribute("data-interval") || "2600", 10) || 2600));
     window.addEventListener("resize", function () { box.style.width = widthOf(words[i]) + "px"; });
   });
 

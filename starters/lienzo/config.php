@@ -41,6 +41,7 @@ return [
     'sections' => [
         'palette' => ['white' => 'Blanco', 'light' => 'Gris claro', 'dark' => 'Oscuro', 'primary' => 'Color principal', 'accent' => 'Color de acento'],
         'classes' => ['container' => 'lz-container', 'header' => 'lz-head', 'title' => '', 'subtitle' => '', 'btn' => 'lz-btn'],
+        'accent_vars' => ['--lz-accent'],   // el color de acento por sección también cambia el del tema
     ],
 
     'settings' => [

@@ -10,6 +10,7 @@
   };
   CMS.effect("visual/spotlight", function (sec) {
     if (CMS.touch()) return;
+    if (CMS.fx(sec, "visual/spotlight").hue === "accent") sec.classList.add("vis-spot-accent");
     var cards = sec.querySelectorAll(".feature-card, .card, .vis-card, [data-spot]");
     if (!cards.length) sec.querySelectorAll('[class*="grid"] > *').forEach(function (c) { cards = Array.prototype.concat.call(Array.from(cards), c); });
     cards = Array.from(cards);

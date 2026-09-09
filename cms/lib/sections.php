@@ -58,6 +58,7 @@ function cms_section_styles(): array
         'bg_image'    => ['type' => 'image', 'label' => 'Imagen de fondo'],
         'overlay'     => ['type' => 'number', 'label' => 'Oscurecer la imagen de fondo (0 a 90 %)', 'min' => 0, 'max' => 90, 'step' => 10],
         'effect'      => ['type' => 'select', 'label' => 'Efecto', 'options' => ['' => 'Ninguno'] + array_map(fn($e) => (string) $e['label'], cms_effects())],
+        'accent'      => ['type' => 'color', 'label' => 'Color de acento solo en esta sección', 'placeholder' => 'vacío = el del sitio'],
         'anchor'      => ['type' => 'text', 'label' => 'Ancla (id para enlaces #ancla)', 'placeholder' => 'contacto'],
         'class'       => ['type' => 'text', 'label' => 'Clases CSS adicionales (avanzado)'],
         'hide_mobile' => ['type' => 'checkbox', 'label' => 'Móvil', 'text' => 'Ocultar en pantallas pequeñas'],
@@ -71,6 +72,52 @@ function cms_block_styles(array $def): array
     if (!cms_effects()) unset($all['effect']);
     if (!array_key_exists('styles', $def)) return $all;
     return array_intersect_key($all, array_flip((array) $def['styles']));
+}
+
+/** Campos configurables de un efecto (los declara el paquete en pack.php). */
+function cms_effect_fields(string $key): array
+{
+    return (array) (cms_effects()[$key]['fields'] ?? []);
+}
+
+/** Opciones guardadas de un efecto en una sección, con los valores por defecto de su definición. */
+function cms_effect_options(array $style, string $key): array
+{
+    $fields = cms_effect_fields($key);
+    if (!$fields) return [];
+    $saved = (array) (($style['fx'] ?? [])[$key] ?? []);
+    $out = [];
+    foreach ($fields as $k => $fd) {
+        $v = $saved[$k] ?? null;
+        if ($v === null || $v === '') { if (array_key_exists('default', $fd)) $out[$k] = $fd['default']; continue; }
+        $out[$k] = $v;
+    }
+    return $out;
+}
+
+/** Valor apto para una variable CSS (evita cerrar la declaración o inyectar). */
+function cms_css_value($v): string
+{
+    $v = is_bool($v) ? ($v ? '1' : '0') : (string) $v;
+    $v = preg_replace('/[^A-Za-z0-9 #%.,()\/_-]/', '', $v) ?? '';
+    return mb_substr(trim($v), 0, 80);
+}
+
+/** Variables CSS y JSON de las opciones de los efectos activos en una sección. Devuelve [css, json]. */
+function cms_effects_style(array $style, array $effects): array
+{
+    $css = ''; $json = [];
+    foreach ($effects as $key) {
+        $opts = cms_effect_options($style, $key);
+        if (!$opts) continue;
+        $prefix = '--fx-' . str_replace('/', '-', $key) . '-';
+        foreach ($opts as $k => $v) {
+            if ($v === '' || $v === null || $v === []) continue;
+            $css .= $prefix . preg_replace('/[^a-z0-9_-]/i', '', $k) . ':' . cms_css_value($v) . ';';
+        }
+        $json[$key] = $opts;
+    }
+    return [$css, $json];
 }
 
 function cms_section_id(): string
@@ -127,7 +174,11 @@ function cms_sections_render(array $sections, array $ctx = []): string
         $style = '';
         if (!empty($st['bg_image'])) $style .= '--sec-bg:url(' . cms_e(cms_img((string) $st['bg_image'])) . ');';
         if (isset($st['overlay']) && $st['overlay'] !== '') $style .= '--sec-overlay:' . (int) $st['overlay'] / 100 . ';';
-        if ($style !== '') $attrs .= ' style="' . $style . '"';
+        // color de acento solo en esta sección: la variable de los paquetes y las que el tema declare en sections.accent_vars
+        if (!empty($st['accent']) && preg_match('/^#[0-9a-f]{6}$/i', (string) $st['accent'])) {
+            $style .= '--cms-accent:' . $st['accent'] . ';';
+            foreach ((array) (cms_config('sections')['accent_vars'] ?? []) as $var) if (preg_match('/^--[a-z0-9_-]+$/i', (string) $var)) $style .= $var . ':' . $st['accent'] . ';';
+        }
         $anim = (string) ($st['animate'] ?? '');
         if ($anim === '') $anim = (string) ($def['animate'] ?? '');
         if ($anim !== '' && $anim !== 'none') $attrs .= ' data-aos="' . cms_e($anim) . '"';
@@ -149,7 +200,13 @@ function cms_sections_render(array $sections, array $ctx = []): string
         }
         $inner = ob_get_clean();
         $fx = array_values(array_filter((array) ($GLOBALS['cms_current_effects'] ?? []), fn($e) => preg_match('#^[a-z0-9_-]+/[a-z0-9_-]+$#i', (string) $e)));
-        if ($fx) $attrs .= ' data-effect="' . cms_e(implode(' ', $fx)) . '"';
+        if ($fx) {
+            $attrs .= ' data-effect="' . cms_e(implode(' ', $fx)) . '"';
+            [$fxCss, $fxJson] = cms_effects_style($st, $fx);
+            $style .= $fxCss;
+            if ($fxJson) $attrs .= ' data-fx="' . cms_e(json_encode($fxJson, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '"';
+        }
+        if ($style !== '') $attrs .= ' style="' . $style . '"';
         $out .= '<section' . $attrs . '>' . $inner . '</section>' . "\n";
     }
     if ($builder) $out .= cms_sections_builder_script();

@@ -35,6 +35,21 @@
      Las que traen JS las carga su bloque cuando toca (CMS.load), así siguen bajo demanda. */
   (C.libsNow || []).forEach(function (n) { var l = (C.libs || {})[n]; if (l && (l.css || []).length && !(l.js || []).length) C.load(n); });
 
+  /** CMS.fx(section, "paquete/efecto"): ajustes que el editor puso a ese efecto en esa sección (objeto vacío si no tocó nada). */
+  C.fx = function (sec, key) {
+    var raw = sec && sec.getAttribute ? sec.getAttribute("data-fx") : null;
+    if (!raw) return {};
+    try { return (JSON.parse(raw) || {})[key] || {}; } catch (e) { return {}; }
+  };
+  /** Número de un ajuste, con valor por defecto y límites. */
+  C.fxNum = function (opts, key, def, min, max) {
+    var v = parseFloat(opts[key]);
+    if (isNaN(v)) return def;
+    if (min !== undefined && v < min) v = min;
+    if (max !== undefined && v > max) v = max;
+    return v;
+  };
+
   /** CMS.ready(fn): tras DOMContentLoaded (o de inmediato si ya pasó). */
   C.ready = function (fn) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn); else fn(); };
 

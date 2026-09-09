@@ -189,6 +189,32 @@ OpenStreetMap con Leaflet (sin clave) y animaciones Lottie. Librerías registrad
 páginas cuyos bloques las declaran. El importador admite además Fable como modelo y recorta de la pantalla los
 logotipos e ilustraciones vectoriales que el PDF no trae como mapa de bits (`@pantalla:x,y,ancho,alto`).
 
+## Efectos con ajustes y color de acento por sección (1.18)
+
+Los efectos dejan de ser un interruptor: cada uno declara en su paquete `'fields' => […]` (los mismos tipos de campo
+que un bloque) y el panel los muestra bajo el selector de efecto, en la pestaña Estilo. Se guardan en
+`style['fx']['<paquete/efecto>']` y solo los del efecto elegido; el núcleo los emite en el `<section>` como variables
+CSS `--fx-<paquete>-<efecto>-<campo>` y como `data-fx` en JSON, que el script lee con `CMS.fx(section, clave)` y
+`CMS.fxNum(opts, campo, defecto, min, max)`.
+
+Ya se pueden ajustar: el **fondo de ondas** (color de las ondas, los dos colores del fondo, velocidad, cantidad de
+ondas, tamaño del dibujo y rejilla), el **degradado animado** (tres colores, difuminado, velocidad, intensidad), las
+**tarjetas con luz** (color y tamaño), el **texto revelado** (velocidad, separación, desde dónde aparece, por letras o
+por palabras), la **aparición escalonada** (velocidad, separación, distancia), el **parallax** (intensidad y
+dirección), el **cursor magnético** (tamaño, color y fuerza de atracción), la **aurora** (tres colores, intensidad,
+difuminado, velocidad), la **rejilla** (tamaño, color, haz y desvanecido), las **partículas** (color, cantidad,
+distancia de unión, velocidad e interacción con el ratón) y los **meteoros** (estrellas, meteoros, velocidad y color).
+
+Además, la pestaña Estilo trae **Color de acento solo en esta sección**: define `--cms-accent` para esa sección, así
+que recolorea de golpe todos los bloques y efectos que hay dentro. El tema puede mapearlo a sus propias variables con
+`'sections' => ['accent_vars' => ['--lz-accent']]` en `site/config.php` (lienzo ya lo hace).
+
+Algunos bloques ganan ajustes propios: el hero con palabras rotativas (segundo color del degradado, cada cuánto cambia
+la palabra y color del halo) y las cifras animadas (cuánto tarda la cuenta).
+
+**Corregido**: el fondo de ondas buscaba una clase `.hero` que ningún tema del proyecto usa, así que no llegaba a
+dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los parámetros como uniforms.
+
 ## Paquete contenido (1.17)
 
 `cms/packs/contenido`: cinco bloques que conectan las páginas con las colecciones del sitio.

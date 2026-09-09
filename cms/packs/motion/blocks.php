@@ -24,6 +24,7 @@ return [
             'subtitle' => ['type' => 'text', 'label' => 'Subtítulo (opcional)'],
             'items'    => ['type' => 'lines', 'label' => 'Cifras, una por línea: número | etiqueta | sufijo (opcional, ej. + o %)', 'rows' => 5, 'required' => true, 'default' => ['120 | Proyectos entregados | +', '15 | Años de experiencia', '98 | Clientes satisfechos | %']],
             'columns'  => ['type' => 'select', 'label' => 'Columnas', 'options' => ['2' => '2', '3' => '3', '4' => '4'], 'default' => '3'],
+            'duration' => ['type' => 'select', 'label' => 'Cuánto tarda la cuenta', 'options' => ['1' => 'Rápida', '1.8' => 'Normal', '3' => 'Lenta'], 'default' => '1.8'],
         ],
     ],
     'titular' => [

@@ -47,6 +47,15 @@ colección tirar (artículos, proyectos, productos), cuántos mostrar y con qué
 mantiene sola: cada vez que publiques un elemento nuevo aparecerá ahí, y los viejos irán saliendo. Si solo quieres los
 de una categoría, escríbela en el campo de filtro tal como la escribes en los elementos.
 
+Cada efecto tiene sus **ajustes**: al elegirlo aparecen debajo, en la misma pestaña Estilo. Puedes cambiar colores,
+velocidad, intensidad y densidad sin tocar código. Por ejemplo, el fondo de ondas admite el color de las ondas, los dos
+colores del fondo, la velocidad, cuántas ondas se dibujan y si se ve la rejilla. Si no tocas nada, cada efecto usa sus
+valores de siempre.
+
+En esa misma pestaña está **Color de acento solo en esta sección**: cambia de golpe el color de los botones, los
+iconos, los precios destacados y los efectos de esa sección, sin afectar al resto del sitio. Sirve para dar un color
+propio a una campaña o a una página de producto.
+
 Los fondos animados (aurora, rejilla, partículas, meteoros) lucen sobre todo en secciones con fondo oscuro: elige
 Oscuro en Fondo y Claro en Color del texto, en la misma pestaña Estilo.
 

@@ -393,3 +393,5 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-pager a:hover { border-color: #000; }
 .ad-pager .cur { background: #000; color: #fff; border-color: #000; }
 .ad-pager-gap { color: var(--grey); padding: 0 4px; }
+.ad-fx-fields { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px 4px; background: #fafafa; }
+.ad-fx-fields > label { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--grey); }

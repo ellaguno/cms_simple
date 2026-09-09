@@ -53,7 +53,9 @@
       if (eff && effPv) {
         var map = {}; try { map = JSON.parse(effPv.getAttribute("data-effect-preview") || "{}"); } catch (e) {}
         var effBox = effPv.querySelector("[data-demo-box]"), effImg = effPv.querySelector("img");
+        var fxBoxes = Array.prototype.slice.call(card.querySelectorAll("[data-fx-fields]"));
         var showEff = function () {
+          fxBoxes.forEach(function (fb) { fb.hidden = fb.getAttribute("data-fx-fields") !== eff.value; });
           var u = map[eff.value]; effPv.hidden = !u; if (!u) return;
           var live = u.indexOf("p=demo") !== -1;
           effImg.hidden = live; if (effBox) effBox.hidden = !live;

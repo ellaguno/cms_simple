@@ -24,11 +24,21 @@
 | Dar prueba social | Testimonio, Insignias, Cifras animadas |
 | Llevar a la acción | Llamado a la acción, con formulario o botón |
 | Un golpe visual entre secciones | Marquesina, Titular grande, Galería con parallax |
+| Abrir con un titular que cambia solo | Hero con palabras rotativas |
+| Enseñar varias funciones sin llenar la página | Cuadrícula bento, o Pestañas con imagen |
+| Demostrar una mejora con dos fotos | Comparador antes y después |
+| Muchas opiniones sin ocupar media pantalla | Cinta de testimonios |
+| Precios con opción mensual y anual | Precios con interruptor |
+| Explicar un proceso paso a paso | Línea de tiempo |
+| Enseñar logotipos de clientes | Cinta de logotipos |
 | Algo que ningún bloque cubre | HTML, solo para quien sabe lo que hace |
 
 ## Efectos
 
 Los efectos se eligen en la pestaña Estilo de cualquier sección. Algunos bloques los traen activados por defecto, como el hero con su fondo de ondas. Todos respetan la preferencia del sistema de "reducir movimiento" y se desactivan solos en pantallas táctiles cuando dependen del ratón.
+
+Los fondos animados (aurora, rejilla, partículas, meteoros) lucen sobre todo en secciones con fondo oscuro: elige
+Oscuro en Fondo y Claro en Color del texto, en la misma pestaña Estilo.
 
 Un consejo: un efecto por página llama la atención; cinco cansan.
 

@@ -21,8 +21,10 @@ lado, debajo o de fondo; fondo animado opcional), encabezado. Contenido: texto, 
 tarjetas (tarjeta, sin fondo o pasos numerados; icono emoji o de Tabler Icons, `ti-rocket`), lista de puntos,
 logotipos, testimonios, equipo, planes de precios, preguntas frecuentes, llamado a la acción, contacto (con formulario
 al endpoint del núcleo), boletín, separador, HTML. Además, los paquetes visual (galería 3D, carrusel, lightbox,
-efectos), motion (marquesina, cifras, titular, parallax) y media (video de YouTube o Vimeo al clic, mapa de
-OpenStreetMap, animación Lottie).
+efectos), motion (marquesina, cifras, titular, parallax), media (video de YouTube o Vimeo al clic, mapa de
+OpenStreetMap, animación Lottie) y marketing (hero con palabras rotativas, cuadrícula bento, pestañas con imagen,
+comparador antes y después, cintas de testimonios y logotipos, precios con interruptor mensual/anual, línea de tiempo,
+y fondos aurora, rejilla, partículas y meteoros).
 
 Los campos de líneas separan celdas con ` | `; un enlace dentro de una celda se escribe `Texto > URL`.
 

@@ -31,6 +31,10 @@
   /** CMS.loadAll(["gsap","scrolltrigger"]) → Promise */
   C.loadAll = function (names) { var p = Promise.resolve(); (names || []).forEach(function (n) { p = p.then(function () { return C.load(n); }); }); return p; };
 
+  /* Las librerías de la página que solo traen CSS (iconos) se cargan solas: ningún script de bloque las pide.
+     Las que traen JS las carga su bloque cuando toca (CMS.load), así siguen bajo demanda. */
+  (C.libsNow || []).forEach(function (n) { var l = (C.libs || {})[n]; if (l && (l.css || []).length && !(l.js || []).length) C.load(n); });
+
   /** CMS.ready(fn): tras DOMContentLoaded (o de inmediato si ya pasó). */
   C.ready = function (fn) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn); else fn(); };
 
@@ -53,6 +57,13 @@
   C.site = function (key, fn) { handlers.site[key] = fn; C.ready(function () { run("site", key, fn); }); };
   /** Vuelve a inicializar (contenido añadido dinámicamente). */
   C.refresh = function () { Object.keys(handlers.block).forEach(function (k) { run("block", k, handlers.block[k]); }); Object.keys(handlers.effect).forEach(function (k) { run("effect", k, handlers.effect[k]); }); };
+  /** CMS.bgLayer(section, el): inserta una capa de fondo absoluta bajo el contenido de la sección (los efectos de fondo la usan). */
+  C.bgLayer = C.bgLayer || function (sec, el) {
+    var ref = null;
+    Array.prototype.some.call(sec.children, function (c) { if (getComputedStyle(c).position === "absolute") return false; ref = c; return true; });
+    sec.insertBefore(el, ref);
+    Array.prototype.forEach.call(sec.children, function (c) { if (c === el || getComputedStyle(c).position === "absolute") return; if (getComputedStyle(c).position === "static") c.style.position = "relative"; if (!c.style.zIndex) c.style.zIndex = "1"; });
+  };
   C.reducedMotion = function () { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; };
   C.touch = function () { return window.matchMedia && window.matchMedia("(hover: none)").matches; };
 })();

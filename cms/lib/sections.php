@@ -237,6 +237,7 @@ function cms_demo_image(string $kind = 'foto', int $n = 1): string
 function cms_block_sample(array $def): array
 {
     $sample = (array) ($def['sample'] ?? []);
+    $texts = !$sample;   // sin 'sample' se inventan títulos y textos; con él, lo que no se declare queda vacío
     $data = [];
     $img = 0;
     foreach ((array) ($def['fields'] ?? []) as $k => $fd) {
@@ -251,9 +252,9 @@ function cms_block_sample(array $def): array
             case $t === 'checkbox': $data[$k] = false; break;
             case $t === 'number': $data[$k] = (int) ($fd['min'] ?? 3); break;
             case $t === 'select': $data[$k] = (string) array_key_first((array) ($fd['options'] ?? [''])); break;
-            case $k === 'title': $data[$k] = 'Título de ejemplo'; break;
-            case $k === 'subtitle': $data[$k] = 'Un subtítulo de apoyo para el bloque'; break;
-            case $k === 'text' || $k === 'sub': $data[$k] = 'Texto breve que acompaña al bloque y explica de qué trata.'; break;
+            case $texts && $k === 'title': $data[$k] = 'Título de ejemplo'; break;
+            case $texts && $k === 'subtitle': $data[$k] = 'Un subtítulo de apoyo para el bloque'; break;
+            case $texts && ($k === 'text' || $k === 'sub'): $data[$k] = 'Texto breve que acompaña al bloque y explica de qué trata.'; break;
             default: $data[$k] = '';
         }
     }

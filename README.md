@@ -189,6 +189,23 @@ OpenStreetMap con Leaflet (sin clave) y animaciones Lottie. Librerías registrad
 páginas cuyos bloques las declaran. El importador admite además Fable como modelo y recorta de la pantalla los
 logotipos e ilustraciones vectoriales que el PDF no trae como mapa de bits (`@pantalla:x,y,ancho,alto`).
 
+## Paquete marketing (1.16)
+
+`cms/packs/marketing`: ocho secciones de página de venta y cuatro fondos animados, en PHP, CSS y JS propios, sin
+librerías (solo los iconos Tabler, opcionales). Bloques: **hero con palabras rotativas** (una palabra del titular
+cambia sola y el ancho se anima para que nada salte), **cuadrícula bento** (tarjetas de distinto tamaño con icono o
+imagen), **pestañas con imagen** (lista de funciones que cambia la captura, con avance automático y barra de
+progreso), **comparador antes y después** (tirador arrastrable), **cinta de testimonios** (una o dos filas en
+sentidos opuestos, con estrellas), **precios con interruptor mensual/anual** (insignia de ahorro y plan destacado),
+**línea de tiempo** (hitos que se encienden y línea que se rellena con el scroll) y **cinta de logotipos**. Efectos
+para la pestaña Estilo: **aurora**, **rejilla con haz de luz**, **partículas conectadas** (canvas, reaccionan al
+ratón) y **meteoros**. Todo respeta `prefers-reduced-motion` y usa las variables del tema (`--cms-accent`,
+`--cms-muted`, `--cms-radius`) y `currentColor`, así que funciona igual sobre fondo claro u oscuro. Se activa con
+`'packs' => ['marketing']` en `site/config.php`; el tema lienzo ya lo trae.
+
+Los patrones de diseño son los habituales de las páginas de producto actuales y de catálogos como 21st.dev; el código
+es propio y MIT, sin copiar el de ningún catálogo. Ver `cms/packs/marketing/LICENSES.md`.
+
 ## Vistas previas de bloques y Respaldos (1.8)
 
 Desde 1.15 las vistas previas son **ejemplos en vivo**: `admin/?p=demo&block=<clave>` (o `&effect=<paquete/efecto>`)

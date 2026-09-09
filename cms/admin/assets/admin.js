@@ -13,6 +13,9 @@
     d.addEventListener("toggle", function () { try { localStorage.setItem(key, d.open ? "1" : "0"); } catch (e) {} });
   });
 
+  /* ---------------- listados: el selector de filtro (categoría, autor…) aplica al cambiar ---------------- */
+  document.querySelectorAll("[data-filter-auto]").forEach(function (sel) { sel.addEventListener("change", function () { sel.form && sel.form.submit(); }); });
+
   /* ---------------- página padre → prefijo de la ruta ---------------- */
   var parentSel = document.querySelector('select[name="parent"]'), parentPath = document.querySelector("[data-parent-path]");
   if (parentSel && parentPath) parentSel.addEventListener("change", function () {

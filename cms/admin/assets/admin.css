@@ -375,3 +375,16 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-color-row input[type=color] { width: 44px; height: 38px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; }
 .ad-color-row input[type=color].is-empty { opacity: .35; }
 .ad-color-row input[type=text] { max-width: 180px; font-family: ui-monospace, monospace; }
+
+/* listado de colecciones: buscador, filtros y paginación */
+.ad-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 12px; }
+.ad-filter input[type=search], .ad-filter select { border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font: inherit; background: #fff; color: var(--ink); }
+.ad-filter input[type=search] { flex: 1 1 260px; max-width: 460px; }
+.ad-filter input[type=search]:focus, .ad-filter select:focus { outline: none; border-color: #000; }
+.ad-filter-status { flex-wrap: wrap; gap: 8px; }
+.ad-filter-status .ad-pill { text-decoration: none; padding: 6px 14px; font-size: 13px; }
+.ad-pager { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 16px 0; }
+.ad-pager a, .ad-pager .cur { display: inline-block; min-width: 36px; text-align: center; padding: 7px 12px; border: 1px solid var(--line); border-radius: 30px; background: #fff; text-decoration: none; color: var(--ink); font-size: 13px; }
+.ad-pager a:hover { border-color: #000; }
+.ad-pager .cur { background: #000; color: #fff; border-color: #000; }
+.ad-pager-gap { color: var(--grey); padding: 0 4px; }

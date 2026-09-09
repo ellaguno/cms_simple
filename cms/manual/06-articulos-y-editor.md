@@ -10,6 +10,13 @@ Artículos, planes, preguntas frecuentes, integrantes del equipo o proyectos son
 
 En el listado ves el estado de cada elemento y puedes **Ver** o hacer **Vista previa**, **Editar**, **Duplicar** o **Eliminar**. Eliminar no tiene deshacer; si dudas, pásalo a borrador.
 
+Cuando la colección crece (un blog puede tener miles de entradas), el listado se muestra de 50 en 50 y trae herramientas para encontrar lo que buscas:
+
+- **Buscador**: escribe una o varias palabras y pulsa Enter. Busca en el título (en todos los idiomas), en la URL y en las columnas del listado (fecha, categoría…). No distingue mayúsculas ni acentos.
+- **Filtros por columna**: si la colección tiene categoría, autor u otro campo con pocos valores distintos, aparece un selector para quedarte solo con uno.
+- **Estado**: las píldoras Todos / Publicados / Programados / Borradores filtran por estado y muestran cuántos hay de cada uno.
+- **Paginación** al pie de la tabla. Los filtros se conservan al pasar de página y al editar, duplicar o eliminar, así vuelves al mismo punto. **Limpiar** quita todos los filtros.
+
 ## Precios: dónde se editan
 
 Los planes viven en **Planes de precios**. Hay dos juegos, uno por producto: **Abogados**, que se muestra en la landing

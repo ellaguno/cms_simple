@@ -12,7 +12,7 @@ Nació para [katapolt.mx](https://katapolt.mx) y está pensado para reutilizarse
 
 - **Sin base de datos**: todo es JSON en `data/`. Respaldar el sitio es copiar la carpeta.
 - **Panel de administración** con login (contraseñas `password_hash`, CSRF, bloqueo tras 5 intentos, sesión con cookie HttpOnly), varios usuarios, contraseñas.
-- **Tipos de contenido por esquema**: declaras en `site/config.php` los tipos (entradas, proyectos, servicios…) y sus campos; el panel genera listados y formularios. Tipos de campo: texto, área de texto, editor visual (Quill), fecha, número, URL, correo, selector, casilla, imagen, lista de imágenes, líneas, etiquetas.
+- **Tipos de contenido por esquema**: declaras en `site/config.php` los tipos (entradas, proyectos, servicios…) y sus campos; el panel genera listados (con buscador, filtros por estado y por columna, y paginación de 50 en 50; `'admin_per_page'` en el tipo cambia el tamaño) y formularios. Tipos de campo: texto, área de texto, editor visual (Quill), fecha, número, URL, correo, selector, casilla, imagen, lista de imágenes, líneas, etiquetas.
 - **Multilingüe**: cualquier campo marcado `i18n` se edita por idioma con un conmutador (un idioma a la vez, con el texto del idioma base como referencia). URLs con prefijo por idioma (`/en/...`), `hreflang`, respaldo al idioma predeterminado cuando falta traducción.
 - **Medios**: subida por botón o arrastrando (imágenes, PDF, video), biblioteca para insertar en el editor o en campos de imagen, WebP automático, aviso de "en uso" antes de borrar.
 - **Menú, textos fijos, ajustes, redirecciones 301** editables desde el panel.

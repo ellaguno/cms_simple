@@ -76,3 +76,15 @@ desde catálogos de confianza. En Ajustes puedes añadir los tuyos.
 
 Desactivar un paquete no borra nada: los bloques que aporta dejan de estar disponibles y las secciones que los usen
 dejan de dibujarse, pero vuelven en cuanto lo actives otra vez.
+
+## Actualizar el CMS con un botón
+
+En **Actualizar** ves la versión que tienes y la publicada. Pulsa **Buscar actualizaciones** (esa consulta sale a
+internet, por eso no se hace sola) y, si hay una nueva, aparecen las notas del cambio y el botón para instalarla.
+
+La actualización sustituye solo el motor del CMS. Tu contenido, tus imágenes y tu diseño no se tocan. La versión
+anterior queda guardada y puedes volver a ella desde esa misma página si algo no te cuadra. Aun así, antes de una
+actualización grande vale la pena crear un respaldo.
+
+Si tu servidor no deja escribir en la carpeta del sitio, la página te lo dirá; en ese caso hay que actualizar por FTP,
+copiando la carpeta `cms/` nueva encima de la vieja.

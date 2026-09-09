@@ -189,6 +189,27 @@ OpenStreetMap con Leaflet (sin clave) y animaciones Lottie. Librerías registrad
 páginas cuyos bloques las declaran. El importador admite además Fable como modelo y recorta de la pantalla los
 logotipos e ilustraciones vectoriales que el PDF no trae como mapa de bits (`@pantalla:x,y,ancho,alto`).
 
+## Actualizar el núcleo desde el panel (1.22)
+
+**Admin → Actualizar** compara la versión instalada con la publicada en `version.json` (por defecto, el de este
+repositorio; se cambia con `'update_url'` en `site/config.php`), enseña las notas del cambio e instala la nueva.
+
+Cómo lo hace: descarga el zip, extrae `cms/` a una carpeta temporal, comprueba que trae un núcleo completo y que su
+`CMS_VERSION` es la anunciada, y solo entonces cambia las carpetas de sitio con `rename`. La anterior queda guardada
+como `.cms-anterior-<fecha>` (se conservan las dos últimas) y se puede volver a ella desde la misma página. Al
+terminar se limpia OPcache.
+
+Antes de empezar comprueba permisos de escritura, extensión Zip, PHP mínimo y la versión mínima desde la que se puede
+saltar; si algo falla lo dice y no ofrece el botón. Un archivo de bloqueo evita que dos pulsaciones se pisen.
+**No toca** `data/`, `uploads/`, el tema, `themes/` ni `packs/`.
+
+La consulta a internet solo se hace cuando la pides: el resto del panel lee lo último descargado, así que nunca se
+queda esperando a la red. El pie del menú avisa cuando hay versión nueva.
+
+Formato de `version.json`: `version`, `date`, `notes`, `url` (zip), `subdir` (carpeta del zip que trae el núcleo),
+`min_version`, `min_php` y `sha256` opcional. Los zips que GitHub genera al vuelo no tienen una firma estable, así que
+`sha256` conviene solo si publicas el zip tú.
+
 ## Catálogo remoto de temas y paquetes (1.21)
 
 **Admin → Catálogo** lee uno o varios catálogos publicados en internet y permite instalar temas y paquetes de bloques

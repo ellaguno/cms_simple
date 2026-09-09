@@ -1,7 +1,7 @@
 {
-  "version": "1.22.0",
+  "version": "1.22.1",
   "date": "2026-09-09",
-  "notes": "Actualización del núcleo desde el panel: Admin → Actualizar comprueba si hay versión nueva, la instala y guarda la anterior por si hay que volver.\nAntes: catálogo remoto de temas y paquetes, varios temas instalables, variaciones de estilo, efectos con ajustes y buscador en los listados.",
+  "notes": "El menú lateral del panel ya se puede desplazar cuando tiene más elementos que altura tiene la pantalla.\nAntes: actualización del núcleo desde el panel, catálogo remoto de temas y paquetes, varios temas instalables y variaciones de estilo.",
   "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
   "subdir": "cms",
   "min_version": "1.10.0",

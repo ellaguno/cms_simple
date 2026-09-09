@@ -10,8 +10,6 @@ code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 12px; 
 .ad-side::-webkit-scrollbar-thumb { background: rgba(0,0,0,.18); border-radius: 8px; }
 .ad-side::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.32); }
 .ad-side::-webkit-scrollbar-track { background: transparent; }
-/* el pie del menú (usuario, salir, versión) se queda abajo mientras haya sitio, y baja con el resto cuando no lo hay */
-.ad-nav { flex: 0 0 auto; }
 .ad-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; }
 .ad-brand img { width: 110px; }
 .ad-brand span { font-size: 12px; background: #000; color: #fff; border-radius: 20px; padding: 2px 9px; }

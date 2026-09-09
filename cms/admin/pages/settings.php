@@ -14,6 +14,10 @@ if (cms_config('cookie_notice', true) !== false) $siteSections += ['Aviso de coo
     'cookie_pos'    => ['type' => 'select', 'label' => 'Posición', 'options' => ['bottom' => 'Abajo, a todo el ancho', 'corner' => 'Esquina inferior izquierda'], 'default' => 'bottom'],
 ]];
 $langNames = ['es' => 'Español', 'en' => 'English', 'fr' => 'Français', 'pt' => 'Português', 'de' => 'Deutsch', 'it' => 'Italiano'];
+$siteSections += ['Catálogo de temas y paquetes' => [
+    'registries' => ['type' => 'textarea', 'label' => 'Catálogos propios (una dirección https por línea; se suman al oficial)', 'rows' => 2,
+                     'placeholder' => 'https://ejemplo.com/catalogo.json', 'help' => 'Un catálogo es un archivo JSON con los temas y paquetes que se pueden instalar. Lo que instales se ejecuta en tu servidor: añade solo catálogos de confianza.'],
+]];
 
 if (admin_is_post() && admin_post('action') === 'webp') {
     admin_csrf_check();

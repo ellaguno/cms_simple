@@ -189,6 +189,40 @@ OpenStreetMap con Leaflet (sin clave) y animaciones Lottie. Librerías registrad
 páginas cuyos bloques las declaran. El importador admite además Fable como modelo y recorta de la pantalla los
 logotipos e ilustraciones vectoriales que el PDF no trae como mapa de bits (`@pantalla:x,y,ancho,alto`).
 
+## Catálogo remoto de temas y paquetes (1.21)
+
+**Admin → Catálogo** lee uno o varios catálogos publicados en internet y permite instalar temas y paquetes de bloques
+con un clic, además de activar o desactivar los paquetes ya instalados.
+
+Un catálogo es un JSON servido por **https**:
+
+```json
+{ "name": "Catálogo de cms_simple",
+  "items": [
+    { "kind": "theme",            // "theme" o "pack"
+      "key": "lienzo",            // carpeta donde se instalará
+      "label": "Lienzo", "desc": "…", "version": "1.0.0", "author": "…", "license": "MIT",
+      "tags": ["blog"], "screenshot": "https://…/x.jpg",
+      "url": "https://…/algo.zip",       // el zip a descargar
+      "subdir": "starters/lienzo",       // opcional: carpeta dentro del zip (sirve para el zip de un repositorio entero)
+      "sha256": "…",                     // opcional: comprueba la descarga
+      "requires": { "cms": "1.20.0" } }
+  ] }
+```
+
+El oficial es `catalog.json` en la raíz de este repositorio, servido por raw.githubusercontent. En Ajustes se pueden
+añadir catálogos propios (uno por línea). El resultado se guarda unas horas en `data/cache/`; si la red falla se usa
+lo último descargado.
+
+Los temas se instalan en `themes/<clave>` y los paquetes en `packs/<clave>`, en la raíz del sitio, así que sobreviven
+al cambio de tema y a la actualización del núcleo. El núcleo busca cada paquete en `packs/`, luego en `<tema>/packs/`
+y por último en `cms/packs/`. Los paquetes se activan y desactivan desde el Catálogo, sin editar el `config.php` del
+tema; queda en Ajustes (`packs_on` y `packs_off`).
+
+Seguridad: solo `https`, cada instalación la confirma la persona, se comprueba `sha256` cuando el catálogo lo trae,
+se descartan rutas con `..` y extensiones ajenas a un tema o paquete, y un paquete del núcleo no se sobrescribe.
+Aun así, instalar trae código que se ejecutará en tu servidor: usa solo catálogos de confianza.
+
 ## Varios temas y librería de temas (1.20)
 
 Un sitio puede tener varios temas instalados en `themes/<clave>/` (cada uno con lo que hay en `site/`: `config.php`,

@@ -22,6 +22,7 @@ function admin_nav(): array
     $nav += [
         'media'     => ['Medios', admin_url('media')],
         'diseno'    => ['Diseño', admin_url('diseno')],
+        'catalogo'  => ['Catálogo', admin_url('catalogo')],
         'menu'      => ['Menú', admin_url('menu')],
         'strings'   => ['Textos del sitio', admin_url('strings')],
         'settings'  => ['Ajustes', admin_url('settings')],

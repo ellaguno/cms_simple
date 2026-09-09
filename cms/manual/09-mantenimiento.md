@@ -67,3 +67,12 @@ guardadas y reaparecen si vuelves al tema anterior.
 Desde ahí también puedes **instalar un tema** desde un archivo zip y **descargar el que estás usando**, que es la forma
 de llevarlo a otro sitio. Un tema contiene programación que se ejecuta en tu servidor: instala solo los que te dé
 alguien de confianza.
+
+## El catálogo: instalar temas y paquetes
+
+En **Catálogo** aparecen los temas y los paquetes de bloques que se pueden instalar desde internet, y más abajo los
+paquetes que ya tienes, con su interruptor. Instalar descarga programación que se ejecutará en tu servidor: hazlo solo
+desde catálogos de confianza. En Ajustes puedes añadir los tuyos.
+
+Desactivar un paquete no borra nada: los bloques que aporta dejan de estar disponibles y las secciones que los usen
+dejan de dibujarse, pero vuelven en cuanto lo actives otra vez.

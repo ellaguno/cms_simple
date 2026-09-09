@@ -11,11 +11,18 @@
       "version": "1.0.0",
       "author": "cms_simple",
       "license": "MIT",
-      "tags": ["general", "constructor", "portafolio", "empresa"],
+      "tags": [
+        "general",
+        "constructor",
+        "portafolio",
+        "empresa"
+      ],
       "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/lienzo/screenshot.jpg",
       "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
       "subdir": "starters/lienzo",
-      "requires": { "cms": "1.20.0" }
+      "requires": {
+        "cms": "1.20.0"
+      }
     }
   ]
 }

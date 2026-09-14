@@ -1,7 +1,10 @@
 # Paquete contenido — licencias
 
-Código propio (listado de colección, catálogo, banda de aviso, acordeón y pasos): MIT, parte de cms_simple. En PHP,
-CSS y JS sin librerías; los iconos Tabler (MIT), registrados en el núcleo, son opcionales.
+Código propio (listado de colección, catálogo, banda de aviso, ticker de novedades, acordeón y pasos): MIT, parte de
+cms_simple. En PHP, CSS y JS sin librerías; los iconos Tabler (MIT), registrados en el núcleo, son opcionales.
+
+Los iconos del ticker (`icons.php`) son trazos SVG de **Tabler Icons** (https://tabler.io/icons), licencia MIT,
+© Paweł Kuna, incrustados para no cargar la fuente de iconos completa por un solo icono.
 
 El marcado y la disposición de varias de estas piezas siguen los patrones de **HyperUI** (https://hyperui.dev),
 biblioteca de componentes con Tailwind CSS publicada bajo licencia MIT:

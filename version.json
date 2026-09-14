@@ -1,7 +1,7 @@
 {
-  "version": "1.22.1",
-  "date": "2026-09-09",
-  "notes": "El menú lateral del panel ya se puede desplazar cuando tiene más elementos que altura tiene la pantalla.\nAntes: actualización del núcleo desde el panel, catálogo remoto de temas y paquetes, varios temas instalables y variaciones de estilo.",
+  "version": "1.23.0",
+  "date": "2026-09-14",
+  "notes": "Ticker de novedades en el paquete contenido: los últimos títulos de una colección del sitio, de un blog externo (WordPress o cualquier feed RSS/Atom, con categoría opcional) o escritos a mano, en cinta o rotando, con icono y equis para cerrarlo.\nAntes: menú lateral desplazable, actualización del núcleo desde el panel, catálogo remoto de temas y paquetes.",
   "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
   "subdir": "cms",
   "min_version": "1.10.0",

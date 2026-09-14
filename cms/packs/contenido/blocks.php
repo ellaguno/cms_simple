@@ -4,6 +4,7 @@
  * página se actualiza sola al publicar. Las opciones del selector de colección se generan desde site/config.php.
  */
 declare(strict_types=1);
+require_once __DIR__ . '/inc.php';
 $F = 'cms/assets/img/demo/';
 $types = [];
 foreach ((array) cms_config('types', []) as $k => $d) $types[$k] = (string) ($d['label'] ?? $k);
@@ -60,6 +61,32 @@ return [
             'key'         => ['type' => 'text', 'label' => 'Nombre del aviso (cámbialo al publicar uno nuevo para que se vuelva a ver)', 'default' => 'aviso-1', 'half' => true],
         ],
         'sample' => ['text' => 'Taller gratuito de diseño editorial el 24 de octubre.', 'link_text' => 'Apuntarme', 'link_url' => '#'],
+    ],
+    'ticker' => [
+        'label' => 'Ticker de novedades', 'group' => 'Contenido dinámico',
+        'desc' => 'Franja estrecha con los últimos títulos de una colección del sitio, de un blog externo (WordPress o cualquier feed RSS/Atom, con categoría opcional) o escritos a mano. Se desplazan en cinta o van rotando uno a uno; con icono, etiqueta, enlace y equis para cerrarla.',
+        'wrap_class' => 'cms-band', 'styles' => ['bg', 'text', 'anchor', 'class', 'hide_mobile'], 'animate' => 'none',
+        'fields' => [
+            'source'        => ['type' => 'select', 'label' => 'De dónde salen los títulos', 'options' => ['collection' => 'Una colección de este sitio', 'feed' => 'Un blog externo (WordPress o feed RSS/Atom)', 'manual' => 'Los escribo yo aquí'], 'default' => 'collection'],
+            'collection'    => ['type' => 'select', 'label' => 'Colección', 'options' => $types, 'default' => (string) array_key_first($types), 'half' => true],
+            'filter'        => ['type' => 'text', 'label' => 'Solo los de esta categoría o etiqueta (opcional)', 'half' => true],
+            'feed_url'      => ['type' => 'text', 'label' => 'Dirección del blog o del feed (WordPress: basta la del sitio, ej. https://blog.ejemplo.com)', 'placeholder' => 'https://blog.ejemplo.com'],
+            'feed_category' => ['type' => 'text', 'label' => 'Categoría del blog (nombre o slug, opcional)', 'placeholder' => 'Noticias', 'half' => true],
+            'refresh'       => ['type' => 'select', 'label' => 'Volver a leer el blog cada', 'options' => ['15' => '15 minutos', '30' => '30 minutos', '60' => '1 hora', '180' => '3 horas', '720' => '12 horas'], 'default' => '30', 'half' => true],
+            'items'         => ['type' => 'lines', 'label' => 'Textos propios, uno por línea: Texto | URL (opcional)', 'rows' => 4],
+            'count'         => ['type' => 'number', 'label' => 'Cuántos títulos', 'default' => 5, 'min' => 1, 'max' => 20, 'half' => true],
+            'mode'          => ['type' => 'select', 'label' => 'Movimiento', 'options' => ['scroll' => 'Cinta que se desplaza', 'rotate' => 'Uno a la vez, cambiando cada pocos segundos', 'still' => 'Sin movimiento (todos seguidos)'], 'default' => 'scroll', 'half' => true],
+            'speed'         => ['type' => 'select', 'label' => 'Velocidad', 'options' => ['slow' => 'Lenta', 'normal' => 'Normal', 'fast' => 'Rápida'], 'default' => 'normal', 'half' => true],
+            'label'         => ['type' => 'text', 'label' => 'Etiqueta al principio (opcional)', 'default' => 'Novedades', 'half' => true],
+            'icon'          => ['type' => 'select', 'label' => 'Icono', 'options' => ['' => 'Ninguno'] + ct_ticker_icons(), 'default' => 'news', 'half' => true],
+            'icon_custom'   => ['type' => 'text', 'label' => 'O un emoji / imagen propia (sustituye al icono)', 'placeholder' => '📰', 'half' => true],
+            'show_date'     => ['type' => 'checkbox', 'label' => 'Mostrar', 'text' => 'La fecha delante de cada título', 'default' => true],
+            'more_text'     => ['type' => 'text', 'label' => 'Enlace al final (texto, opcional)', 'placeholder' => 'Ver todo', 'half' => true],
+            'more_url'      => ['type' => 'text', 'label' => 'Enlace al final (URL; vacío = índice de la colección o portada del blog)', 'half' => true],
+            'closable'      => ['type' => 'checkbox', 'label' => 'Cerrar', 'text' => 'Se puede cerrar y no vuelve a aparecer', 'half' => true],
+            'key'           => ['type' => 'text', 'label' => 'Nombre del ticker (cámbialo para que quien lo cerró lo vuelva a ver)', 'default' => 'ticker-1', 'half' => true],
+        ],
+        'sample' => ['source' => 'manual', 'label' => 'Novedades', 'items' => ['Nueva versión con firma electrónica avanzada | #', 'Guía: cómo organizar expedientes en equipo | #', 'Webinar: inteligencia artificial en el despacho | #'], 'more_text' => 'Ver todo', 'more_url' => '#'],
     ],
     'acordeon' => [
         'label' => 'Acordeón', 'group' => 'Contenido dinámico',

@@ -307,9 +307,28 @@ la palabra y color del halo) y las cifras animadas (cuánto tarda la cuenta).
 **Corregido**: el fondo de ondas buscaba una clase `.hero` que ningún tema del proyecto usa, así que no llegaba a
 dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los parámetros como uniforms.
 
+## Ticker de novedades (1.23)
+
+Bloque `contenido/ticker`: una franja estrecha, como la banda de aviso, que enseña los últimos títulos de:
+
+- **una colección del sitio** (artículos, proyectos…), con filtro por categoría o etiqueta;
+- **un blog externo**: basta la dirección del sitio si es WordPress (se lee `/feed/` y, con categoría,
+  `/category/<slug>/feed/`), o la de cualquier feed RSS 2.0, RSS 1.0 o Atom (la categoría filtra entonces por nombre).
+  Si la dirección es una página HTML, se busca su `<link rel="alternate" type="application/rss+xml">`. Lo descargado
+  queda en `data/cache/feed-*.json` el tiempo que elija el editor (15 minutos a 12 horas); si el blog no responde se
+  sigue mostrando lo último que se leyó, y solo se vuelve a intentar pasado ese plazo. Las descargas van por
+  `cms_http_get()` (https, 2 MB, 8 s). En el constructor, si no sale nada, la vista previa dice por qué y lista las
+  categorías que trae el feed;
+- **textos escritos a mano** ("Texto | URL").
+
+Movimiento a elegir: cinta que se desplaza (se pausa al pasar el ratón y se detiene con "reducir movimiento"), un
+título a la vez con fundido, o sin movimiento. Icono de una lista de Tabler incrustados como SVG (o un emoji o imagen
+propia), etiqueta al principio, fecha opcional, enlace al final (por defecto el índice de la colección o la portada del
+blog) y equis para cerrarlo que se recuerda como en la banda de aviso.
+
 ## Paquete contenido (1.17)
 
-`cms/packs/contenido`: cinco bloques que conectan las páginas con las colecciones del sitio.
+`cms/packs/contenido`: seis bloques que conectan las páginas con las colecciones del sitio.
 
 - **Listado de una colección**: los últimos elementos publicados de cualquier tipo (artículos, proyectos, productos)
   en rejilla de 2, 3 o 4, en lista con imagen a un lado, o con uno destacado y el resto en columna. Filtra por
@@ -318,6 +337,7 @@ dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los
 - **Catálogo de tarjetas**: rejilla con imagen, etiqueta o precio, título, texto y enlace, escrita a mano.
 - **Banda de aviso**: franja estrecha con anuncio, enlace y equis para cerrarla; quien la cierra no la vuelve a ver
   (queda en `localStorage`, con un nombre que el editor cambia para volver a mostrarla).
+- **Ticker de novedades** (1.23): últimos títulos de una colección, de un blog externo por RSS o a mano; ver arriba.
 - **Acordeón** de apartados plegables y **pasos numerados** unidos por una línea.
 
 El marcado sigue patrones de [HyperUI](https://hyperui.dev) (Tailwind CSS, MIT, © Mark Mead), reescritos con CSS

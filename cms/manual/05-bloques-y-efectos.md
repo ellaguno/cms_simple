@@ -34,6 +34,7 @@
 | Enseñar los últimos artículos o proyectos | Listado de una colección |
 | Un catálogo de servicios o productos a mano | Catálogo de tarjetas |
 | Anunciar algo arriba de la página | Banda de aviso |
+| Los últimos títulos del blog (propio o WordPress) desfilando arriba | Ticker de novedades |
 | Condiciones o temarios largos | Acordeón |
 | Explicar un método en tres movimientos | Pasos numerados |
 | Algo que ningún bloque cubre | HTML, solo para quien sabe lo que hace |
@@ -46,6 +47,12 @@ El **Listado de una colección** es distinto a los demás: no escribes su conten
 colección tirar (artículos, proyectos, productos), cuántos mostrar y con qué forma, y a partir de ahí la página se
 mantiene sola: cada vez que publiques un elemento nuevo aparecerá ahí, y los viejos irán saliendo. Si solo quieres los
 de una categoría, escríbela en el campo de filtro tal como la escribes en los elementos.
+
+El **Ticker de novedades** hace lo mismo en una sola línea, arriba de la página: los últimos títulos de una colección,
+o de un blog externo (si es WordPress basta pegar la dirección del sitio y, si quieres, el nombre de una categoría; si
+es otro blog, pega la dirección de su feed RSS). Elige cuántos, si desfilan en cinta o van cambiando uno a uno, el
+icono y si se puede cerrar. El blog se vuelve a leer cada cierto tiempo, el que elijas; mientras tanto la página no
+espera a nadie.
 
 Cada efecto tiene sus **ajustes**: al elegirlo aparecen debajo, en la misma pestaña Estilo. Puedes cambiar colores,
 velocidad, intensidad y densidad sin tocar código. Por ejemplo, el fondo de ondas admite el color de las ondas, los dos

@@ -39,6 +39,9 @@
           card.querySelectorAll("[data-sec-pane]").forEach(function (p) { p.hidden = p.getAttribute("data-sec-pane") !== b.getAttribute("data-sec-tab"); });
         });
       });
+      function moved() { renumber(); ping(); card.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+      card.querySelector("[data-sec-first]").addEventListener("click", function () { if (card !== list.firstElementChild) { list.insertBefore(card, list.firstElementChild); moved(); } });
+      card.querySelector("[data-sec-last]").addEventListener("click", function () { if (card !== list.lastElementChild) { list.appendChild(card); moved(); } });
       card.querySelector("[data-sec-up]").addEventListener("click", function () { var prev = card.previousElementSibling; if (prev) { list.insertBefore(card, prev); renumber(); ping(); } });
       card.querySelector("[data-sec-down]").addEventListener("click", function () { var next = card.nextElementSibling; if (next) { list.insertBefore(next, card); renumber(); ping(); } });
       card.querySelector("[data-sec-del]").addEventListener("click", function () {
@@ -64,22 +67,41 @@
         eff.addEventListener("change", showEff); showEff();
       }
       card.addEventListener("focusin", function () { select(card, true); });
-      // arrastrar para reordenar
-      card.addEventListener("dragstart", function (e) {
-        if (!e.target.closest(".ad-sec-grip")) { e.preventDefault(); return; }
-        card.classList.add("ad-sec-dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", "");
+      // arrastrar por el asa para cambiar de lugar: mientras se arrastra, todas las tarjetas se pliegan para que la lista quepa en pantalla
+      var grip = card.querySelector(".ad-sec-grip"), wasOpen = false;
+      grip.addEventListener("dragstart", function (e) {
+        e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", "");
+        try { e.dataTransfer.setDragImage(card.querySelector(".ad-sec-head"), 20, 16); } catch (x) {}
+        wasOpen = !card.classList.contains("ad-sec-collapsed");
+        setTimeout(function () { card.classList.add("ad-sec-dragging"); card.classList.add("ad-sec-collapsed"); list.classList.add("ad-list-dragging"); }, 0);
       });
-      card.addEventListener("dragend", function () { card.classList.remove("ad-sec-dragging"); renumber(); ping(); });
-      card.querySelector(".ad-sec-grip").addEventListener("mousedown", function () { card.setAttribute("draggable", "true"); });
+      grip.addEventListener("dragend", function () {
+        card.classList.remove("ad-sec-dragging"); list.classList.remove("ad-list-dragging"); stopAutoScroll();
+        if (wasOpen) card.classList.remove("ad-sec-collapsed");
+        renumber(); ping(); card.scrollIntoView({ block: "nearest" });
+      });
       updateTitle(card);
     }
-    list.addEventListener("dragover", function (e) {
-      e.preventDefault();
+    // el cursor cerca del borde superior o inferior de la ventana desplaza la página (el navegador no siempre lo hace solo)
+    var autoScroll = 0, autoDir = 0;
+    function stopAutoScroll() { if (autoScroll) cancelAnimationFrame(autoScroll); autoScroll = 0; autoDir = 0; }
+    function autoScrollStep() { if (!autoDir) { autoScroll = 0; return; } window.scrollBy(0, autoDir * 14); autoScroll = requestAnimationFrame(autoScrollStep); }
+    function place(e) {
       var dragging = list.querySelector(".ad-sec-dragging"); if (!dragging) return;
       var after = null;
       list.querySelectorAll("[data-sec]:not(.ad-sec-dragging)").forEach(function (c) { var r = c.getBoundingClientRect(); if (e.clientY < r.top + r.height / 2 && after === null) after = c; });
-      if (after) list.insertBefore(dragging, after); else list.appendChild(dragging);
+      if (after) { if (after !== dragging.nextElementSibling) list.insertBefore(dragging, after); }
+      else if (list.lastElementChild !== dragging) list.appendChild(dragging);
+    }
+    document.addEventListener("dragover", function (e) {
+      if (!list.querySelector(".ad-sec-dragging")) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = "move";
+      var edge = 70, h = window.innerHeight;
+      autoDir = e.clientY < edge ? -1 : (e.clientY > h - edge ? 1 : 0);
+      if (autoDir && !autoScroll) autoScroll = requestAnimationFrame(autoScrollStep);
+      place(e);
     });
+    document.addEventListener("drop", function (e) { if (list.querySelector(".ad-sec-dragging")) e.preventDefault(); });
 
     function fromTemplate(type, values) {
       var tpl = box.querySelector('template[data-section-tpl="' + type + '"]');

@@ -51,7 +51,7 @@ return [
     'aviso' => [
         'label' => 'Banda de aviso', 'group' => 'Contenido dinámico',
         'desc' => 'Una franja estrecha arriba de la página con un anuncio, un enlace y una equis para cerrarla. Quien la cierra no la vuelve a ver.',
-        'wrap_class' => 'cms-band', 'styles' => ['bg', 'text', 'anchor', 'class', 'hide_mobile'], 'animate' => 'none',
+        'wrap_class' => 'cms-band', 'styles' => ['bg', 'text', 'anchor', 'class', 'hide_mobile'], 'animate' => 'none', 'top' => true,
         'fields' => [
             'text'        => ['type' => 'text', 'label' => 'Texto del aviso', 'required' => true],
             'icon'        => ['type' => 'text', 'label' => 'Emoji o icono al principio (opcional)', 'default' => '🎉', 'half' => true],
@@ -59,13 +59,14 @@ return [
             'link_url'    => ['type' => 'text', 'label' => 'URL del enlace', 'half' => true],
             'closable'    => ['type' => 'checkbox', 'label' => 'Cerrar', 'text' => 'Se puede cerrar y no vuelve a aparecer', 'default' => true],
             'key'         => ['type' => 'text', 'label' => 'Nombre del aviso (cámbialo al publicar uno nuevo para que se vuelva a ver)', 'default' => 'aviso-1', 'half' => true],
+            'top'         => ['type' => 'checkbox', 'label' => 'Posición', 'text' => 'Arriba de la cabecera del sitio, por encima del menú (si el tema lo admite)'],
         ],
         'sample' => ['text' => 'Taller gratuito de diseño editorial el 24 de octubre.', 'link_text' => 'Apuntarme', 'link_url' => '#'],
     ],
     'ticker' => [
         'label' => 'Ticker de novedades', 'group' => 'Contenido dinámico',
         'desc' => 'Franja estrecha con los últimos títulos de una colección del sitio, de un blog externo (WordPress o cualquier feed RSS/Atom, con categoría opcional) o escritos a mano. Se desplazan en cinta o van rotando uno a uno; con icono, etiqueta, enlace y equis para cerrarla.',
-        'wrap_class' => 'cms-band', 'styles' => ['bg', 'text', 'anchor', 'class', 'hide_mobile'], 'animate' => 'none',
+        'wrap_class' => 'cms-band', 'styles' => ['bg', 'text', 'anchor', 'class', 'hide_mobile'], 'animate' => 'none', 'top' => true,
         'fields' => [
             'source'        => ['type' => 'select', 'label' => 'De dónde salen los títulos', 'options' => ['collection' => 'Una colección de este sitio', 'feed' => 'Un blog externo (WordPress o feed RSS/Atom)', 'manual' => 'Los escribo yo aquí'], 'default' => 'collection'],
             'collection'    => ['type' => 'select', 'label' => 'Colección', 'options' => $types, 'default' => (string) array_key_first($types), 'half' => true],
@@ -85,6 +86,7 @@ return [
             'more_url'      => ['type' => 'text', 'label' => 'Enlace al final (URL; vacío = índice de la colección o portada del blog)', 'half' => true],
             'closable'      => ['type' => 'checkbox', 'label' => 'Cerrar', 'text' => 'Se puede cerrar y no vuelve a aparecer', 'half' => true],
             'key'           => ['type' => 'text', 'label' => 'Nombre del ticker (cámbialo para que quien lo cerró lo vuelva a ver)', 'default' => 'ticker-1', 'half' => true],
+            'top'           => ['type' => 'checkbox', 'label' => 'Posición', 'text' => 'Arriba de la cabecera del sitio, por encima del menú (si el tema lo admite)'],
         ],
         'sample' => ['source' => 'manual', 'label' => 'Novedades', 'items' => ['Nueva versión con firma electrónica avanzada | #', 'Guía: cómo organizar expedientes en equipo | #', 'Webinar: inteligencia artificial en el despacho | #'], 'more_text' => 'Ver todo', 'more_url' => '#'],
     ],

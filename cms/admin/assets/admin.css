@@ -274,7 +274,9 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-sections { margin-top: 4px; }
 .ad-sec { background: #fff; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; }
 .ad-sec-selected { border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79,70,229,.15); }
-.ad-sec-dragging { opacity: .4; }
+.ad-sec-dragging { opacity: .4; outline: 2px dashed #4f46e5; outline-offset: -2px; }
+.ad-list-dragging .ad-sec-body { display: none; }
+.ad-sec-grip:active { cursor: grabbing; }
 .ad-sec-hidden { opacity: .55; }
 .ad-sec-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: default; }
 .ad-sec-grip { cursor: grab; color: var(--grey); font-size: 15px; letter-spacing: -3px; padding: 0 4px; user-select: none; }

@@ -18,7 +18,7 @@ Un truco que ahorra tiempo: **haz clic en cualquier sección de la vista previa*
 
 ![Selector de secciones](img/constructor-selector.png)
 
-Pulsa **Añadir sección**. El selector agrupa los bloques por lo que hacen: cabeceras, contenido, tarjetas y listas, datos del sitio, cierre, y los paquetes de efectos. Cada uno explica en una línea para qué sirve, y los que vienen de un paquete llevan su nombre al lado. Arriba hay un **buscador**: escribe "precios", "galería", "aviso" o el nombre de un paquete y solo quedan los bloques que coinciden; si queda uno, Enter lo añade. La sección nueva aparece al final; muévela con las flechas o arrastrándola por el asa ⋮⋮.
+Pulsa **Añadir sección**. El selector agrupa los bloques por lo que hacen: cabeceras, contenido, tarjetas y listas, datos del sitio, cierre, y los paquetes de efectos. Cada uno explica en una línea para qué sirve, y los que vienen de un paquete llevan su nombre al lado. Arriba hay un **buscador**: escribe "precios", "galería", "aviso" o el nombre de un paquete y solo quedan los bloques que coinciden; si queda uno, Enter lo añade. La sección nueva aparece al final; súbela con ⤒ (al principio), con las flechas, o arrástrala por el asa ⋮⋮: mientras arrastras, las tarjetas se pliegan y la página se desplaza sola si acercas el cursor al borde.
 
 Una página bien construida suele tener entre cinco y diez secciones. Si pasa de doce, probablemente son dos páginas.
 
@@ -56,7 +56,7 @@ Si una opción no aparece en un bloque es porque ese bloque no la admite; un her
 
 ## Herramientas de cada tarjeta
 
-- **↑ ↓** cambian el orden. También puedes arrastrar por el asa.
+- **⤒ ↑ ↓ ⤓** cambian el orden: al principio, un lugar arriba, un lugar abajo, al final. También puedes arrastrar por el asa ⋮⋮.
 - **⧉** duplica la sección con todo su contenido. Útil para repetir una estructura cambiando textos.
 - **oculta** la guarda sin mostrarla. Sirve para desactivar algo temporalmente sin perderlo.
 - **×** la quita. Puedes volver a añadir el bloque, pero el contenido se pierde.

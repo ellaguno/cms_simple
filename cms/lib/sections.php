@@ -252,6 +252,22 @@ function cms_section_effect(string $effect, bool $on = true): void
     $GLOBALS['cms_current_effects'] = $cur;
 }
 
+/**
+ * Separa las secciones que el editor marcó "arriba de la cabecera del sitio" (campo 'top' de bandas como la banda de
+ * aviso o el ticker) del resto. El tema que lo admita dibuja las primeras antes de su <header> y el resto en su lugar:
+ *   [$top, $rest] = cms_sections_top($sections);
+ * Un tema que no llame a esta función dibuja todo en orden y el campo no tiene efecto.
+ */
+function cms_sections_top(array $sections): array
+{
+    $top = []; $rest = [];
+    foreach ($sections as $sec) {
+        if (is_array($sec) && empty($sec['hidden']) && !empty($sec['data']['top']) && ($def = cms_block((string) ($sec['type'] ?? ''))) && !empty($def['top'])) $top[] = $sec;
+        else $rest[] = $sec;
+    }
+    return [$top, $rest];
+}
+
 /** Clases del tema para los bloques de paquetes (config 'sections' => ['classes' => ['container' => …, 'header' => …, 'title' => …, 'subtitle' => …, 'btn' => …]]). */
 function cms_block_class(string $what): string
 {

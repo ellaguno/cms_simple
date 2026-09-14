@@ -307,7 +307,19 @@ la palabra y color del halo) y las cifras animadas (cuánto tarda la cuenta).
 **Corregido**: el fondo de ondas buscaba una clase `.hero` que ningún tema del proyecto usa, así que no llegaba a
 dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los parámetros como uniforms.
 
-## Buscador en el selector de bloques (1.24)
+## Reordenar arrastrando y bandas sobre la cabecera (1.25)
+
+En el constructor, el asa ⋮⋮ de cada sección arrastra de verdad (antes el arranque del arrastre se cancelaba porque
+el evento llegaba a la tarjeta y no al asa): mientras se arrastra, todas las tarjetas se pliegan para que la lista
+quepa en pantalla, y acercar el cursor al borde superior o inferior de la ventana desplaza la página. Además hay
+botones ⤒ y ⤓ para mover una sección al principio o al final de un golpe.
+
+La banda de aviso y el ticker tienen la opción **Arriba de la cabecera del sitio**. `cms_sections_top($sections)`
+devuelve `[$top, $rest]`; el tema que lo admita dibuja `$top` antes de su `<header>` y `$rest` donde iban. Un tema
+que no la llame ignora la opción. El tema de Iurefficient la implementa con la cabecera fija: la banda se queda
+arriba y el menú baja lo que mide la banda mientras esta se ve.
+
+
 
 El cuadro "Añadir sección" del constructor tiene un buscador arriba: filtra por nombre, descripción, grupo, clave
 (`contenido/ticker`) y paquete mientras se escribe; los grupos sin coincidencias se ocultan, Enter añade el bloque

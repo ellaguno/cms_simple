@@ -271,14 +271,16 @@ function admin_section_card(string $name, string $idx, array $sec, array $bd): s
     $style = (array) ($sec['style'] ?? []);
     $hidden = !empty($sec['hidden']);
     $summary = cms_section_summary($sec);
-    $h = '<div class="ad-sec' . ($hidden ? ' ad-sec-hidden' : '') . '" data-sec data-sec-type="' . cms_e($type) . '" data-sec-id="' . cms_e($id) . '" draggable="true">';
+    $h = '<div class="ad-sec' . ($hidden ? ' ad-sec-hidden' : '') . '" data-sec data-sec-type="' . cms_e($type) . '" data-sec-id="' . cms_e($id) . '">';
     $h .= '<input type="hidden" name="' . cms_e($n . '[type]') . '" value="' . cms_e($type) . '"><input type="hidden" name="' . cms_e($n . '[id]') . '" value="' . cms_e($id) . '">';
-    $h .= '<div class="ad-sec-head"><span class="ad-sec-grip" title="Arrastra para reordenar">⋮⋮</span>'
+    $h .= '<div class="ad-sec-head"><span class="ad-sec-grip" title="Arrastra para cambiar de lugar" draggable="true">⋮⋮</span>'
         . '<button type="button" class="ad-sec-toggle" data-sec-toggle aria-label="Plegar o desplegar"></button>'
         . '<span class="ad-sec-kind">' . cms_e($bd['label']) . '</span><span class="ad-sec-title" data-sec-title>' . cms_e($summary) . '</span>'
         . '<span class="ad-sec-tools">'
+        . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-sec-first title="Mover al principio">⤒</button>'
         . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-sec-up title="Subir">↑</button>'
         . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-sec-down title="Bajar">↓</button>'
+        . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-sec-last title="Mover al final">⤓</button>'
         . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-sec-dup title="Duplicar">⧉</button>'
         . '<label class="ad-sec-hide" title="Guardar la sección pero no mostrarla"><input type="hidden" name="' . cms_e($n . '[hidden]') . '" value="0"><input type="checkbox" name="' . cms_e($n . '[hidden]') . '" value="1"' . ($hidden ? ' checked' : '') . '> oculta</label>'
         . '<button type="button" class="ad-btn ad-btn-sm ad-btn-danger" data-sec-del title="Quitar">×</button>'

@@ -295,6 +295,10 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-sec-pane .ad-editor .ql-editor { min-height: 160px; }
 .ad-sec-style .ad-two { grid-template-columns: 1fr 1fr; gap: 0 14px; }
 .ad-sections-add { margin: 6px 0 14px; }
+.ad-picker-search { flex: 1 1 auto; margin: 0 12px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 14px; min-width: 0; }
+.ad-picker-search:focus { outline: 2px solid #000; outline-offset: 1px; }
+.ad-picker-pack { font-weight: 500; font-size: 11px; color: var(--grey); text-transform: uppercase; letter-spacing: .04em; margin-left: 4px; }
+.ad-picker-group[hidden], .ad-picker-item[hidden] { display: none; }
 .ad-picker-body h4 { margin: 14px 0 8px; font-size: 13px; color: var(--grey); text-transform: uppercase; letter-spacing: .05em; }
 .ad-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
 .ad-picker-item { text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; font: inherit; display: flex; flex-direction: column; gap: 3px; }

@@ -18,7 +18,7 @@ Un truco que ahorra tiempo: **haz clic en cualquier sección de la vista previa*
 
 ![Selector de secciones](img/constructor-selector.png)
 
-Pulsa **Añadir sección**. El selector agrupa los bloques por lo que hacen: cabeceras, contenido, tarjetas y listas, datos del sitio, cierre, y los paquetes de efectos. Cada uno explica en una línea para qué sirve. La sección nueva aparece al final; muévela con las flechas o arrastrándola por el asa ⋮⋮.
+Pulsa **Añadir sección**. El selector agrupa los bloques por lo que hacen: cabeceras, contenido, tarjetas y listas, datos del sitio, cierre, y los paquetes de efectos. Cada uno explica en una línea para qué sirve, y los que vienen de un paquete llevan su nombre al lado. Arriba hay un **buscador**: escribe "precios", "galería", "aviso" o el nombre de un paquete y solo quedan los bloques que coinciden; si queda uno, Enter lo añade. La sección nueva aparece al final; muévela con las flechas o arrastrándola por el asa ⋮⋮.
 
 Una página bien construida suele tener entre cinco y diez secciones. Si pasa de doce, probablemente son dos páginas.
 

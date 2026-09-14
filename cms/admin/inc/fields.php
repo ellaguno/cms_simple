@@ -239,12 +239,22 @@ function admin_sections_control(string $name, array $def, array $sections): stri
     // selector
     $groups = [];
     foreach ($blocks as $k => $bd) $groups[(string) ($bd['group'] ?? 'Bloques')][$k] = $bd;
-    $h .= '<div class="ad-modal" data-section-picker hidden><div class="ad-modal-box"><div class="ad-modal-head"><h3>Añadir sección</h3><button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-close>Cerrar</button></div><div class="ad-modal-body ad-picker-body">';
+    $packs = cms_packs();
+    $h .= '<div class="ad-modal" data-section-picker hidden><div class="ad-modal-box"><div class="ad-modal-head"><h3>Añadir sección</h3>'
+        . '<input type="search" class="ad-picker-search" data-picker-search placeholder="Buscar bloque… (nombre, qué hace, paquete)" aria-label="Buscar bloque" autocomplete="off">'
+        . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-close>Cerrar</button></div><div class="ad-modal-body ad-picker-body">';
     foreach ($groups as $g => $list) {
-        $h .= '<h4>' . cms_e($g) . '</h4><div class="ad-picker-grid">';
-        foreach ($list as $k => $bd) { $demo = cms_demo_url($k); $pv = $demo === '' ? cms_block_preview($bd) : ''; $h .= '<button type="button" class="ad-picker-item" data-block="' . cms_e($k) . '"' . ($demo ? ' data-demo="' . cms_e($demo) . '"' : '') . ($pv ? ' data-preview="' . cms_e($pv) . '"' : '') . '><strong>' . cms_e($bd['label']) . '</strong>' . (!empty($bd['desc']) ? '<span>' . cms_e($bd['desc']) . '</span>' : '') . '</button>'; }
-        $h .= '</div>';
+        $h .= '<section class="ad-picker-group" data-picker-group><h4>' . cms_e($g) . '</h4><div class="ad-picker-grid">';
+        foreach ($list as $k => $bd) {
+            $demo = cms_demo_url($k); $pv = $demo === '' ? cms_block_preview($bd) : '';
+            $pack = isset($bd['pack'], $packs[$bd['pack']]) ? (string) $packs[$bd['pack']]['label'] : '';
+            $hay = mb_strtolower(trim($bd['label'] . ' ' . ($bd['desc'] ?? '') . ' ' . $g . ' ' . $k . ' ' . $pack . ' ' . ($bd['pack'] ?? '')));
+            $h .= '<button type="button" class="ad-picker-item" data-block="' . cms_e($k) . '" data-search="' . cms_e($hay) . '"' . ($demo ? ' data-demo="' . cms_e($demo) . '"' : '') . ($pv ? ' data-preview="' . cms_e($pv) . '"' : '')
+                . '><strong>' . cms_e($bd['label']) . ($pack !== '' ? ' <small class="ad-picker-pack">' . cms_e($pack) . '</small>' : '') . '</strong>' . (!empty($bd['desc']) ? '<span>' . cms_e($bd['desc']) . '</span>' : '') . '</button>';
+        }
+        $h .= '</div></section>';
     }
+    $h .= '<p class="ad-help ad-picker-none" data-picker-none hidden>Ningún bloque coincide. Prueba con otra palabra: "precios", "galería", "aviso"…</p>';
     $h .= '</div><div class="ad-picker-preview" data-picker-preview hidden><div class="ad-demo" data-demo-box></div><img alt="" hidden><p></p></div></div></div>';
     // plantillas (una por bloque) para clonar desde JS
     foreach ($blocks as $k => $bd) $h .= '<template data-section-tpl="' . cms_e($k) . '">' . admin_section_card($name, '__IDX__', ['id' => '__ID__', 'type' => $k, 'data' => [], 'style' => []], $bd) . '</template>';

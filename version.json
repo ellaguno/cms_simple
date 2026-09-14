@@ -1,7 +1,7 @@
 {
-  "version": "1.23.0",
+  "version": "1.24.0",
   "date": "2026-09-14",
-  "notes": "Ticker de novedades en el paquete contenido: los últimos títulos de una colección del sitio, de un blog externo (WordPress o cualquier feed RSS/Atom, con categoría opcional) o escritos a mano, en cinta o rotando, con icono y equis para cerrarlo.\nAntes: menú lateral desplazable, actualización del núcleo desde el panel, catálogo remoto de temas y paquetes.",
+  "notes": "Buscador en el selector de bloques del constructor (por nombre, descripción, grupo y paquete; Enter añade el único resultado).\nAntes (1.23): ticker de novedades en el paquete contenido, con colección del sitio, blog externo por RSS o textos a mano.",
   "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
   "subdir": "cms",
   "min_version": "1.10.0",

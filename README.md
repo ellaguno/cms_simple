@@ -307,6 +307,12 @@ la palabra y color del halo) y las cifras animadas (cuánto tarda la cuenta).
 **Corregido**: el fondo de ondas buscaba una clase `.hero` que ningún tema del proyecto usa, así que no llegaba a
 dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los parámetros como uniforms.
 
+## Buscador en el selector de bloques (1.24)
+
+El cuadro "Añadir sección" del constructor tiene un buscador arriba: filtra por nombre, descripción, grupo, clave
+(`contenido/ticker`) y paquete mientras se escribe; los grupos sin coincidencias se ocultan, Enter añade el bloque
+cuando queda uno solo y Escape limpia o cierra. Cada bloque de paquete muestra el nombre del paquete junto al título.
+
 ## Ticker de novedades (1.23)
 
 Bloque `contenido/ticker`: una franja estrecha, como la banda de aviso, que enseña los últimos títulos de:

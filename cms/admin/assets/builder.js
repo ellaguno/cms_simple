@@ -123,7 +123,29 @@
     }
 
     // selector de bloques (con vista previa al pasar el ratón)
-    box.querySelector("[data-add-section]").addEventListener("click", function () { picker.hidden = false; });
+    var search = picker.querySelector("[data-picker-search]");
+    function filterPicker() {
+      var q = (search.value || "").trim().toLowerCase().replace(/\s+/g, " "), words = q ? q.split(" ") : [], shown = 0;
+      picker.querySelectorAll("[data-picker-group]").forEach(function (g) {
+        var n = 0;
+        g.querySelectorAll("[data-block]").forEach(function (b) {
+          var hay = (b.getAttribute("data-search") || "").toLowerCase();
+          var ok = words.every(function (w) { return hay.indexOf(w) !== -1; });
+          b.hidden = !ok; if (ok) n++;
+        });
+        g.hidden = n === 0; shown += n;
+      });
+      var none = picker.querySelector("[data-picker-none]"); if (none) none.hidden = shown > 0;
+      if (pv) pv.hidden = true;
+    }
+    box.querySelector("[data-add-section]").addEventListener("click", function () { picker.hidden = false; if (search) { search.value = ""; filterPicker(); setTimeout(function () { search.focus(); }, 30); } });
+    if (search) {
+      search.addEventListener("input", filterPicker);
+      search.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") { e.preventDefault(); if (search.value) { search.value = ""; filterPicker(); } else picker.hidden = true; }
+        if (e.key === "Enter") { e.preventDefault(); var vis = [].filter.call(picker.querySelectorAll("[data-block]"), function (b) { return !b.hidden; }); if (vis.length === 1) vis[0].click(); }
+      });
+    }
     var pv = picker.querySelector("[data-picker-preview]"), pvBox = pv && pv.querySelector("[data-demo-box]"), pvImg = pv && pv.querySelector("img"), hoverT = null;
     picker.querySelectorAll("[data-block]").forEach(function (b) {
       b.addEventListener("mouseenter", function () {

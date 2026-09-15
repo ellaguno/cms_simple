@@ -1,7 +1,7 @@
 {
-  "version": "1.30.1",
-  "date": "2026-09-14",
-  "notes": "Categorías: se activan desde el panel, colección por colección, en Diseño → Categorías (la entrada aparece siempre); en 1.30.0 solo se podía con 'categories' => true en config.php y nada lo indicaba. También se pueden desactivar ahí (el registro se conserva).\n1.30: cada categoría es una subsección indexable /coleccion/categoria/, con registro propio (nombre por idioma, orden, SEO), selector en el editor para evitar duplicados y erratas, renombrar y fusionar. Las páginas de los paquetes pasan al grupo Contenido.",
+  "version": "1.31.0",
+  "date": "2026-09-15",
+  "notes": "Paquete \"agencia\" (cms/packs/agencia): portada con pase de imágenes a todo el ancho (flechas, puntos, gesto de arrastre, título opcional y pestaña curva con botón de compartir en Facebook, X, LinkedIn, WhatsApp o copiar enlace), banda con imagen y círculo de color, equipo en carrusel (desde cualquier colección o escrito a mano; foto en blanco y negro opcional) y barras de habilidades que se llenan al aparecer. Extraído del tema de alldesign.mx; el tema lienzo ya lo trae. Nuevo tema \"alldesign\" en starters/ y en el catálogo.",
   "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
   "subdir": "cms",
   "min_version": "1.10.0",

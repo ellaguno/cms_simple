@@ -16,7 +16,7 @@ Nació para [katapolt.mx](https://katapolt.mx) y está pensado para reutilizarse
 - **Multilingüe**: cualquier campo marcado `i18n` se edita por idioma con un conmutador (un idioma a la vez, con el texto del idioma base como referencia). URLs con prefijo por idioma (`/en/...`), `hreflang`, respaldo al idioma predeterminado cuando falta traducción.
 - **Medios**: subida por botón o arrastrando (imágenes, PDF, video), biblioteca para insertar en el editor o en campos de imagen, WebP automático, aviso de "en uso" antes de borrar.
 - **Menú, textos fijos, ajustes, redirecciones 301** editables desde el panel. Publicación programada y fecha de retiro (caducidad) por elemento, sin cron. **Categorías** por colección con registro propio (Diseño → Categorías) y subsecciones indexables `/coleccion/categoria/`.
-- **Paquetes**: bloques y efectos para el constructor y, desde 1.27, código con ganchos (`content`, `head`, `item.save`, `admin.item.sidebar`, `cron`), ajustes, campos propios y página en el panel. Incluidos: visual, motion, media, marketing, contenido, enlaces (enlazado interno automático), audio (texto a voz) y redaccion (artículos y resúmenes de noticias con IA).
+- **Paquetes**: bloques y efectos para el constructor y, desde 1.27, código con ganchos (`content`, `head`, `item.save`, `admin.item.sidebar`, `cron`), ajustes, campos propios y página en el panel. Incluidos: visual, motion, media, marketing, contenido, agencia (portada con pase de imágenes, banda con círculo, equipo y habilidades), enlaces (enlazado interno automático), audio (texto a voz) y redaccion (artículos y resúmenes de noticias con IA).
 - **Código del tema**: editor de código en el panel para plantillas, layout, CSS y JS, con respaldos, restauración y verificación de sintaxis PHP.
 - **SEO de serie**: `title`/`description` por página y campos SEO por elemento, `canonical`, `hreflang`, Open Graph y Twitter Card, JSON-LD (`Organization`, `WebSite`, `BreadcrumbList` y `Article`/`CreativeWork`/… según el tipo), `sitemap.xml` con `lastmod`, `robots.txt`, `noindex` en filtros y 404, imágenes con `<picture>` WebP y dimensiones.
 - **Formulario de contacto** genérico (`POST /_cms/form`) con `mail()`, honeypot y registro en `data/mensajes.log`.
@@ -309,6 +309,33 @@ la palabra y color del halo) y las cifras animadas (cuánto tarda la cuenta).
 
 **Corregido**: el fondo de ondas buscaba una clase `.hero` que ningún tema del proyecto usa, así que no llegaba a
 dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los parámetros como uniforms.
+
+## Paquete agencia y tema alldesign (1.31)
+
+`cms/packs/agencia`: cuatro bandas de sitio de agencia o portafolio, extraídas del tema nuevo de alldesign.mx y
+reescritas con clases `ag-*` y variables del tema para que sirvan en cualquier tema, claro u oscuro. Sin librerías.
+
+- **Portada con pase de imágenes**: una o varias imágenes a todo el ancho que pasan solas (flechas, puntos, gesto de
+  arrastre, pausa al pasar el ratón y con la pestaña oculta), altura a elegir, título y texto opcionales encima, y la
+  **pestaña curva** al pie con el botón de **compartir** (Facebook, X, LinkedIn, WhatsApp y copiar enlace; en móvil usa
+  el menú nativo del sistema). `ag_share_tab($lang)` la dibuja también desde una plantilla del tema.
+- **Banda con círculo**: imagen ancha con un círculo del color de acento (o el que se elija) y una frase corta, con
+  enlace opcional. Un separador o llamado a la acción.
+- **Equipo (carrusel)**: una persona a la vez, foto a un lado (cuadrada, círculo o vertical; blanco y negro opcional),
+  nombre, semblanza, puesto y redes; flechas y gesto de arrastre, pase automático opcional. Lee **cualquier colección**
+  (nombre = `title_field`, puesto = `excerpt_field`, foto = `image_field`, texto = `body`/`bio`, redes = los campos `url`
+  llamados `x`, `twitter`, `linkedin`, `instagram`…) o personas escritas a mano, una por línea.
+- **Barras de habilidades**: texto a un lado y barras de porcentaje que se llenan al entrar en pantalla
+  (`IntersectionObserver`; sin animación con `prefers-reduced-motion`), color por barra, cifra opcional, grosor.
+
+Se activa con `'packs' => ['agencia']` en `site/config.php` o desde el Catálogo; el tema lienzo ya lo trae.
+
+**Tema alldesign** (`starters/alldesign`, también en el catálogo): el diseño de alldesign.mx, hecho originalmente con
+Adobe Muse, para el constructor. Cabecera clara con menú en mayúsculas y **desplegable automático** con las páginas
+hijas de la página Portafolio; cuerpo gris oscuro; bloques propios `ad-*` (texto con sello, acordeón, etiqueta
+espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con icono, mosaico del portafolio, texto con
+imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
+noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
 
 ## Categorías como subsecciones y página Categorías (1.30)
 

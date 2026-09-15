@@ -1,0 +1,38 @@
+{
+  "site_name": "All Design",
+  "email": "contacto@alldesign.mx",
+  "form_to": "",
+  "phone": "+52 (55) 4336-0189",
+  "phone_href": "+525543360189",
+  "whatsapp": "",
+  "author_name": "All Design",
+  "country": "MX",
+  "languages": {},
+  "social": {
+    "facebook": "https://www.facebook.com/AllDesignMX",
+    "x": "https://twitter.com/alldesignmx",
+    "linkedin": "",
+    "instagram": "",
+    "behance": "",
+    "youtube": ""
+  },
+  "other_sites": [],
+  "logo": "logo.png",
+  "favicon": "favicon.png",
+  "og_image": "uploads/2026/09/portada-1.jpg",
+  "google_verification": "",
+  "color_accent": "",
+  "color_bg": "",
+  "font": "",
+  "font_menu": "",
+  "logo_light": "logo-blanco.png",
+  "seal": "sello.png",
+  "seal_hover": "sello-hover.png",
+  "portfolio_page": "portafolio",
+  "address": "5 de Mayo 295\nCiudad de México",
+  "footer_text": "Empresa mexicana dedicada al servicio de imagen corporativa y branding. Comunicando tu imagen desde 1992.",
+  "categories_on": [
+    "proyectos"
+  ],
+  "theme": ""
+}

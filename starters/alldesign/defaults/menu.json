@@ -1,0 +1,24 @@
+{
+  "es": [
+    {
+      "label": "INICIO",
+      "url": "/"
+    },
+    {
+      "label": "PORTAFOLIO",
+      "url": "/portafolio"
+    },
+    {
+      "label": "SERVICIOS",
+      "url": "/servicios"
+    },
+    {
+      "label": "NOSOTROS",
+      "url": "/nosotros"
+    },
+    {
+      "label": "CONTACTO",
+      "url": "/contacto"
+    }
+  ]
+}

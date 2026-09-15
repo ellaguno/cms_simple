@@ -1,0 +1,162 @@
+{
+  "menu_label": {
+    "es": "MENU",
+    "help": "Texto del botón del menú en móvil"
+  },
+  "menu_portfolio": {
+    "es": "Portafolio",
+    "help": ""
+  },
+  "footer_contact": {
+    "es": "Contacto",
+    "help": ""
+  },
+  "footer_follow": {
+    "es": "Síguenos",
+    "help": ""
+  },
+  "footer_copy": {
+    "es": "© {year} All Design Consultores · Comunicando tu imagen desde 1992",
+    "help": "{year} se sustituye por el año actual"
+  },
+  "back_top": {
+    "es": "Subir",
+    "help": ""
+  },
+  "share_label": {
+    "es": "Compartir esta página",
+    "help": ""
+  },
+  "share_title": {
+    "es": "Compartir",
+    "help": ""
+  },
+  "gallery_open": {
+    "es": "Ver",
+    "help": ""
+  },
+  "gallery_visit": {
+    "es": "Visitar sitio",
+    "help": ""
+  },
+  "all_projects": {
+    "es": "Portafolio",
+    "help": ""
+  },
+  "category_projects": {
+    "es": "Más proyectos de esta categoría",
+    "help": ""
+  },
+  "projects_empty": {
+    "es": "Todavía no hay proyectos en esta categoría.",
+    "help": ""
+  },
+  "team_prev": {
+    "es": "Anterior",
+    "help": ""
+  },
+  "team_next": {
+    "es": "Siguiente",
+    "help": ""
+  },
+  "f_name": {
+    "es": "Su nombre",
+    "help": ""
+  },
+  "f_email": {
+    "es": "nombre@email.com",
+    "help": ""
+  },
+  "f_message": {
+    "es": "Agregue su mensaje...",
+    "help": ""
+  },
+  "f_send": {
+    "es": "Enviar",
+    "help": ""
+  },
+  "f_sending": {
+    "es": "Enviando…",
+    "help": ""
+  },
+  "f_ok": {
+    "es": "Gracias, recibimos su mensaje. Le responderemos pronto.",
+    "help": ""
+  },
+  "f_err": {
+    "es": "No se pudo enviar el mensaje. Escríbanos a contacto@alldesign.mx",
+    "help": ""
+  },
+  "f_invalid": {
+    "es": "Escriba su nombre y un correo electrónico válido.",
+    "help": ""
+  },
+  "c_address": {
+    "es": "DIRECCIÓN:",
+    "help": ""
+  },
+  "c_phone": {
+    "es": "TELÉFONO:",
+    "help": ""
+  },
+  "c_email": {
+    "es": "EMAIL:",
+    "help": ""
+  },
+  "c_facebook": {
+    "es": "FACEBOOK",
+    "help": ""
+  },
+  "c_facebook_text": {
+    "es": "HAZTE FAN",
+    "help": ""
+  },
+  "c_twitter": {
+    "es": "X (TWITTER)",
+    "help": ""
+  },
+  "c_twitter_text": {
+    "es": "SÍGUENOS",
+    "help": ""
+  },
+  "home_meta_title": {
+    "es": "All Design · Branding, identidad de marca y diseño en México",
+    "help": ""
+  },
+  "home_meta_desc": {
+    "es": "Empresa mexicana dedicada al servicio de imagen corporativa y branding. Comunicando tu imagen desde 1992. Informes anuales, identidad de marca, web, empaques, fotografía e ilustración.",
+    "help": ""
+  },
+  "not_found_title": {
+    "es": "Página no encontrada",
+    "help": ""
+  },
+  "not_found_text": {
+    "es": "La dirección no existe o cambió.",
+    "help": ""
+  },
+  "go_home": {
+    "es": "Ir al inicio",
+    "help": ""
+  },
+  "read_more": {
+    "es": "Leer más",
+    "help": ""
+  },
+  "proyectos_meta_title": {
+    "es": "Portafolio",
+    "help": ""
+  },
+  "proyectos_meta_desc": {
+    "es": "Proyectos de All Design: informes anuales, identidad de marca, páginas web, empaques, fotografía e ilustración.",
+    "help": ""
+  },
+  "noticias_meta_title": {
+    "es": "Noticias",
+    "help": ""
+  },
+  "noticias_meta_desc": {
+    "es": "Novedades de All Design Consultores.",
+    "help": ""
+  }
+}

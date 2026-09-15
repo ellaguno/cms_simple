@@ -1,7 +1,7 @@
 {
   "name": "Catálogo de cms_simple",
   "desc": "Temas y paquetes de bloques listos para instalar desde Admin → Catálogo.",
-  "updated": "2026-09-09",
+  "updated": "2026-09-15",
   "items": [
     {
       "kind": "theme",
@@ -22,6 +22,27 @@
       "subdir": "starters/lienzo",
       "requires": {
         "cms": "1.20.0"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "alldesign",
+      "label": "All Design",
+      "desc": "El diseño de alldesign.mx: cabecera clara con menú en mayúsculas y desplegable, portadas con pestaña curva, cuerpo gris oscuro, etiquetas espaciadas, círculo verde, tarjetas, galerías con visor, equipo y barras de habilidades. Colecciones: páginas, proyectos con categorías, equipo y noticias.",
+      "version": "1.0.0",
+      "author": "All Design / SesoLibre",
+      "license": "MIT",
+      "tags": [
+        "portafolio",
+        "agencia",
+        "diseño",
+        "constructor"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/alldesign/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/alldesign",
+      "requires": {
+        "cms": "1.30.0"
       }
     }
   ]

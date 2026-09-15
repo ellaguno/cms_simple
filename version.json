@@ -1,7 +1,7 @@
 {
-  "version": "1.25.0",
+  "version": "1.26.0",
   "date": "2026-09-14",
-  "notes": "Constructor: arrastrar una sección por el asa ⋮⋮ ya funciona (la lista se pliega mientras se arrastra y la página se desplaza sola cerca de los bordes), y hay botones para mover al principio o al final. Banda de aviso y ticker: opción \"arriba de la cabecera del sitio\" para los temas que la admitan (cms_sections_top).\nAntes: buscador en el selector de bloques (1.24) y ticker de novedades (1.23).",
+  "notes": "Índice ligero por colección (data/index/): los listados, el sitemap, el menú y los bloques de colección ya no leen el cuerpo de todos los elementos, y la página de detalle lee solo su archivo. Con 5,000 artículos, un artículo pasa de 190 ms a 2 ms y el índice de 230 a 70 ms. Bloque nuevo \"Índice del sitio\" (mapa HTML por colección, año, letra o categoría) y paginación en el núcleo (cms_paginate / cms_pager). Botón \"Reconstruir los índices\" en el Inicio del panel.\nPara programadores: cms_items() devuelve elementos sin campos html/sections/code; cms_items(tipo, true, true) los completos; 'index' => true en un campo lo conserva en el índice.\nAntes: arrastre de secciones (1.25), buscador de bloques (1.24), ticker (1.23).",
   "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
   "subdir": "cms",
   "min_version": "1.10.0",

@@ -171,9 +171,9 @@ function cms_content_usage(): array
     static $cache = null;
     if ($cache !== null) return $cache;
     $types = [];
-    foreach (cms_config('types') as $k => $d) if (glob(cms_content_dir($k) . '/*.json')) $types[] = (string) $k;
+    foreach (cms_config('types') as $k => $d) if (cms_content_files($k)) $types[] = (string) $k;
     $blocks = [];
-    foreach ($types as $t) foreach (cms_items($t, false) as $it) foreach ((array) ($it['sections'] ?? []) as $sec) {
+    foreach ($types as $t) foreach (cms_items($t, false, true) as $it) foreach ((array) ($it['sections'] ?? []) as $sec) {   // completos: hace falta 'sections'
         $b = (string) ($sec['type'] ?? '');
         if ($b !== '' && strpos($b, '/') === false) $blocks[$b] = true;   // los de paquetes viajan con el núcleo
     }

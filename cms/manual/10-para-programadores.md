@@ -47,7 +47,9 @@ Carpeta en `cms/packs/<nombre>` o `site/packs/<nombre>` con `pack.php` (manifies
 | Función | Para qué |
 |---|---|
 | `cms_url('home' / 'list:tipo' / 'item:tipo' / 'page:clave', $lang, $slug)` | URL de cualquier ruta |
-| `cms_items('tipo')`, `cms_item('tipo', $slug)` | contenido publicado |
+| `cms_items('tipo')` | contenido publicado, del índice ligero (sin cuerpo ni secciones); `cms_items('tipo', true, true)` lee los archivos completos |
+| `cms_item('tipo', $slug)` | un elemento completo, leyendo solo su archivo |
+| `cms_paginate($items, 12)`, `cms_pager($pg, $base)` | paginación de un listado (`?pg=`) |
 | `cms_f($item, 'campo', $lang)` | campo bilingüe con respaldo |
 | `cms_t('clave', $lang, 'por defecto')` | texto fijo |
 | `cms_content($html)` | HTML del editor |
@@ -56,3 +58,7 @@ Carpeta en `cms/packs/<nombre>` o `site/packs/<nombre>` con `pack.php` (manifies
 | `cms_tree_children('tipo', $slug)` | páginas hijas |
 
 El detalle completo está en el `README.md` del repositorio.
+
+## El índice ligero
+
+`data/index/<tipo>.json` guarda cada elemento sin sus campos pesados (`html`, `sections`, `code`). Se actualiza al guardar desde el panel y se reconstruye solo si la carpeta `data/content/<tipo>/` cambió por fuera. Si un campo `html` corto hace falta en listados, márcalo con `'index' => true` en `site/config.php`; `'no_index' => true` en el tipo lo deja sin índice. No lo subas al repositorio ni lo copies entre instalaciones: se regenera.

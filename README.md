@@ -59,7 +59,7 @@ site/              TEMA — lo propio de cada sitio
   templates/       home.php, <listado>.php, <detalle>.php, <página>.php, 404.php
   assets/          css, js, img, video del tema
   defaults/        settings.json, strings.json, menu.json iniciales (se copian a data/ al primer guardado)
-data/              contenido: settings, strings, menu, users, redirects, content/<tipo>/<slug>.json
+data/              contenido: settings, strings, menu, users, redirects, content/<tipo>/<slug>.json; index/<tipo>.json (índice ligero, se regenera solo)
 uploads/           archivos subidos (AAAA/MM/)
 ```
 
@@ -94,7 +94,9 @@ uploads/           archivos subidos (AAAA/MM/)
 | Función | Para qué |
 |---|---|
 | `cms_url('home'\|'list:tipo'\|'item:tipo'\|'page:clave', $lang, $slug)` | URLs por idioma |
-| `cms_items('tipo')`, `cms_item('tipo', $slug)` | Contenido publicado |
+| `cms_items('tipo')`, `cms_item('tipo', $slug)` | Contenido publicado: la lista sale del índice ligero (sin cuerpo); el elemento, de su archivo (completo) |
+| `cms_items('tipo', true, true)` | La lista con los archivos completos (buscar en el cuerpo, exportar) |
+| `cms_paginate($items, 12)`, `cms_pager($pg, $base, $filtros)` | Paginación de listados públicos (`?pg=`) |
 | `cms_f($item, 'campo', $lang)` | Valor de un campo bilingüe con respaldo |
 | `cms_t('clave', $lang, 'por defecto')` | Texto fijo |
 | `cms_content($html)` | HTML del editor (o Markdown heredado) |
@@ -306,6 +308,46 @@ la palabra y color del halo) y las cifras animadas (cuánto tarda la cuenta).
 
 **Corregido**: el fondo de ondas buscaba una clase `.hero` que ningún tema del proyecto usa, así que no llegaba a
 dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los parámetros como uniforms.
+
+## Índice ligero y sitios con miles de páginas (1.26)
+
+Hasta ahora `cms_items('tipo')` leía todos los JSON del tipo, cuerpo y secciones incluidos, en cada petición que tocara
+ese tipo: un listado, el sitemap, el menú, cualquier `cms_url()` de una página en árbol y hasta la página de detalle
+de un solo artículo. Con 5,000 artículos eran unos 230 ms y 40 MB por página. Ahora:
+
+- Cada tipo tiene un **índice ligero** en `data/index/<tipo>.json` con todos sus elementos sin los campos pesados (los
+  de tipo `html`, `sections` y `code`). Al guardar o borrar desde el panel se actualiza solo la entrada que cambia. Si
+  alguien toca `data/content/` por fuera (un importador, rsync, `git pull`), la firma de la carpeta (cantidad de
+  archivos y fecha del más nuevo) deja de coincidir y el índice se reconstruye solo en la siguiente lectura; el botón
+  **Reconstruir los índices de contenido** del Inicio del panel lo fuerza. `data/index/` va en `.gitignore`.
+- `cms_items('tipo')` devuelve los elementos del índice: todo lo que necesita un listado, un menú, el sitemap o un
+  bloque de colección, pero sin cuerpo. Para buscar dentro del cuerpo o exportar, `cms_items('tipo', true, true)` lee
+  los archivos completos como antes.
+- `cms_item('tipo', $slug)` lee **solo el archivo de ese elemento**, con cuerpo y secciones: la página de detalle ya no
+  carga la colección entera. `cms_tree_item()` localiza la ruta en el índice y lee ese archivo.
+- Un campo `html` corto que haga falta en listados (la respuesta de una pregunta frecuente que dibuja un bloque FAQ)
+  se conserva en el índice con `'index' => true` en su definición; `'index' => false` saca del índice un campo que
+  no lo sea por tipo. Un tipo con `'no_index' => true` no usa índice (siempre lee completo).
+- Paginación en el núcleo: `cms_paginate($items, 12)` devuelve la porción de `?pg=` con `page`, `pages` y `total`, y
+  `cms_pager($pg, $base, $filtros)` dibuja `<nav class="cms-pager">` con Anterior/Siguiente y números compactos
+  (primera, última y dos a cada lado); el tema pone el CSS.
+- Bloque **contenido/indice**, "Índice del sitio": mapa HTML de todas las páginas publicadas, por colección (con las
+  hijas anidadas bajo su padre), por año, por letra inicial o por categoría; 1 a 3 columnas; fecha y conteo por grupo
+  opcionales; máximo por grupo con enlace al índice de la colección; y el grupo "Secciones" con la portada, las páginas
+  fijas y los índices de las colecciones. "Todas las colecciones" salta las marcadas `noindex`. Sale del índice ligero,
+  así que aguanta miles de páginas.
+
+Medido con 5,000 artículos en el servidor de desarrollo de PHP (mediana de cinco peticiones):
+
+| Página | 1.25 | 1.26 |
+|---|---|---|
+| Un artículo (`/articulos/x`) | 193 ms | 2 ms |
+| Índice de artículos (`/articulos/`, 12 por página) | 228 ms | 70 ms |
+| `sitemap.xml` | 247 ms | 98 ms |
+| `cms_items('articulos')` en memoria | 40 MB | 23 MB |
+
+Buscar dentro del cuerpo de miles de artículos sigue leyendo todos los archivos (`/buscar` en el tema de Iurefficient);
+si algún sitio lo necesita a esa escala, el siguiente paso sería un índice de texto aparte, no una base de datos.
 
 ## Reordenar arrastrando y bandas sobre la cabecera (1.25)
 

@@ -3,6 +3,13 @@ declare(strict_types=1);
 $S = cms_settings();
 $types = cms_config('types');
 $writable = is_writable(CMS_DATA) && is_writable(CMS_UPLOADS);
+if (admin_is_post() && admin_post('action') === 'reindex') {
+    admin_csrf_check();
+    cms_index_flush();
+    foreach ($types as $k => $def) cms_index($k);
+    admin_flash('Índices de contenido reconstruidos.');
+    admin_redirect(admin_url());
+}
 admin_header('Inicio', 'dashboard');
 ?>
 <?php if (!$writable): ?>
@@ -29,6 +36,7 @@ admin_header('Inicio', 'dashboard');
       <li><a href="<?= admin_url('strings') ?>">Revisar los textos fijos del sitio<?= count(cms_langs()) > 1 ? ' y sus traducciones' : '' ?></a></li>
       <li><a href="<?= admin_url('backup') ?>">Crear un respaldo del sitio</a></li>
       <li><a href="<?= CMS_BASE ?>/sitemap.xml" target="_blank" rel="noopener">Ver sitemap.xml</a></li>
+      <li><form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="reindex"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit" title="Los índices ligeros de data/index/ se rehacen solos; este botón fuerza la reconstrucción">Reconstruir los índices de contenido</button></form> <small class="ad-help">si copiaste archivos a data/content a mano</small></li>
     </ul>
   </section>
   <section class="ad-box">

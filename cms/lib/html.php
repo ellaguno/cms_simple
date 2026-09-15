@@ -101,3 +101,47 @@ function cms_google_fonts_url(array $families, string $weights = '400;500;600;70
     if (!$families) return '';
     return 'https://fonts.googleapis.com/css2?' . implode('&', array_map(fn($f) => 'family=' . str_replace(' ', '+', $f) . ':wght@' . $weights, $families)) . '&display=swap';
 }
+
+/* ------------------------------------------------------------------ paginación de listados públicos */
+
+/**
+ * Reparte una lista en páginas: ['items' => la porción de esta página (conserva las claves), 'page', 'pages', 'total', 'per'].
+ * La página actual sale de ?pg= (o de $page si se pasa); fuera de rango se ajusta a la última.
+ */
+function cms_paginate(array $items, int $per = 12, ?int $page = null, string $param = 'pg'): array
+{
+    $per = max(1, $per);
+    $total = count($items);
+    $pages = max(1, (int) ceil($total / $per));
+    $page = $page ?? (int) ($_GET[$param] ?? 1);
+    $page = min($pages, max(1, $page));
+    return ['items' => array_slice($items, ($page - 1) * $per, $per, true), 'page' => $page, 'pages' => $pages, 'total' => $total, 'per' => $per];
+}
+
+/**
+ * <nav class="cms-pager"> con Anterior / Siguiente y números compactos (primera, última y dos a cada lado de la actual).
+ * $base es la URL del listado y $query los filtros que hay que conservar (['cat' => 'Diseño']). El tema pone el CSS.
+ */
+function cms_pager(array $pg, string $base, array $query = [], string $param = 'pg'): string
+{
+    $pages = (int) ($pg['pages'] ?? 1); $cur = (int) ($pg['page'] ?? 1);
+    if ($pages <= 1) return '';
+    $en = cms_render_lang() === 'en';
+    $url = function (int $n) use ($base, $query, $param): string {
+        $q = array_filter($query, fn($v) => $v !== '' && $v !== null);
+        if ($n > 1) $q[$param] = $n;
+        return $base . ($q ? (strpos($base, '?') === false ? '?' : '&') . http_build_query($q) : '');
+    };
+    $show = array_unique(array_filter(array_merge([1, $pages], range(max(1, $cur - 2), min($pages, $cur + 2))), fn($n) => $n >= 1 && $n <= $pages));
+    sort($show);
+    $h = '<nav class="cms-pager" aria-label="' . ($en ? 'Pages' : 'Páginas') . '">';
+    if ($cur > 1) $h .= '<a class="cms-pager-prev" rel="prev" href="' . cms_e($url($cur - 1)) . '">‹ ' . ($en ? 'Previous' : 'Anterior') . '</a>';
+    $prev = 0;
+    foreach ($show as $n) {
+        if ($prev && $n > $prev + 1) $h .= '<span class="cms-pager-gap">…</span>';
+        $prev = $n;
+        $h .= $n === $cur ? '<span class="cms-pager-cur" aria-current="page">' . $n . '</span>' : '<a href="' . cms_e($url($n)) . '">' . $n . '</a>';
+    }
+    if ($cur < $pages) $h .= '<a class="cms-pager-next" rel="next" href="' . cms_e($url($cur + 1)) . '">' . ($en ? 'Next' : 'Siguiente') . ' ›</a>';
+    return $h . '</nav>';
+}

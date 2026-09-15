@@ -9,11 +9,11 @@ function cms_json_read(string $file, $default = [])
     return is_array($data) ? $data : $default;
 }
 
-function cms_json_write(string $file, $data): bool
+function cms_json_write(string $file, $data, bool $pretty = true): bool
 {
     $dir = dirname($file);
     if (!is_dir($dir) && !mkdir($dir, 0755, true)) return false;
-    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $json = json_encode($data, ($pretty ? JSON_PRETTY_PRINT : 0) | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($json === false) return false;
     $tmp = $file . '.' . bin2hex(random_bytes(4)) . '.tmp';
     if (file_put_contents($tmp, $json, LOCK_EX) === false) return false;
@@ -73,24 +73,142 @@ function cms_content_dir(string $type): string
     return CMS_DATA . '/content/' . preg_replace('/[^a-z0-9_-]/i', '', $type);
 }
 
-/** Todos los elementos de un tipo (publicados por defecto), ordenados según el esquema. */
-function cms_items(string $type, bool $published_only = true): array
+/* ------------------------------------------------------------------ índice ligero por tipo (data/index/<tipo>.json)
+ * Leer todos los JSON de un tipo (cuerpo y secciones incluidos) en cada petición no escala: con 5,000 artículos son
+ * ~180 ms y 37 MB por página. El índice guarda de cada elemento solo los campos ligeros (todo menos los de tipo
+ * html, sections y code, salvo que el campo diga 'index' => true) y se reescribe al guardar o borrar desde el panel.
+ * Si alguien toca data/content a mano (importadores, rsync), la firma (cantidad de archivos + fecha del más nuevo)
+ * deja de coincidir y el índice se reconstruye solo en la siguiente lectura.
+ */
+
+function cms_index_file(string $type): string
+{
+    return CMS_DATA . '/index/' . preg_replace('/[^a-z0-9_-]/i', '', $type) . '.json';
+}
+
+/** Archivos de contenido de un tipo (sin el índice ni temporales). */
+function cms_content_files(string $type): array
+{
+    return glob(cms_content_dir($type) . '/*.json') ?: [];
+}
+
+/** Firma de la carpeta del tipo: cambia si se añade, borra o reescribe cualquier archivo. */
+function cms_index_signature(string $type): string
+{
+    $files = cms_content_files($type);
+    $max = 0;
+    foreach ($files as $f) { $m = (int) @filemtime($f); if ($m > $max) $max = $m; }
+    // si el esquema cambia qué campos son pesados ('index' => true en site/config.php), el índice se rehace solo
+    return count($files) . ':' . $max . ':' . (int) @filemtime(cms_content_dir($type)) . ':' . substr(md5(implode(',', cms_index_heavy_fields($type))), 0, 8);
+}
+
+/** Campos que NO entran al índice: los de tipo html, sections y code (salvo 'index' => true) y los pesados sin esquema. */
+function cms_index_heavy_fields(string $type): array
+{
+    $def = cms_type($type);
+    $heavy = ['sections' => true, 'body' => true, 'content' => true, 'html' => true];
+    foreach ((array) ($def['fields'] ?? []) as $name => $fd) {
+        $fd = (array) $fd;
+        if (isset($fd['index'])) { if ($fd['index']) unset($heavy[$name]); else $heavy[$name] = true; continue; }
+        if (in_array($fd['type'] ?? 'text', ['html', 'sections', 'code'], true)) $heavy[$name] = true;
+        else unset($heavy[$name]);
+    }
+    return array_keys($heavy);
+}
+
+/** Versión ligera de un elemento para el índice. */
+function cms_index_entry(string $type, array $it, ?array $heavy = null): array
+{
+    $heavy = $heavy ?? cms_index_heavy_fields($type);
+    foreach ($heavy as $f) unset($it[$f]);
+    return $it;
+}
+
+/** Vuelve a leer todos los archivos del tipo y escribe el índice. Devuelve los elementos ligeros (slug => elemento). */
+function cms_index_rebuild(string $type): array
+{
+    $heavy = cms_index_heavy_fields($type);
+    $items = [];
+    foreach (cms_content_files($type) as $f) {
+        $it = cms_json_read($f, null);
+        if (is_array($it) && !empty($it['slug'])) $items[$it['slug']] = cms_index_entry($type, $it, $heavy);
+    }
+    cms_json_write(cms_index_file($type), ['signature' => cms_index_signature($type), 'built' => date('Y-m-d H:i:s'), 'items' => $items], false);   // compacto: se lee en cada petición
+    unset($GLOBALS['cms_index_cache'][$type]);
+    return $items;
+}
+
+/** Actualiza (o quita, con $item = null) una entrada del índice sin releer los demás archivos. */
+function cms_index_touch(string $type, string $slug, ?array $item): void
+{
+    $file = cms_index_file($type);
+    if (!is_dir(dirname($file))) @mkdir(dirname($file), 0755, true);
+    $lock = @fopen(dirname($file) . '/.lock', 'c');   // dos guardados a la vez no se pisan la entrada del otro
+    if ($lock) flock($lock, LOCK_EX);
+    $idx = cms_json_read($file, null);
+    if (!is_array($idx) || !isset($idx['items']) || !is_array($idx['items'])) {
+        cms_index_rebuild($type);
+    } else {
+        if ($item === null) unset($idx['items'][$slug]);
+        else $idx['items'][$slug] = cms_index_entry($type, $item);
+        $idx['signature'] = cms_index_signature($type);
+        $idx['built'] = date('Y-m-d H:i:s');
+        cms_json_write($file, $idx, false);
+    }
+    if ($lock) { flock($lock, LOCK_UN); fclose($lock); }
+    unset($GLOBALS['cms_index_cache'][$type]);
+}
+
+/**
+ * Índice ligero de un tipo: slug => elemento sin campos pesados, TODOS los estados y sin localizar ni ordenar
+ * (lo hace cms_items). Se reconstruye si falta o si la carpeta cambió por fuera del panel.
+ */
+function cms_index(string $type): array
+{
+    $cache = &$GLOBALS['cms_index_cache'];
+    if (!is_array($cache)) $cache = [];
+    if (isset($cache[$type])) return $cache[$type];
+    $idx = cms_json_read(cms_index_file($type), null);
+    $items = is_array($idx) && isset($idx['items']) && is_array($idx['items']) && ($idx['signature'] ?? '') === cms_index_signature($type)
+        ? $idx['items'] : cms_index_rebuild($type);
+    return $cache[$type] = $items;
+}
+
+/** Borra los índices (se regeneran al vuelo). Útil tras importar contenido a mano. */
+function cms_index_flush(): void
+{
+    foreach (glob(CMS_DATA . '/index/*.json') ?: [] as $f) @unlink($f);
+    $GLOBALS['cms_index_cache'] = [];
+    cms_items_flush();
+}
+
+/**
+ * Elementos de un tipo (publicados por defecto), ordenados según el esquema, con los campos bilingües resueltos al
+ * idioma que se dibuja. Por defecto salen del índice ligero, SIN los campos pesados (html, sections, code): es lo que
+ * necesita un listado, un menú o el sitemap. Con $full = true se leen los archivos completos (buscar en el cuerpo,
+ * exportar); para un solo elemento usa cms_item(), que lee únicamente su archivo.
+ */
+function cms_items(string $type, bool $published_only = true, bool $full = false): array
 {
     $cache = &$GLOBALS['cms_items_cache'];
     if (!is_array($cache)) $cache = [];
-    $k = $type . ($published_only ? ':pub' : ':all');
+    $k = $type . ($published_only ? ':pub' : ':all') . ($full ? ':full' : '');
     if (isset($cache[$k])) return $cache[$k];
     $def = cms_type($type);
-    $items = [];
-    foreach (glob(cms_content_dir($type) . '/*.json') ?: [] as $f) {
-        $it = cms_json_read($f, null);
-        if (is_array($it) && !empty($it['slug'])) $items[$it['slug']] = $it;
+    if ($full || !empty($def['no_index'])) {
+        $items = [];
+        foreach (cms_content_files($type) as $f) {
+            $it = cms_json_read($f, null);
+            if (is_array($it) && !empty($it['slug'])) $items[$it['slug']] = $it;
+        }
+    } else {
+        $items = cms_index($type);
     }
     // elementos en memoria (vista previa del constructor, sin guardar)
     foreach ((array) ($GLOBALS['cms_item_override'][$type] ?? []) as $sl => $it) $items[$sl] = $it;
+    if ($published_only) $items = array_filter($items, 'cms_item_is_live');
     // al dibujar el sitio, los campos bilingües llegan resueltos al idioma de la petición (las plantillas usan $item['title'] sin más)
     if (!empty($GLOBALS['cms_render_lang'])) foreach ($items as $sl => $it) $items[$sl] = cms_localize($it, (string) $GLOBALS['cms_render_lang']);
-    if ($published_only) $items = array_filter($items, 'cms_item_is_live');
     $sort = $def['sort'] ?? ['field' => 'date', 'dir' => 'desc'];
     $field = $sort['field'] ?? 'date';
     $dir = ($sort['dir'] ?? 'desc') === 'asc' ? 1 : -1;
@@ -102,15 +220,26 @@ function cms_items(string $type, bool $published_only = true): array
     return $cache[$k] = $items;
 }
 
-/** Vacía la caché de elementos (tras guardar o al inyectar un elemento en memoria). */
+/** Vacía la caché en memoria de elementos e índices (tras guardar o al inyectar un elemento en memoria). */
 function cms_items_flush(): void
 {
     $GLOBALS['cms_items_cache'] = [];
+    $GLOBALS['cms_index_cache'] = [];
 }
 
+/** Un elemento completo (con cuerpo y secciones) leyendo solo su archivo; null si no existe o no está publicado. */
 function cms_item(string $type, string $slug, bool $published_only = true): ?array
 {
-    return cms_items($type, $published_only)[$slug] ?? null;
+    $slug = (string) preg_replace('/[^a-z0-9_.-]/i', '', $slug);
+    if ($slug === '' || $slug === '.' || $slug === '..') return null;
+    $it = $GLOBALS['cms_item_override'][$type][$slug] ?? null;
+    if ($it === null) {
+        $it = cms_json_read(cms_content_dir($type) . '/' . $slug . '.json', null);
+        if (!is_array($it) || empty($it['slug'])) return null;
+    }
+    if (!empty($GLOBALS['cms_render_lang'])) $it = cms_localize($it, (string) $GLOBALS['cms_render_lang']);
+    if ($published_only && !cms_item_is_live($it)) return null;
+    return $it;
 }
 
 /** Publicado y, si tiene fecha de publicación programada, ya alcanzada. */
@@ -141,6 +270,7 @@ function cms_item_save(string $type, array $item): bool
         }
     }
     $ok = cms_json_write($file, $item);
+    if ($ok) cms_index_touch($type, (string) $item['slug'], $item);
     cms_items_flush();
     return $ok;
 }
@@ -188,7 +318,10 @@ function cms_item_url(string $type, array $item, string $lang): string
 function cms_item_delete(string $type, string $slug): bool
 {
     $f = cms_content_dir($type) . '/' . cms_slugify($slug) . '.json';
-    return is_file($f) && unlink($f);
+    $ok = is_file($f) && unlink($f);
+    if ($ok) cms_index_touch($type, cms_slugify($slug), null);
+    cms_items_flush();
+    return $ok;
 }
 
 /** ¿Es un valor por idioma? (arreglo cuyas claves son códigos de idioma del sitio) */
@@ -249,17 +382,20 @@ function cms_tree_path(string $type, array $items, string $slug, int $depth = 0)
 function cms_tree_rebuild(string $type): void
 {
     $items = [];
-    foreach (glob(cms_content_dir($type) . '/*.json') ?: [] as $f) { $it = cms_json_read($f, null); if (is_array($it) && !empty($it['slug'])) $items[$it['slug']] = $it; }
+    foreach (cms_content_files($type) as $f) { $it = cms_json_read($f, null); if (is_array($it) && !empty($it['slug'])) $items[$it['slug']] = $it; }
+    $changed = false;
     foreach ($items as $slug => $it) {
         $path = cms_tree_path($type, $items, $slug);
-        if (($it['path'] ?? '') !== $path) { $it['path'] = $path; cms_json_write(cms_content_dir($type) . '/' . $slug . '.json', $it); }
+        if (($it['path'] ?? '') !== $path) { $it['path'] = $path; cms_json_write(cms_content_dir($type) . '/' . $slug . '.json', $it); $changed = true; }
     }
+    if ($changed) cms_index_rebuild($type);
+    cms_items_flush();
 }
 
 /** Elemento de un tipo en árbol por su ruta completa. */
 function cms_tree_item(string $type, string $path, bool $published_only = true): ?array
 {
-    foreach (cms_items($type, $published_only) as $it) if (($it['path'] ?? $it['slug']) === $path) return $it;
+    foreach (cms_items($type, $published_only) as $it) if (($it['path'] ?? $it['slug']) === $path) return cms_item($type, (string) $it['slug'], $published_only);
     return null;
 }
 

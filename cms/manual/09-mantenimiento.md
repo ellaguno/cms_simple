@@ -18,6 +18,10 @@ En **Ajustes → Aviso de cookies** se activa una barra que pide aceptar el uso 
 
 Cada vez que guardas una página o un artículo, la versión anterior se conserva. En el editor, "Versiones anteriores" permite restaurar cualquiera de las últimas diez. No hace falta hacer copias manuales antes de editar.
 
+## Índices de contenido
+
+Para que un sitio con miles de páginas siga siendo rápido, el CMS guarda en `data/index/` un resumen de cada colección. Se mantiene solo. Si copias archivos a `data/content/` a mano o restauras un respaldo y algo no aparece, pulsa **Reconstruir los índices de contenido** en el Inicio del panel.
+
 ## Actualizar el motor
 
 El motor es la carpeta `cms/`. Actualizar es sustituirla por la versión nueva; `site/`, `data/` y `uploads/` no se tocan. Quien mantiene el código prepara un archivo comprimido con lo necesario y las instrucciones. Después de actualizar, entra al panel: la versión aparece al pie del menú.

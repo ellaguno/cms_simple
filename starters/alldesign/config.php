@@ -107,7 +107,7 @@ return [
             'color_accent' => ['type' => 'color', 'label' => 'Color de acento (verde del círculo)', 'placeholder' => '#97d700 (el del tema)', 'half' => true],
             'color_bg'     => ['type' => 'color', 'label' => 'Gris del cuerpo', 'placeholder' => '#404040 (el del tema)', 'half' => true],
             'font'         => ['type' => 'select', 'label' => 'Tipografía del texto (Google Fonts)', 'options' => ['' => 'Open Sans (la del tema)', 'Lato' => 'Lato', 'Source Sans 3' => 'Source Sans 3', 'Roboto' => 'Roboto', 'Nunito Sans' => 'Nunito Sans', 'Work Sans' => 'Work Sans', 'Inter' => 'Inter'], 'half' => true],
-            'font_menu'    => ['type' => 'select', 'label' => 'Tipografía del menú', 'options' => ['' => 'Dosis (la del tema)', 'Josefin Sans' => 'Josefin Sans', 'Montserrat' => 'Montserrat', 'Raleway' => 'Raleway', 'Oswald' => 'Oswald'], 'half' => true],
+            'font_menu'    => ['type' => 'select', 'label' => 'Tipografía del menú', 'options' => ['' => 'Open Sans (la del tema)', 'Dosis' => 'Dosis', 'Josefin Sans' => 'Josefin Sans', 'Montserrat' => 'Montserrat', 'Raleway' => 'Raleway'], 'half' => true],
         ],
         'Marca' => [
             'logo_light' => ['type' => 'image', 'label' => 'Logotipo en blanco (pie de página)'],

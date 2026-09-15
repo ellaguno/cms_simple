@@ -13,14 +13,17 @@ function site_header(array $page): void
     $site = $S['site_name'] ?? 'All Design';
     $path = trim((string) ($page['path'] ?? ''), '/');
     $font = trim((string) ($S['font'] ?? '')) ?: 'Open Sans';
-    $fontMenu = trim((string) ($S['font_menu'] ?? '')) ?: 'Dosis';
-    $families = array_values(array_unique([$font, $fontMenu, 'Josefin Sans', 'M PLUS 1p']));
-    $gf = 'https://fonts.googleapis.com/css2?' . implode('&', array_map(fn($f) => 'family=' . str_replace(' ', '+', $f) . ':wght@300;400;600;700', $families)) . '&display=swap';
+    $fontMenu = trim((string) ($S['font_menu'] ?? '')) ?: 'Open Sans';
+    $fam = [];
+    foreach (array_unique([$font, $fontMenu]) as $f) $fam[] = $f === 'Open Sans' ? 'family=Open+Sans:ital,wdth,wght@0,75,300;0,100,300;0,100,400;0,100,600;1,100,300' : 'family=' . str_replace(' ', '+', $f) . ':wght@300;400;600';
+    $fam[] = 'family=M+PLUS+1p:wght@300;400';
+    $fam[] = 'family=Josefin+Sans:wght@600';
+    $gf = 'https://fonts.googleapis.com/css2?' . implode('&', $fam) . '&display=swap';
     $vars = '';
     if (preg_match('/^#[0-9a-f]{3,8}$/i', (string) ($S['color_accent'] ?? ''))) $vars .= '--ad-accent:' . $S['color_accent'] . ';--cms-accent:' . $S['color_accent'] . ';';
     if (preg_match('/^#[0-9a-f]{3,8}$/i', (string) ($S['color_bg'] ?? ''))) $vars .= '--ad-bg:' . $S['color_bg'] . ';';
     if ($font !== 'Open Sans') $vars .= '--ad-font:"' . cms_e($font) . '",sans-serif;';
-    if ($fontMenu !== 'Dosis') $vars .= '--ad-font-menu:"' . cms_e($fontMenu) . '",sans-serif;';
+    if ($fontMenu !== 'Open Sans') $vars .= '--ad-font-menu:"' . cms_e($fontMenu) . '",sans-serif;';
     $logo = cms_img($S['logo'] ?? 'logo.png');
     $home = cms_url('home', $lang);
     $bare = !empty($_GET['cmsbare']);
@@ -46,7 +49,7 @@ function site_header(array $page): void
   </div>
   <div class="ad-navbar">
     <div class="ad-container ad-navbar-in">
-      <a class="ad-logo" href="<?= $home ?>" aria-label="<?= cms_e($site) ?>"><img src="<?= cms_e($logo) ?>" alt="<?= cms_e($site) ?>" width="100" height="36"></a>
+      <a class="ad-logo" href="<?= $home ?>" aria-label="<?= cms_e($site) ?>"><img src="<?= cms_e($logo) ?>" alt="<?= cms_e($site) ?>" width="106" height="48"></a>
       <button class="ad-nav-toggle" type="button" aria-expanded="false" aria-controls="ad-nav" data-ad-nav-toggle><?= ad_svg('menu') ?><span><?= cms_e($t('menu_label', 'MENU')) ?></span></button>
       <nav class="ad-nav" id="ad-nav" aria-label="Principal">
         <ul>

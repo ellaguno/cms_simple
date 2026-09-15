@@ -13,7 +13,7 @@ foreach ((array) cms_config('types', []) as $k => $d) $types[$k] = 'Colección: 
 return [
     'portada' => [
         'label' => 'Portada con pase de imágenes', 'group' => 'Cabeceras',
-        'desc' => 'Una o varias imágenes a todo el ancho que pasan solas (flechas, puntos y gesto de arrastre), con título opcional encima y una pestaña curva con el botón de compartir. La primera banda de una página.',
+        'desc' => 'Una o varias imágenes a todo el ancho que pasan solas (flechas, puntos y gesto de arrastre), con título opcional encima y una pestaña curva con el botón de compartir. Opción parallax: la imagen se queda fija y la página pasa por encima. La primera banda de una página.',
         'wrap_class' => 'ag-hero', 'styles' => ['bg', 'anchor', 'class', 'hide_mobile'], 'animate' => 'none',
         'sample' => ['images' => [$F . 'foto-1.jpg | Primera imagen', $F . 'foto-2.jpg | Segunda imagen', $F . 'foto-3.jpg | Tercera imagen'], 'height' => 'medium', 'title' => 'Diseñamos marcas que se recuerdan', 'subtitle' => 'Identidad, editorial y web desde 1992'],
         'fields' => [
@@ -24,7 +24,8 @@ return [
             'subtitle' => ['type' => 'text', 'label' => 'Texto bajo el título (opcional)', 'half' => true],
             'position' => ['type' => 'select', 'label' => 'Encuadre de la imagen', 'options' => ['center' => 'Centro', 'top' => 'Arriba', 'bottom' => 'Abajo'], 'default' => 'center', 'half' => true],
             'overlay'  => ['type' => 'select', 'label' => 'Oscurecer la imagen bajo el título', 'options' => ['0' => 'No', '25' => 'Un poco', '50' => 'Bastante'], 'default' => '25', 'half' => true],
-            'share'    => ['type' => 'checkbox', 'label' => 'Pestaña', 'text' => 'Mostrar la pestaña curva con el botón de compartir', 'default' => true],
+            'share'    => ['type' => 'checkbox', 'label' => 'Pestaña', 'text' => 'Mostrar la pestaña curva con el botón de compartir', 'default' => true, 'half' => true],
+            'fixed'    => ['type' => 'checkbox', 'label' => 'Parallax', 'text' => 'La imagen se queda fija y la página pasa por encima', 'default' => false, 'half' => true],
         ],
     ],
     'banda' => [
@@ -36,10 +37,12 @@ return [
             'image'  => ['type' => 'image', 'label' => 'Imagen de fondo', 'required' => true],
             'text'   => ['type' => 'text', 'label' => 'Frase del círculo', 'required' => true],
             'url'    => ['type' => 'text', 'label' => 'Enlace del círculo (opcional)'],
-            'height' => ['type' => 'select', 'label' => 'Altura', 'options' => ['s' => 'Baja', 'm' => 'Media', 'l' => 'Alta'], 'default' => 'm', 'half' => true],
+            'height' => ['type' => 'select', 'label' => 'Altura', 'options' => ['s' => 'Baja', 'm' => 'Media', 'l' => 'Alta', 'xl' => 'Muy alta'], 'default' => 'm', 'half' => true],
             'size'   => ['type' => 'select', 'label' => 'Tamaño del círculo', 'options' => ['s' => 'Pequeño', 'm' => 'Mediano', 'l' => 'Grande'], 'default' => 'm', 'half' => true],
             'color'  => ['type' => 'color', 'label' => 'Color del círculo', 'placeholder' => 'vacío = el de acento', 'half' => true],
             'text_color' => ['type' => 'select', 'label' => 'Texto del círculo', 'options' => ['light' => 'Claro', 'dark' => 'Oscuro'], 'default' => 'light', 'half' => true],
+            'opacity' => ['type' => 'select', 'label' => 'Transparencia del círculo', 'options' => ['1' => 'Sólido', '0.8' => 'Un poco transparente', '0.6' => 'Bastante transparente'], 'default' => '1', 'half' => true],
+            'fixed'  => ['type' => 'checkbox', 'label' => 'Parallax', 'text' => 'La imagen se queda fija y la página pasa por encima', 'default' => false, 'half' => true],
         ],
     ],
     'equipo' => [

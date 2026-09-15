@@ -9,6 +9,9 @@
 .ag-hero-short { height: 38vh; min-height: 240px; max-height: 420px; }
 .ag-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease; }
 .ag-slide.is-active { opacity: 1; z-index: 1; }
+/* parallax: la imagen se queda fija al viewport y el recorte (clip-path) la limita a la caja de la portada */
+.ag-hero-in.ag-fixed { clip-path: inset(0); }
+.ag-hero-in.ag-fixed .ag-slide { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; }
 .ag-slide picture, .ag-slide img { width: 100%; height: 100%; display: block; }
 .ag-slide img { object-fit: cover; object-position: center; }
 .ag-pos-top .ag-slide img { object-position: center top; }
@@ -36,12 +39,17 @@
 /* ---------- banda con círculo ---------- */
 .ag-band { padding: 0 !important; }
 .ag-band-in { position: relative; display: flex; align-items: center; justify-content: center; background: var(--ag-band-img) center / cover no-repeat #333; }
-.ag-band-h-s { height: 220px; } .ag-band-h-m { height: 300px; } .ag-band-h-l { height: 420px; }
-.ag-circle { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--ag-circle, var(--cms-accent, #4f46e5)); text-align: center; text-transform: uppercase; font-size: 13px; letter-spacing: .08em; line-height: 1.4; padding: 24px; opacity: .92; text-decoration: none; transition: transform .3s, opacity .3s; }
+.ag-band-h-s { height: 220px; } .ag-band-h-m { height: 300px; } .ag-band-h-l { height: 420px; } .ag-band-h-xl { height: 590px; }
+.ag-band-in.ag-fixed { clip-path: inset(0); background-image: none; }
+.ag-band-in.ag-fixed::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; background: var(--ag-band-img) center / cover no-repeat; z-index: 0; }
+.ag-band-in.ag-fixed .ag-circle { position: relative; z-index: 1; }
+.ag-circle { position: relative; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-align: center; text-transform: uppercase; font-size: 13px; letter-spacing: .08em; line-height: 1.4; padding: 24px; text-decoration: none; transition: transform .3s; }
+.ag-circle::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--ag-circle, var(--cms-accent, #4f46e5)); opacity: var(--ag-circle-opacity, .92); transition: opacity .3s; }   /* el fondo es translúcido; el texto no */
+.ag-circle > span { position: relative; }
 .ag-circle-light { color: #fff; } .ag-circle-dark { color: #111; }
 .ag-circle-s { width: 150px; height: 150px; font-size: 11px; } .ag-circle-m { width: 190px; height: 190px; } .ag-circle-l { width: 250px; height: 250px; font-size: 15px; }
-a.ag-circle:hover { transform: scale(1.05); opacity: 1; }
-@media (max-width: 600px) { .ag-band-h-m, .ag-band-h-l { height: 260px; } .ag-circle-l { width: 190px; height: 190px; font-size: 13px; } }
+a.ag-circle:hover { transform: scale(1.05); } a.ag-circle:hover::before { opacity: 1; }
+@media (max-width: 600px) { .ag-band-h-m, .ag-band-h-l { height: 260px; } .ag-band-h-xl { height: 340px; } .ag-circle-l { width: 190px; height: 190px; font-size: 13px; } }
 
 /* ---------- equipo ---------- */
 .ag-team { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 10px; }

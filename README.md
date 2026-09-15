@@ -328,11 +328,15 @@ reescritas con clases `ag-*` y variables del tema para que sirvan en cualquier t
 - **Barras de habilidades**: texto a un lado y barras de porcentaje que se llenan al entrar en pantalla
   (`IntersectionObserver`; sin animación con `prefers-reduced-motion`), color por barra, cifra opcional, grosor.
 
+La portada y la banda tienen la opción **parallax** (1.31.1): la imagen se queda fija al viewport y la página pasa por encima;
+se hace con `position: fixed` dentro de un `clip-path: inset(0)`, sin JavaScript, así que funciona también en iOS. La banda
+admite altura muy alta y el círculo puede ser translúcido sin que lo sea su texto.
+
 Se activa con `'packs' => ['agencia']` en `site/config.php` o desde el Catálogo; el tema lienzo ya lo trae.
 
 **Tema alldesign** (`starters/alldesign`, también en el catálogo): el diseño de alldesign.mx, hecho originalmente con
-Adobe Muse, para el constructor. Cabecera clara con menú en mayúsculas y **desplegable automático** con las páginas
-hijas de la página Portafolio; cuerpo gris oscuro; bloques propios `ad-*` (texto con sello, acordeón, etiqueta
+Adobe Muse, para el constructor. Cabecera fija y translúcida (la portada pasa por debajo) con menú en mayúsculas y **desplegable automático** con las
+páginas hijas de la página Portafolio; cuerpo gris oscuro; bloques propios `ad-*` (texto con sello, acordeón, etiqueta
 espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con icono, mosaico del portafolio, texto con
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.

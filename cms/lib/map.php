@@ -3,7 +3,7 @@
  * cms_simple — mapa del sitio: árbol calculado a partir de la configuración, el contenido, el menú y las carpetas.
  *
  * Nodo: ['kind' => home|page|type|item|static|external, 'label', 'url' (relativa, con CMS_BASE), 'route',
- *        'status' => published|draft|scheduled|'', 'noindex' => bool, 'source' => texto, 'updated' => 'AAAA-MM-DD',
+ *        'status' => published|draft|scheduled|expired|'', 'noindex' => bool, 'source' => texto, 'updated' => 'AAAA-MM-DD',
  *        'edit' => url del panel o '', 'children' => [nodos], 'type' => clave del tipo, 'slug']
  */
 declare(strict_types=1);
@@ -25,6 +25,7 @@ function cms_map_item_status(array $it): string
 {
     if (($it['status'] ?? 'draft') !== 'published') return 'draft';
     if (!empty($it['publish_at']) && $it['publish_at'] > date('Y-m-d')) return 'scheduled';
+    if (cms_item_is_expired($it)) return 'expired';
     return 'published';
 }
 

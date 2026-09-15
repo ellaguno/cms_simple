@@ -65,7 +65,20 @@ function cms_menu(string $lang): array
 function cms_type(string $type): ?array
 {
     $types = cms_config('types');
-    return isset($types[$type]) ? $types[$type] + ['key' => $type] : null;
+    if (!isset($types[$type])) return null;
+    $def = $types[$type] + ['key' => $type];
+    // campos que añaden los paquetes activos: 'item_fields' => ['*' => [campo => def]] (todos los tipos) o [tipo => [...]]
+    foreach (cms_packs() as $p) foreach ((array) ($p['item_fields'] ?? []) as $for => $fields) {
+        if ($for !== '*' && $for !== $type) continue;
+        foreach ((array) $fields as $k => $fd) if (!isset($def['fields'][$k])) $def['fields'][$k] = (array) $fd + ['sidebar' => true];
+    }
+    return $def;
+}
+
+/** Lo que se está dibujando en esta petición: 'type', 'item', 'page', 'lang' (lo fija el enrutador; vacío en el panel). */
+function cms_current(): array
+{
+    return (array) ($GLOBALS['cms_current'] ?? []) + ['type' => null, 'item' => null, 'page' => [], 'lang' => (string) ($GLOBALS['cms_render_lang'] ?? cms_default_lang())];
 }
 
 function cms_content_dir(string $type): string
@@ -242,12 +255,22 @@ function cms_item(string $type, string $slug, bool $published_only = true): ?arr
     return $it;
 }
 
-/** Publicado y, si tiene fecha de publicación programada, ya alcanzada. */
+/** Publicado, con la fecha de publicación programada (si la hay) ya alcanzada y la de retiro (si la hay) aún no. */
 function cms_item_is_live(array $it): bool
 {
     if (($it['status'] ?? 'draft') !== 'published') return false;
+    $today = date('Y-m-d');
     $at = (string) ($it['publish_at'] ?? '');
-    return $at === '' || $at <= date('Y-m-d');
+    if ($at !== '' && $at > $today) return false;
+    $to = (string) ($it['unpublish_at'] ?? '');
+    return $to === '' || $to > $today;
+}
+
+/** Publicado pero ya retirado por su fecha de caducidad. */
+function cms_item_is_expired(array $it): bool
+{
+    $to = (string) ($it['unpublish_at'] ?? '');
+    return ($it['status'] ?? 'draft') === 'published' && $to !== '' && $to <= date('Y-m-d');
 }
 
 /** Guarda el elemento; la versión anterior queda en data/versions/<tipo>/<slug>/ (se conservan las últimas 10). */
@@ -272,6 +295,7 @@ function cms_item_save(string $type, array $item): bool
     $ok = cms_json_write($file, $item);
     if ($ok) cms_index_touch($type, (string) $item['slug'], $item);
     cms_items_flush();
+    if ($ok) cms_do('item.save', $type, $item);
     return $ok;
 }
 
@@ -301,6 +325,17 @@ function cms_secret(): string
     $s = bin2hex(random_bytes(24));
     @file_put_contents($f, $s);
     return $s;
+}
+
+/** Token del cron del hosting (derivado del secreto de la instalación) y la URL que se programa: /_cms/cron?token=… */
+function cms_cron_token(): string
+{
+    return substr(hash_hmac('sha256', 'cron', cms_secret()), 0, 32);
+}
+
+function cms_cron_url(): string
+{
+    return cms_site_url() . '/_cms/cron?token=' . cms_cron_token();
 }
 
 function cms_preview_token(string $type, string $slug): string

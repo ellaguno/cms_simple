@@ -12,7 +12,7 @@
  */
 declare(strict_types=1);
 
-const CMS_VERSION = '1.26.0';
+const CMS_VERSION = '1.28.0';
 
 define('CMS_DIR', __DIR__);
 define('CMS_ROOT', dirname(__DIR__));
@@ -95,6 +95,7 @@ function cms_active_langs(): array
 mb_internal_encoding('UTF-8');
 date_default_timezone_set((string) cms_config('timezone'));
 
+require_once CMS_DIR . '/lib/hooks.php';
 require_once CMS_DIR . '/lib/Parsedown.php';
 require_once CMS_DIR . '/lib/storage.php';
 require_once CMS_DIR . '/lib/url.php';
@@ -108,3 +109,6 @@ require_once CMS_DIR . '/lib/styles.php';
 require_once CMS_DIR . '/lib/registry.php';
 require_once CMS_DIR . '/lib/update.php';
 if (is_file(CMS_SITE . '/inc/functions.php')) require_once CMS_SITE . '/inc/functions.php';
+// paquetes con código: <paquete>/inc.php se carga una vez por petición si el paquete está activo (ganchos y helpers)
+foreach (cms_packs() as $cms_pack) if (is_file($cms_pack['dir'] . '/inc.php')) require_once $cms_pack['dir'] . '/inc.php';
+unset($cms_pack);

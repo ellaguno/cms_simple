@@ -10,7 +10,7 @@ $cols = (array) ($def['list'] ?? []);
 
 /* ---------- filtros del listado (buscador, estado, columnas) y paginación; todo por GET para poder compartir/volver ---------- */
 $q = trim((string) ($_GET['q'] ?? ''));
-$status = in_array($_GET['status'] ?? '', ['published', 'scheduled', 'draft'], true) ? (string) $_GET['status'] : '';
+$status = in_array($_GET['status'] ?? '', ['published', 'scheduled', 'expired', 'draft'], true) ? (string) $_GET['status'] : '';
 $colFilters = [];
 foreach ($cols as $c) { $v = trim((string) ($_GET['f_' . $c] ?? '')); if ($v !== '') $colFilters[$c] = $v; }
 $page = max(1, (int) ($_GET['page'] ?? 1));
@@ -31,7 +31,7 @@ if (admin_is_post()) {
             $base = $src['slug'] . '-copia'; $slug = $base; $n = 2;
             while (is_file(cms_content_dir($type) . '/' . $slug . '.json')) $slug = $base . '-' . $n++;
             $tf = $def['title_field'] ?? 'title';
-            $copy = $src; $copy['slug'] = $slug; $copy['status'] = 'draft'; $copy['created'] = date('Y-m-d'); $copy['updated'] = date('Y-m-d'); unset($copy['publish_at']);
+            $copy = $src; $copy['slug'] = $slug; $copy['status'] = 'draft'; $copy['created'] = date('Y-m-d'); $copy['updated'] = date('Y-m-d'); unset($copy['publish_at'], $copy['unpublish_at']);
             if (is_array($copy[$tf] ?? null)) { foreach ($copy[$tf] as $l => $v) if ($v !== '') $copy[$tf][$l] = $v . ' (copia)'; } else $copy[$tf] = (string) ($copy[$tf] ?? '') . ' (copia)';
             if (cms_item_save($type, $copy)) { admin_flash('Copia creada como borrador.'); admin_redirect(admin_url('edit', ['type' => $type, 'slug' => $slug])); }
             admin_flash('No se pudo duplicar.', 'err');
@@ -49,7 +49,7 @@ $flat = function ($v) use (&$flat): string {
     if (is_array($v)) return implode(' ', array_map($flat, $v));
     return is_scalar($v) ? (string) $v : '';
 };
-$itemStatus = fn(array $it) => cms_item_is_live($it) ? 'published' : ((($it['status'] ?? '') === 'published') ? 'scheduled' : 'draft');
+$itemStatus = fn(array $it) => cms_item_is_live($it) ? 'published' : (cms_item_is_expired($it) ? 'expired' : ((($it['status'] ?? '') === 'published') ? 'scheduled' : 'draft'));
 /** Minúsculas y sin acentos, para que "diseno" encuentre "Diseño". */
 $fold = fn(string $s) => strtr(mb_strtolower($s), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u', 'ç' => 'c']);
 
@@ -72,7 +72,7 @@ foreach ($colFilters as $c => $v) {
     });
 }
 // contadores por estado (sobre lo que coincide con búsqueda y filtros de columna)
-$counts = ['published' => 0, 'scheduled' => 0, 'draft' => 0];
+$counts = ['published' => 0, 'scheduled' => 0, 'expired' => 0, 'draft' => 0];
 foreach ($items as $it) $counts[$itemStatus($it)]++;
 // 3) estado
 if ($status !== '') $items = array_filter($items, fn($it) => $itemStatus($it) === $status);
@@ -119,6 +119,7 @@ admin_header($def['label'] ?? $type, 'content:' . $type);
   <a class="ad-pill <?= $status === '' ? 'on' : '' ?>" href="<?= $listUrl(['status' => '', 'page' => '']) ?>">Todos (<?= array_sum($counts) ?>)</a>
   <a class="ad-pill <?= $status === 'published' ? 'on' : '' ?>" href="<?= $listUrl(['status' => 'published', 'page' => '']) ?>">Publicados (<?= $counts['published'] ?>)</a>
 <?php if ($counts['scheduled'] || $status === 'scheduled'): ?>  <a class="ad-pill <?= $status === 'scheduled' ? 'on' : '' ?>" href="<?= $listUrl(['status' => 'scheduled', 'page' => '']) ?>">Programados (<?= $counts['scheduled'] ?>)</a>
+<?php endif; if ($counts['expired'] || $status === 'expired'): ?>  <a class="ad-pill <?= $status === 'expired' ? 'on' : '' ?>" href="<?= $listUrl(['status' => 'expired', 'page' => '']) ?>">Caducados (<?= $counts['expired'] ?>)</a>
 <?php endif; ?>  <a class="ad-pill <?= $status === 'draft' ? 'on' : '' ?>" href="<?= $listUrl(['status' => 'draft', 'page' => '']) ?>">Borradores (<?= $counts['draft'] ?>)</a>
 <?php if ($total > $perPage): ?>  <span class="ad-help">Mostrando <?= ($page - 1) * $perPage + 1 ?>–<?= min($total, $page * $perPage) ?> de <?= $total ?></span><?php endif; ?>
 </p>
@@ -132,7 +133,7 @@ admin_header($def['label'] ?? $type, 'content:' . $type);
 <?php foreach ($cols as $c): $v = cms_f($it, $c, $dl); ?>
       <td><?= cms_e(is_array($v) ? implode(', ', $v) : (string) $v) ?></td>
 <?php endforeach; ?>
-      <td><span class="ad-pill <?= $live ? 'on' : ($pub ? 'warn' : '') ?>"><?= $live ? 'Publicado' : ($pub ? 'Programado ' . cms_e($it['publish_at'] ?? '') : 'Borrador') ?></span></td>
+      <td><span class="ad-pill <?= $live ? 'on' : ($pub ? 'warn' : '') ?>"><?= $live ? 'Publicado' . (!empty($it['unpublish_at']) ? ' hasta ' . cms_e($it['unpublish_at']) : '') : (cms_item_is_expired($it) ? 'Caducado ' . cms_e($it['unpublish_at']) : ($pub ? 'Programado ' . cms_e($it['publish_at'] ?? '') : 'Borrador')) ?></span></td>
 <?php if ($multi): $missing = []; foreach (cms_langs() as $l) if ($l !== $dl && empty($it[$titleField][$l])) $missing[] = strtoupper($l); ?>
       <td><?= $missing ? '<span class="ad-help">falta ' . implode(', ', $missing) . '</span>' : '✓' ?></td>
 <?php endif; ?>

@@ -36,6 +36,8 @@ Un buscador no puede leer un video ni una imagen. Cada página necesita texto qu
 
 Enlaza desde el texto a tus otras páginas con palabras que describan el destino, como "nuestros planes para despachos", no "haz clic aquí". Cada enlace le dice al buscador de qué trata la página de destino y reparte la autoridad.
 
+El paquete **Enlaces automáticos** (Catálogo → activar; luego Ajustes → Enlaces automáticos) lo hace por ti: escribes una lista "palabra | URL" y cada vez que esa palabra aparece en un artículo o en un bloque de texto se convierte en enlace, una vez por página, nunca dentro de un título ni de otro enlace, y nunca hacia la misma página. Apunta cada palabra a tu mejor página sobre ese tema. Enlazar las etiquetas al filtro del índice está apagado por defecto: esas páginas de filtro llevan `noindex`, así que el buscador no gana nada con ellas. Si un artículo no debe llevar enlaces automáticos, marca "No enlazar palabras en este elemento" en su barra lateral.
+
 ### 5. Imágenes con nombre y texto alternativo
 
 Explicado en [Artículos y el editor visual](cap:06-articulos-y-editor). Es barato y suma en las búsquedas de imágenes.

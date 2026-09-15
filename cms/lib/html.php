@@ -9,12 +9,13 @@ function cms_md(string $text): string
     return $pd->text(str_replace('{{base}}', CMS_BASE, $text));
 }
 
-/** Contenido del editor visual (HTML) o Markdown heredado. */
+/** Contenido del editor visual (HTML) o Markdown heredado, pasado por el gancho 'content' (paquetes como enlaces). */
 function cms_content(string $text): string
 {
     $text = str_replace('{{base}}', CMS_BASE, $text);
     if ($text === '') return '';
-    return preg_match('/^\s*</', $text) ? $text : cms_md($text);
+    $html = preg_match('/^\s*</', $text) ? $text : cms_md($text);
+    return cms_has_hook('content') ? (string) cms_apply('content', $html, cms_current()) : $html;
 }
 
 function cms_date(string $ymd, string $lang): string

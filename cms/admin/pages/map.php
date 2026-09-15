@@ -47,7 +47,7 @@ $menuUrls = array_column(cms_menu($lang), 'url');
 $treeTypes = array_keys(array_filter(cms_config('types'), fn($d) => !empty($d['tree'])));
 $counts = cms_map_counts($map);
 $icons = ['home' => '⌂', 'page' => '▭', 'type' => '▤', 'item' => '·', 'static' => '▣', 'external' => '↗'];
-$statusLabel = ['published' => 'publicado', 'draft' => 'borrador', 'scheduled' => 'programado'];
+$statusLabel = ['published' => 'publicado', 'draft' => 'borrador', 'scheduled' => 'programado', 'expired' => 'caducado'];
 
 function admin_map_node(array $n, array $icons, array $statusLabel, int $depth = 0, array $ctx = []): void
 {
@@ -67,7 +67,7 @@ function admin_map_node(array $n, array $icons, array $statusLabel, int $depth =
     echo '</span>';
     if ($n['url'] !== '') echo '<a class="ad-map-url" href="' . cms_e($n['url']) . '" target="_blank" rel="noopener">' . cms_e(preg_replace('#^https?://[^/]+#', '', $n['url'])) . '</a>';
     elseif ($n['kind'] === 'type') echo '<span class="ad-map-url ad-help">/' . cms_e($n['segment'] ?? '') . '/…</span>';
-    if ($n['status'] !== '' && $n['kind'] === 'item') echo '<span class="ad-pill ' . ($n['status'] === 'published' ? 'on' : ($n['status'] === 'scheduled' ? 'warn' : '')) . '">' . $statusLabel[$n['status']] . '</span>';
+    if ($n['status'] !== '' && $n['kind'] === 'item') echo '<span class="ad-pill ' . ($n['status'] === 'published' ? 'on' : (in_array($n['status'], ['scheduled', 'expired'], true) ? 'warn' : '')) . '">' . ($statusLabel[$n['status']] ?? $n['status']) . '</span>';
     if ($n['noindex']) echo '<span class="ad-pill" title="No aparece en buscadores ni en el sitemap">noindex</span>';
     echo '<span class="ad-map-source">' . cms_e($n['source']) . ($n['updated'] ? ' · ' . cms_e($n['updated']) : '') . '</span>';
     // acciones
@@ -109,6 +109,8 @@ admin_header('Mapa del sitio', 'map');
   <span><span class="ad-pill on">publicado</span> <?= (int) $counts['published'] ?></span>
   <span><span class="ad-pill">borrador</span> <?= (int) $counts['draft'] ?></span>
   <span><span class="ad-pill warn">programado</span> <?= (int) $counts['scheduled'] ?></span>
+<?php if (!empty($counts['expired'])): ?>  <span><span class="ad-pill warn">caducado</span> <?= (int) $counts['expired'] ?></span>
+<?php endif; ?>
   <span class="ad-help">▭ plantilla fija · ▤ colección de contenido · ▣ carpeta fuera del CMS · ↗ enlace externo</span>
   <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= CMS_BASE ?>/sitemap.xml" target="_blank" rel="noopener">sitemap.xml ↗</a>
 </div>

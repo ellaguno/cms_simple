@@ -106,6 +106,39 @@ function cms_registries(): array
     return array_keys($out);
 }
 
+/**
+ * Petición POST (o GET si $body es null) para las API que usan los paquetes. $body: arreglo (se envía como JSON) o
+ * cadena tal cual (SSML, formularios); $headers: ['Nombre: valor', …]. Devuelve el cuerpo de la respuesta (texto o
+ * binario). Lanza RuntimeException con un mensaje legible si no conecta o si el servidor responde 4xx/5xx
+ * (el código HTTP queda en getCode()).
+ */
+function cms_http_post(string $url, $body, array $headers = [], int $timeout = 120): string
+{
+    if (!preg_match('#^https://#i', $url)) throw new RuntimeException('Solo se admiten direcciones https.');
+    if (is_array($body)) { $body = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); $headers[] = 'Content-Type: application/json'; }
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => $timeout, CURLOPT_CONNECTTIMEOUT => 20, CURLOPT_HTTPHEADER => $headers, CURLOPT_FOLLOWLOCATION => true, CURLOPT_USERAGENT => 'cms_simple/' . CMS_VERSION]);
+        if ($body !== null) { curl_setopt($ch, CURLOPT_POST, true); curl_setopt($ch, CURLOPT_POSTFIELDS, (string) $body); }
+        $res = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $err = curl_error($ch);
+        curl_close($ch);
+        if ($res === false) throw new RuntimeException('No se pudo conectar con ' . parse_url($url, PHP_URL_HOST) . ': ' . $err);
+    } else {
+        $ctx = stream_context_create(['http' => ['method' => $body !== null ? 'POST' : 'GET', 'header' => implode("\r\n", $headers), 'content' => (string) ($body ?? ''), 'timeout' => $timeout, 'ignore_errors' => true, 'user_agent' => 'cms_simple/' . CMS_VERSION]]);
+        $res = @file_get_contents($url, false, $ctx);
+        if ($res === false) throw new RuntimeException('No se pudo conectar con ' . parse_url($url, PHP_URL_HOST));
+        $code = isset($http_response_header[0]) && preg_match('/\s(\d{3})\s/', $http_response_header[0], $m) ? (int) $m[1] : 0;
+    }
+    if ($code >= 400) {
+        $j = json_decode((string) $res, true);
+        $msg = $j['error']['message'] ?? $j['error'] ?? $j['message'] ?? $j['detail']['message'] ?? $j['detail'] ?? substr(strip_tags((string) $res), 0, 300);
+        throw new RuntimeException("HTTP $code: " . (is_string($msg) ? $msg : json_encode($msg, JSON_UNESCAPED_UNICODE)), $code);
+    }
+    return (string) $res;
+}
+
 /** Descarga una URL con límite de tamaño y tiempo. Devuelve [contenido|null, error]. */
 function cms_http_get(string $url, int $maxBytes = 33554432, int $timeout = 25): array
 {

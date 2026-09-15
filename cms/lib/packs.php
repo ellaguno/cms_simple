@@ -7,6 +7,10 @@
  *                  'effects' => ['clave' => ['label', 'desc', 'assets' => [...], 'libs' => [...]]]]
  *   blocks.php     definiciones de bloques como en site/blocks.php; cada bloque puede traer 'assets' y 'libs'
  *   blocks/*.php   vistas;  assets/  CSS y JS;  LICENSES.md
+ *   inc.php        opcional: código que se carga una vez por petición si el paquete está activo (ganchos con cms_on(),
+ *                  helpers). El manifiesto puede declarar además 'settings' => ['Grupo' => [campo => def]] (grupo en
+ *                  Admin → Ajustes) e 'item_fields' => ['*' | tipo => [campo => def]] (campos en la barra lateral del
+ *                  editor de esos tipos). Un paquete puede no traer bloques y ser solo código (p. ej. cms/packs/enlaces).
  * El tema los activa en config: 'packs' => ['visual', 'motion'] (o ['motion' => ['site' => ['cursor']]] con opciones).
  * Los bloques de un paquete se llaman paquete/bloque; los efectos, paquete/efecto. Los recursos (CSS, JS y librerías)
  * se cargan solo en las páginas cuyas secciones los usan (cms_sections_assets()).

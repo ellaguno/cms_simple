@@ -71,3 +71,5 @@ Campos que importan y por qué:
 ## Publicar y programar
 
 Igual que en las páginas: borrador, publicado, publicación programada, vista previa con enlace privado y versiones anteriores. Un artículo publicado entra al sitemap y al índice de artículos de forma automática.
+
+**Retirar a partir de** es la fecha de caducidad: desde ese día el artículo deja de verse en el sitio, los listados y el sitemap, aunque sigue publicado. En el listado aparece como *Caducado*; quita o cambia la fecha para que vuelva. Sirve para promociones, convocatorias o avisos con fecha límite.

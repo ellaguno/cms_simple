@@ -5,6 +5,8 @@ declare(strict_types=1);
 $S = cms_json_read(CMS_DATA . '/settings.json', []) ?: cms_settings();
 $socials = ['linkedin' => 'LinkedIn', 'facebook' => 'Facebook', 'x' => 'X (Twitter)', 'instagram' => 'Instagram', 'behance' => 'Behance', 'youtube' => 'YouTube'];
 $siteSections = (array) cms_config('settings');
+// grupos de ajustes que declaran los paquetes activos ('settings' => ['Grupo' => [campo => def]] en pack.php)
+foreach (cms_packs() as $pk) foreach ((array) ($pk['settings'] ?? []) as $g => $pf) $siteSections[$g] = ($siteSections[$g] ?? []) + (array) $pf;
 // aviso de cookies (núcleo): el tema no tiene que hacer nada; se dibuja desde cms_head(). 'cookie_notice' => false en config lo quita.
 if (cms_config('cookie_notice', true) !== false) $siteSections += ['Aviso de cookies' => [
     'cookie_on'     => ['type' => 'checkbox', 'label' => 'Aviso', 'text' => 'Mostrar la barra de aviso de cookies hasta que la persona la acepte'],

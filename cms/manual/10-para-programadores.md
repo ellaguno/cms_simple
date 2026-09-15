@@ -62,3 +62,21 @@ El detalle completo está en el `README.md` del repositorio.
 ## El índice ligero
 
 `data/index/<tipo>.json` guarda cada elemento sin sus campos pesados (`html`, `sections`, `code`). Se actualiza al guardar desde el panel y se reconstruye solo si la carpeta `data/content/<tipo>/` cambió por fuera. Si un campo `html` corto hace falta en listados, márcalo con `'index' => true` en `site/config.php`; `'no_index' => true` en el tipo lo deja sin índice. No lo subas al repositorio ni lo copies entre instalaciones: se regenera.
+
+## Paquetes con código: ganchos
+
+Un paquete puede traer `inc.php`; el motor lo carga una vez por petición si el paquete está activo (Catálogo o `'packs'` en `site/config.php`). Ahí se registran ganchos y helpers:
+
+```php
+cms_on('content', fn(string $html, array $ctx) => str_replace('…', '...', $html));   // filtro
+cms_on('head', function (array $page) { echo '<meta name="x" content="y">'; });        // acción
+cms_on('item.save', function (string $type, array $item) { /* p. ej. generar algo */ });
+```
+
+Puntos de gancho del motor: `content` (el HTML que devuelve `cms_content()`: campos html y bloques de texto; `$ctx` es `cms_current()`, con `type`, `item`, `page` y `lang`), `head` (al final de `cms_head()`), `item.save` (tras guardar un elemento), `admin.item.sidebar` (la barra lateral del editor de un elemento guardado, para botones propios) y `cron` (cuando el hosting llama a `/_cms/cron?token=…` o se ejecuta `php cms/cron.php`; recibe una función `$log`). Se añade un punto nuevo solo cuando un paquete real lo necesita.
+
+Ojo con `cms_current()['item']` al dibujar el sitio: llega resuelto al idioma de la petición, con respaldo al predeterminado; si necesitas saber si un campo existe en ese idioma exacto, lee el archivo del elemento (el paquete audio lo hace con `au_raw_item()`).
+
+Para interfaz no hay API: el manifiesto `pack.php` declara `'settings' => ['Grupo' => [campo => def]]` (un grupo en Ajustes), `'item_fields' => ['*' => [campo => def]]` o `[tipo => …]` (campos en la barra lateral del editor), con la misma sintaxis de campos de `config.php`, y `'admin' => ['label' => 'Audio', 'file' => 'admin.php']` para una página propia en el panel: responde en `admin/?p=pack:<nombre>`, con `$pack` (el manifiesto) y los helpers del panel (`admin_header()`, `admin_is_post()`, `admin_csrf_check()`, `admin_flash()`, `admin_redirect()`), y aparece en el menú lateral. Para hablar con una API, `cms_http_post($url, $body, $headers)` (JSON o cuerpo crudo, respuesta de texto o binaria, excepción legible).
+
+Ejemplos completos: `cms/packs/enlaces` (solo código, un grupo de ajustes, una casilla por elemento y dos ganchos), `cms/packs/audio` (página propia, botones en el editor, bloque, `item.save`) y `cms/packs/redaccion` (página propia, historial en `data/`, tarea de `cron`).

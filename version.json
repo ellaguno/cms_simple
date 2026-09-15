@@ -1,7 +1,7 @@
 {
-  "version": "1.26.0",
+  "version": "1.28.0",
   "date": "2026-09-14",
-  "notes": "Índice ligero por colección (data/index/): los listados, el sitemap, el menú y los bloques de colección ya no leen el cuerpo de todos los elementos, y la página de detalle lee solo su archivo. Con 5,000 artículos, un artículo pasa de 190 ms a 2 ms y el índice de 230 a 70 ms. Bloque nuevo \"Índice del sitio\" (mapa HTML por colección, año, letra o categoría) y paginación en el núcleo (cms_paginate / cms_pager). Botón \"Reconstruir los índices\" en el Inicio del panel.\nPara programadores: cms_items() devuelve elementos sin campos html/sections/code; cms_items(tipo, true, true) los completos; 'index' => true en un campo lo conserva en el índice.\nAntes: arrastre de secciones (1.25), buscador de bloques (1.24), ticker (1.23).",
+  "notes": "Dos paquetes nuevos, apagados por defecto (se activan en Catálogo): \"Audio: texto a voz\" convierte artículos y páginas en MP3 con OpenAI, ElevenLabs, Azure o Google (botón por idioma en el editor, reproductor al principio o al final del texto, bloque Reproductor, generación automática al publicar opcional) y \"Redacción con IA\" escribe artículos sobre tus temas y resúmenes diarios de noticias con fuentes (OpenRouter, OpenAI, Anthropic o DeepSeek), guardados como borrador en la colección que elijas, con historial y programación. Los dos traen un proveedor de prueba sin clave.\nNúcleo: los paquetes pueden tener página propia en el panel ('admin' en pack.php), gancho admin.item.sidebar en el editor, cron del hosting en /_cms/cron?token=… (o php cms/cron.php) con el gancho cron, y cms_http_post() para las API.\nAntes: paquetes con código, caducidad y enlaces automáticos (1.27), índice ligero (1.26).",
   "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
   "subdir": "cms",
   "min_version": "1.10.0",

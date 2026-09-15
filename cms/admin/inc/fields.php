@@ -177,6 +177,8 @@ function admin_read_item(string $type, array $def, array $fields, array $existin
     $errors = [];
     $new = ['slug' => '', 'status' => admin_post('status') === 'published' ? 'published' : 'draft'];
     $new['publish_at'] = preg_match('/^\d{4}-\d{2}-\d{2}$/', admin_post('publish_at')) && admin_post('publish_at') > date('Y-m-d') ? admin_post('publish_at') : '';
+    $new['unpublish_at'] = preg_match('/^\d{4}-\d{2}-\d{2}$/', admin_post('unpublish_at')) ? admin_post('unpublish_at') : '';
+    if ($new['unpublish_at'] !== '' && $new['publish_at'] !== '' && $new['unpublish_at'] <= $new['publish_at']) $errors[] = 'La fecha de retiro debe ser posterior a la de publicación.';
     foreach ($fields as $name => $fd) $new[$name] = admin_read_field($name, (array) $fd);
     $titleVal = $new[$titleField] ?? '';
     $titleMain = is_array($titleVal) ? ($titleVal[$dl] ?? '') : (string) $titleVal;

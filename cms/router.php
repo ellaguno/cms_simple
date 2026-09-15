@@ -29,6 +29,7 @@ if ($path === 'robots.txt') { cms_robots(); exit; }
 if ($path === 'sitemap.xml') { cms_sitemap(); exit; }
 if ($path === 'llms.txt' && is_file(CMS_SITE . '/llms.txt')) { header('Content-Type: text/plain; charset=utf-8'); echo str_replace('{{site}}', cms_site_url(), (string) file_get_contents(CMS_SITE . '/llms.txt')); exit; }
 if ($path === '_cms/form') { require CMS_DIR . '/form.php'; exit; }
+if ($path === '_cms/cron') { require CMS_DIR . '/cron.php'; exit; }
 
 // ---- idioma
 $lang = cms_default_lang();
@@ -173,6 +174,7 @@ if ($template === null || !is_file(CMS_SITE . '/templates/' . $template . '.php'
 }
 $page['canonical'] = cms_abs_url($page['alt'][$lang] ?? cms_url('home', $lang));
 if (is_array($item ?? null) && is_array($item['sections'] ?? null)) $page['sections'] = $item['sections'];
+$GLOBALS['cms_current'] = ['type' => $type, 'item' => is_array($item ?? null) ? $item : null, 'page' => $page, 'lang' => $lang];   // cms_current(), para los ganchos
 
 site_header($page);
 require CMS_SITE . '/templates/' . $template . '.php';

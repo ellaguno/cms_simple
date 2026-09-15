@@ -1,0 +1,7 @@
+/* Paquete audio: reproductor (el tema puede sobrescribir .cms-audio con sus variables --cms-*) */
+.cms-audio{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 1.5em;padding:12px 16px;border:1px solid var(--cms-line,rgba(0,0,0,.12));border-radius:var(--cms-radius,12px);background:var(--cms-soft,rgba(0,0,0,.03))}
+.cms-audio-label{font-weight:600;font-size:.95em}
+.cms-audio-el{flex:1 1 240px;min-width:0;height:36px}
+.cms-audio-dl{font-size:.8em;opacity:.7;text-decoration:none}
+.cms-audio-dl:hover{opacity:1}
+.cms-audio-empty{opacity:.6;font-style:italic}

@@ -99,8 +99,10 @@ $titleInputName = !empty($fields[$titleField]['i18n']) ? $titleField . '[' . $dl
       <div class="ad-field"><label>Estado</label>
         <select name="status"><option value="draft"<?= $item['status'] !== 'published' ? ' selected' : '' ?>>Borrador</option><option value="published"<?= $item['status'] === 'published' ? ' selected' : '' ?>>Publicado</option></select></div>
       <div class="ad-field"><label>Publicar a partir de <small class="ad-help">(vacío = de inmediato)</small></label><input type="date" name="publish_at" value="<?= cms_e($item['publish_at'] ?? '') ?>" min="<?= date('Y-m-d', time() + 86400) ?>"></div>
+      <div class="ad-field"><label>Retirar a partir de <small class="ad-help">(vacío = nunca)</small></label><input type="date" name="unpublish_at" value="<?= cms_e($item['unpublish_at'] ?? '') ?>"><p class="ad-help">Desde ese día deja de verse en el sitio, el sitemap y los listados, pero sigue publicado: quita o cambia la fecha para que vuelva.</p></div>
       <div class="ad-field"><label>URL (slug)</label><input type="text" name="slug" value="<?= cms_e($item['slug']) ?>" data-slug placeholder="se genera del título"><p class="ad-help"><?php if ($tree): $pp = ($item['parent'] ?? '') !== '' ? (cms_items($type, false)[$item['parent']]['path'] ?? $item['parent']) . '/' : ''; $sg = cms_segment($def, $dl); ?>/<?= $sg !== '' ? cms_e($sg) . '/' : '' ?><span data-parent-path><?= cms_e($pp) ?></span><?php else: ?>/<?= cms_e(cms_segment($def, $dl)) ?>/<?php endif; ?><span data-slug-preview><?= cms_e($item['slug']) ?></span></p></div>
 <?php foreach ($side as $name => $fd) admin_field($name, $fd, $item[$name] ?? ''); ?>
+<?php if (!$is_new) cms_do('admin.item.sidebar', $type, $item); ?>
       <div class="ad-field ad-sticky-save">
         <button class="ad-btn" type="submit">Guardar</button>
         <a class="ad-btn ad-btn-light" href="<?= admin_url('content', ['type' => $type]) ?>">Volver</a>

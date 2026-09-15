@@ -104,6 +104,7 @@ function cms_head(array $page): void
         echo '<script type="application/ld+json">' . json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
     }
     echo cms_cookie_bar((string) ($page['lang'] ?? cms_default_lang()));
+    cms_do('head', $page);
 }
 
 /**

@@ -23,6 +23,10 @@ function admin_nav(): array
         'media'     => ['Medios', admin_url('media')],
         'diseno'    => ['Diseño', admin_url('diseno')],
         'catalogo'  => ['Catálogo', admin_url('catalogo')],
+    ];
+    // páginas propias de los paquetes activos ('admin' => ['label' => …, 'file' => …] en pack.php)
+    foreach (cms_packs() as $pn => $pk) if (!empty($pk['admin']['file'])) $nav['pack:' . $pn] = [(string) ($pk['admin']['label'] ?? $pk['label']), admin_url('pack:' . $pn)];
+    $nav += [
         'menu'      => ['Menú', admin_url('menu')],
         'strings'   => ['Textos del sitio', admin_url('strings')],
         'settings'  => ['Ajustes', admin_url('settings')],

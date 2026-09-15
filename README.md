@@ -15,7 +15,8 @@ Nació para [katapolt.mx](https://katapolt.mx) y está pensado para reutilizarse
 - **Tipos de contenido por esquema**: declaras en `site/config.php` los tipos (entradas, proyectos, servicios…) y sus campos; el panel genera listados (con buscador, filtros por estado y por columna, y paginación de 50 en 50; `'admin_per_page'` en el tipo cambia el tamaño) y formularios. Tipos de campo: texto, área de texto, editor visual (Quill), fecha, número, URL, correo, selector, casilla, imagen, lista de imágenes, líneas, etiquetas.
 - **Multilingüe**: cualquier campo marcado `i18n` se edita por idioma con un conmutador (un idioma a la vez, con el texto del idioma base como referencia). URLs con prefijo por idioma (`/en/...`), `hreflang`, respaldo al idioma predeterminado cuando falta traducción.
 - **Medios**: subida por botón o arrastrando (imágenes, PDF, video), biblioteca para insertar en el editor o en campos de imagen, WebP automático, aviso de "en uso" antes de borrar.
-- **Menú, textos fijos, ajustes, redirecciones 301** editables desde el panel.
+- **Menú, textos fijos, ajustes, redirecciones 301** editables desde el panel. Publicación programada y fecha de retiro (caducidad) por elemento, sin cron.
+- **Paquetes**: bloques y efectos para el constructor y, desde 1.27, código con ganchos (`content`, `head`, `item.save`, `admin.item.sidebar`, `cron`), ajustes, campos propios y página en el panel. Incluidos: visual, motion, media, marketing, contenido, enlaces (enlazado interno automático), audio (texto a voz) y redaccion (artículos y resúmenes de noticias con IA).
 - **Código del tema**: editor de código en el panel para plantillas, layout, CSS y JS, con respaldos, restauración y verificación de sintaxis PHP.
 - **SEO de serie**: `title`/`description` por página y campos SEO por elemento, `canonical`, `hreflang`, Open Graph y Twitter Card, JSON-LD (`Organization`, `WebSite`, `BreadcrumbList` y `Article`/`CreativeWork`/… según el tipo), `sitemap.xml` con `lastmod`, `robots.txt`, `noindex` en filtros y 404, imágenes con `<picture>` WebP y dimensiones.
 - **Formulario de contacto** genérico (`POST /_cms/form`) con `mail()`, honeypot y registro en `data/mensajes.log`.
@@ -309,6 +310,76 @@ la palabra y color del halo) y las cifras animadas (cuánto tarda la cuenta).
 **Corregido**: el fondo de ondas buscaba una clase `.hero` que ningún tema del proyecto usa, así que no llegaba a
 dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los parámetros como uniforms.
 
+## Audio (texto a voz), Redacción con IA, páginas de paquete y cron (1.28)
+
+Dos paquetes nuevos incluidos con el núcleo, apagados por defecto (se activan en Catálogo), que son las reescrituras
+de los plugins de WordPress "TTS SesoLibre" y "AI Content Generator" sobre el modelo de paquetes con código de 1.27.
+Para ellos el núcleo ganó cuatro piezas, cada una pedida por un paquete real:
+
+- **Página propia en el panel**: `'admin' => ['label' => 'Audio', 'file' => 'admin.php']` en `pack.php`. Aparece en el
+  menú lateral y responde en `admin/?p=pack:<nombre>`, con `$pack` (el manifiesto) y todos los helpers del panel.
+- **Gancho `admin.item.sidebar`** (acción `$type, $item`): la barra lateral del editor de un elemento ya guardado.
+- **Cron del hosting**: `/_cms/cron?token=…` (o `php cms/cron.php`) ejecuta el gancho `cron` de los paquetes activos con
+  una función `$log`; el token sale de `cms_cron_token()` (derivado de `data/.secret`), un bloqueo evita solapes y el
+  resumen queda en `data/cron.json`. Se programa cada 15 o 30 minutos; cada paquete decide si le toca algo.
+- **`cms_http_post()`** en `cms/lib/registry.php`: POST con JSON o cuerpo crudo, respuesta de texto o binaria y error
+  legible con el código HTTP.
+
+**Paquete `audio`** (`cms/packs/audio`). Convierte artículos y páginas en MP3 y pone un reproductor al principio o al
+final del cuerpo (o solo con el bloque "Reproductor de audio" y `au_player()` en temas propios). Proveedores por HTTP
+puro, sin SDK: OpenAI, ElevenLabs, Azure y Google Cloud; y "prueba", que devuelve un MP3 en silencio sin clave para
+revisar el flujo. Botón **Generar audio** por idioma en la barra lateral del editor; página Audio con prueba de voz y el
+estado de cada colección; generación automática al publicar (opcional); máximo de caracteres para acotar el gasto. El
+texto se limpia de HTML (título opcional, cuerpo y textos de las secciones del constructor), se parte por oraciones según
+el límite del proveedor y los MP3 se concatenan en `uploads/audio/<tipo>/<slug>-<idioma>.mp3`; la ruta queda en el
+campo `audio` del elemento, por idioma y sin respaldo a otro idioma. No lleva Amazon Polly (firma SigV4) ni Buzzsprout.
+
+**Paquete `redaccion`** (`cms/packs/redaccion`). Escribe artículos completos sobre los temas de una lista (título,
+secciones con subtítulo, resumen, categoría, imagen generada opcional con OpenAI) y resúmenes diarios de noticias por
+tema (Google News RSS o cualquier feed con `{topic}`, filtrado por antigüedad, sin repetir URL, resumen fiel a los
+titulares y fuentes enlazadas al final de cada sección). Guarda en la colección que elijas como borrador o publicado,
+rellenando los campos según el esquema del tipo. Proveedores: OpenRouter, OpenAI, Anthropic, DeepSeek y "prueba".
+Página Redacción IA con generar ahora, prueba del proveedor, historial con tokens y costo (cuando el proveedor lo
+informa), y programación diaria o semanal que ejecuta el cron; la lista de temas rota en orden. Estado e historial en
+`data/redaccion/`. Lo que no se portó del plugin: marca de agua en imágenes, carrusel de imágenes de las noticias y la
+resolución de las URL acortadas de Google News (se enlaza la URL del feed, que redirige a la fuente).
+
+## Paquetes con código, ganchos, caducidad y enlaces automáticos (1.27)
+
+Un paquete ya no es solo bloques y efectos: puede traer **código** que el núcleo carga en cada petición y engancharse
+en tres puntos concretos. Es el modelo de "plugin" de cms_simple, y cabe en 80 líneas de núcleo porque reutiliza lo
+que ya existía (paquetes, Catálogo para activar y desactivar, instalación desde zip, Ajustes por esquema).
+
+- **`<paquete>/inc.php`** se carga una vez por petición si el paquete está activo (al final de `cms/bootstrap.php`,
+  después de `site/inc/functions.php`). Ahí van los ganchos y los helpers. Un paquete puede no traer bloques.
+- **Ganchos** (`cms/lib/hooks.php`): `cms_on('gancho', $fn, $prio)` registra; `cms_apply('gancho', $valor, …)` filtra un
+  valor; `cms_do('gancho', …)` avisa. Puntos del núcleo, y solo estos por ahora:
+  `content` (filtro: el HTML de `cms_content()`, es decir, los campos html y los bloques de texto, con
+  `cms_current()` como contexto), `head` (acción al final de `cms_head()`, para emitir `<style>`, `<script>` o `<meta>`)
+  e `item.save` (acción tras guardar un elemento). La regla para que el núcleo no engorde: un punto de gancho se añade
+  cuando un paquete real lo necesita, nunca "por si acaso".
+- **Declaraciones en el manifiesto** en lugar de una API de interfaz: `'settings' => ['Grupo' => [campo => def]]` añade
+  un grupo a Admin → Ajustes, e `'item_fields' => ['*' | tipo => [campo => def]]` añade campos a la barra lateral del
+  editor (todos los tipos o los que se indiquen). Misma sintaxis de campos que `site/config.php`.
+- **`cms_current()`**: lo que se está dibujando en la petición (`type`, `item`, `page`, `lang`); lo fija el enrutador.
+
+**Caducidad en el núcleo.** Junto a "Publicar a partir de" hay **Retirar a partir de**: desde ese día el elemento deja
+de verse en el sitio, los listados, el menú, los bloques de colección y el sitemap, pero sigue publicado; quita o cambia
+la fecha y vuelve. Se evalúa al leer (`cms_item_is_live()`), sin cron. El listado del panel y el mapa del sitio lo marcan
+como **Caducado** (`cms_item_is_expired()`), y hay filtro de caducados. La fecha de retiro debe ser posterior a la de
+publicación.
+
+**Paquete `enlaces`** (`cms/packs/enlaces`, incluido con el núcleo, apagado por defecto: se activa en Catálogo o con
+`'packs' => ['enlaces']`). Enlazado interno automático: al dibujar el contenido convierte en enlace las palabras de una
+lista "palabra | URL" (Ajustes → Enlaces automáticos, por idioma; las URL relativas se ajustan al idioma) y,
+opcionalmente, las etiquetas de las colecciones hacia el filtro `?tag=` de su índice (apagado por defecto: esos filtros
+llevan `noindex`, así que enlazarlos no aporta a buscadores). Reglas: un enlace por palabra y página (configurable),
+tope de enlaces por página, largo mínimo, lista negra, nunca dentro de títulos, enlaces existentes, botones, código ni
+scripts, nunca hacia la propia página, y sin `target=_blank`. Cada elemento tiene la casilla "No enlazar palabras en
+este elemento". Los términos se compilan en una sola expresión regular, del más largo al más corto, con límites de
+palabra Unicode (`\p{L}`, no `\b`, para que "México" no coincida dentro de "Méxicos"). Lo guardado no cambia: si cambias
+la lista, cambian los enlaces. Clase `cms-autolink` y CSS propio opcional desde el `<head>`.
+
 ## Índice ligero y sitios con miles de páginas (1.26)
 
 Hasta ahora `cms_items('tipo')` leía todos los JSON del tipo, cuerpo y secciones incluidos, en cada petición que tocara
@@ -521,5 +592,6 @@ MIT. Incluye [Parsedown](https://github.com/erusev/parsedown) (MIT). El panel ca
 `cms_simple` is a flat-file PHP CMS: JSON content, a schema-driven admin panel (content types and fields declared in `site/config.php`),
 multilingual fields with a language switcher, media library (images/PDF/video with automatic WebP), menus, site texts, settings,
 301 redirects, users, a built-in code editor for theme files (with backups and PHP syntax check), and SEO out of the box (meta, canonical, hreflang, Open Graph, JSON-LD, sitemap with lastmod, robots, `<picture>`).
+Packs extend it with page-builder blocks and, since 1.27, with code: a pack's `inc.php` is loaded on every request and can hook `content`, `head`, `item.save`, `admin.item.sidebar` and `cron`, declare a settings group, per-item fields and its own admin page. Scheduled publishing and an expiry date per item, no cron needed; a host cron endpoint (`/_cms/cron?token=…`) runs pack jobs. Bundled packs: `enlaces` (automatic internal linking), `audio` (text-to-speech with OpenAI, ElevenLabs, Azure or Google) and `redaccion` (AI-written articles and news digests with OpenRouter, OpenAI, Anthropic or DeepSeek).
 Requires PHP 7.4+ and Apache with mod_rewrite. Copy to your web root, make `data/` and `uploads/` writable, open `/admin/` and create the first user.
 The admin UI is in Spanish. MIT license.

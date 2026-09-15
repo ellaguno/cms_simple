@@ -1,7 +1,7 @@
 {
-  "version": "1.30.0",
+  "version": "1.30.1",
   "date": "2026-09-14",
-  "notes": "Categorías como subsecciones: una colección con 'categories' => true convierte cada categoría en una página indexable /coleccion/categoria/ con título, descripción y SEO propios, presente en el mapa y el sitemap; el filtro viejo ?cat= redirige. Registro por colección en data/categories/ con nombre por idioma, orden y textos SEO. El campo de categoría del editor pasa a ser un selector con \"+ Nueva categoría\", para evitar duplicados por mayúsculas o erratas. Página Diseño → Categorías: renombrar (corrige los elementos), fusionar (mueve los elementos), ordenar, eliminar y \"añadir las que faltan\". Desde el mapa, \"+ Nuevo en esta categoría\".\nMenú: las páginas de los paquetes (Audio, Redacción IA) pasan al grupo Contenido.\nAntes: panel ordenado (1.29), audio y redacción con IA (1.28).",
+  "notes": "Categorías: se activan desde el panel, colección por colección, en Diseño → Categorías (la entrada aparece siempre); en 1.30.0 solo se podía con 'categories' => true en config.php y nada lo indicaba. También se pueden desactivar ahí (el registro se conserva).\n1.30: cada categoría es una subsección indexable /coleccion/categoria/, con registro propio (nombre por idioma, orden, SEO), selector en el editor para evitar duplicados y erratas, renombrar y fusionar. Las páginas de los paquetes pasan al grupo Contenido.",
   "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
   "subdir": "cms",
   "min_version": "1.10.0",

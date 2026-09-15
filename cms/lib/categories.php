@@ -16,10 +16,32 @@ declare(strict_types=1);
 function cms_categories_field(string $type): ?string
 {
     $def = cms_config('types')[$type] ?? null;   // sin cms_type(), que a su vez pregunta aquí
-    if (!$def || empty($def['categories'])) return null;
-    $c = $def['categories'];
+    if (!$def) return null;
+    $c = $def['categories'] ?? null;
+    if (empty($c)) {   // activado desde el panel (Diseño → Categorías) sin tocar config.php: data/settings.json → categories_on
+        if (!in_array($type, (array) (cms_settings()['categories_on'] ?? []), true)) return null;
+        $c = true;
+    }
     $f = is_array($c) ? (string) ($c['field'] ?? 'category') : 'category';
+    if (!isset($def['fields'][$f])) foreach (['category', 'categoria', 'categoría', 'cat'] as $alt) if (isset($def['fields'][$alt])) { $f = $alt; break; }
     return isset($def['fields'][$f]) ? $f : null;
+}
+
+/** Campo de categoría que tendría un tipo si se activara (texto llamado category/categoria), o null. */
+function cms_categories_candidate_field(string $type): ?string
+{
+    $def = cms_config('types')[$type] ?? null;
+    if (!$def) return null;
+    $c = $def['categories'] ?? null;
+    $f = is_array($c) ? (string) ($c['field'] ?? 'category') : 'category';
+    if (!isset($def['fields'][$f])) foreach (['category', 'categoria', 'categoría', 'cat'] as $alt) if (isset($def['fields'][$alt])) { $f = $alt; break; }
+    return isset($def['fields'][$f]) && in_array($def['fields'][$f]['type'] ?? 'text', ['text', 'category'], true) ? $f : null;
+}
+
+/** ¿Las categorías de este tipo vienen del config.php (fijas) o se activaron desde el panel? */
+function cms_categories_from_config(string $type): bool
+{
+    return !empty(cms_config('types')[$type]['categories']);
 }
 
 /** Tipos que usan categorías. */

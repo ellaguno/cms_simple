@@ -312,8 +312,9 @@ dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los
 
 ## Categorías como subsecciones y página Categorías (1.30)
 
-Una colección puede declarar `'categories' => true` en su tipo (usa el campo `category`; con `['field' => 'x']` se elige
-otro). Con eso, cada categoría se vuelve una **subsección con URL propia**, `/articulos/derecho/` o `/noticias/derecho/`:
+Se activa por colección desde **Diseño → Categorías** (queda en Ajustes, `categories_on`) o fijándolo en el tipo con
+`'categories' => true` (usa el campo `category` o `categoria`; con `['field' => 'x']` se elige otro). Con eso, cada
+categoría se vuelve una **subsección con URL propia**, `/articulos/derecho/` o `/noticias/derecho/`:
 
 - **Enrutador**: `/coleccion/categoria/` dibuja la plantilla de índice de la colección filtrada por esa categoría, con su
   título (o el título SEO de la categoría), descripción, canonical, `hreflang`, migas de pan y JSON-LD, e **indexable**.
@@ -334,7 +335,8 @@ otro). Con eso, cada categoría se vuelve una **subsección con URL propia**, `/
 - Funciones: `cms_categories($tipo)`, `cms_category($tipo, $slug)`, `cms_category_label($cat, $lang)`,
   `cms_item_category($tipo, $item)`, `cms_items_in_category($tipo, $slug)`, `cms_categories_counts($tipo)`.
 
-Es opcional: un sitio que no declare `categories` no cambia en nada. El tema de ejemplo lo activa en `posts`.
+Es opcional: un sitio que no lo active no cambia en nada. El tema de ejemplo lo activa en `posts`. (1.30.1: la
+activación desde el panel; en 1.30.0 solo se podía desde `config.php`.)
 
 Además, las páginas de los paquetes (Audio, Redacción IA) pasan del grupo Ajustes al grupo **Contenido** del menú, que
 es lo que producen; un paquete puede pedir otro grupo con `'admin' => ['group' => 'diseno'|'ajustes'|'sistema']`.

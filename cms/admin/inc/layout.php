@@ -34,7 +34,7 @@ function admin_nav(): array
     $nav += $groups;
     // Diseño: temas y variaciones, menú, textos, código del tema e importar (solo si el tema tiene constructor)
     $design = ['diseno' => ['Diseño', admin_url('diseno')], 'menu' => ['Menú', admin_url('menu')], 'strings' => ['Textos del sitio', admin_url('strings')]];
-    if (cms_categories_types()) $design['categorias'] = ['Categorías', admin_url('categorias')];
+    $design['categorias'] = ['Categorías', admin_url('categorias')];
     if (cms_config('code_editor', true) !== false) $design['code'] = ['Código del tema', admin_url('code')];
     if (cms_config('importer', true) !== false && cms_builder_type() !== null) $design['importar'] = ['Importar diseño', admin_url('importar')];
     $nav['group:diseno'] = ['group' => 'Diseño', 'items' => $design + $packPages['diseno']];

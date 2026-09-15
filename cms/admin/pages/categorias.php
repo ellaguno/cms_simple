@@ -13,6 +13,23 @@ $dl = cms_default_lang();
 $langs = cms_langs();
 $multi = count($langs) > 1;
 
+if (admin_is_post() && in_array(admin_post('action'), ['enable', 'disable'], true)) {   // activar o desactivar por colección, sin tocar config.php
+    admin_csrf_check();
+    $tk = (string) admin_post('type');
+    $S = cms_json_read(CMS_DATA . '/settings.json', []);
+    $on = array_values(array_filter((array) ($S['categories_on'] ?? []), 'is_string'));
+    if (admin_post('action') === 'enable' && isset(cms_config('types')[$tk]) && cms_categories_candidate_field($tk) !== null) {
+        if (!in_array($tk, $on, true)) $on[] = $tk;
+        $S['categories_on'] = $on;
+        if (cms_json_write(CMS_DATA . '/settings.json', $S)) admin_flash('Categorías activadas en "' . (cms_config('types')[$tk]['label'] ?? $tk) . '": cada categoría es ahora una subsección con URL propia y el campo del editor es un selector.');
+        else admin_flash('No se pudo guardar settings.json.', 'err');
+    } elseif (admin_post('action') === 'disable' && !cms_categories_from_config($tk)) {
+        $S['categories_on'] = array_values(array_diff($on, [$tk]));
+        if (cms_json_write(CMS_DATA . '/settings.json', $S)) admin_flash('Categorías desactivadas en esa colección (el registro se conserva por si las vuelves a activar).');
+        else admin_flash('No se pudo guardar settings.json.', 'err');
+    }
+    admin_redirect(admin_url('categorias', ['type' => $tk]));
+}
 if (admin_is_post() && $type !== '') {
     admin_csrf_check();
     $action = admin_post('action');
@@ -46,8 +63,20 @@ if (admin_is_post() && $type !== '') {
 }
 
 admin_header('Categorías', 'categorias');
+$candidates = [];   // colecciones con campo de categoría que aún no las usan como subsecciones
+foreach (cms_config('types') as $tk => $td) if (!in_array($tk, $types, true) && cms_categories_candidate_field($tk) !== null) $candidates[$tk] = (string) ($td['label'] ?? $tk);
 if ($type === ''): ?>
-<p class="ad-help">Ninguna colección usa categorías. Para activarlas, en <code>site/config.php</code> añade <code>'categories' => true</code> al tipo (usa su campo <code>category</code>; con <code>['field' => 'otro']</code> eliges el campo). Las categorías se vuelven subsecciones con URL propia: <code>/coleccion/categoria/</code>.</p>
+<p class="ad-help">Ninguna colección usa todavía categorías como subsecciones. Al activarlas, cada categoría se vuelve una página con URL propia (<code>/coleccion/categoria/</code>), indexable y presente en el mapa y el sitemap, y el campo de categoría del editor pasa a ser un selector (nada de erratas ni duplicados). Las categorías que ya tengan escritas los elementos se registran solas.</p>
+<?php if ($candidates): ?>
+<section class="ad-box"><h2>Activar en una colección</h2>
+<?php foreach ($candidates as $tk => $lab): ?>
+  <form method="post" class="ad-inline" style="margin:0 8px 8px 0"><?= admin_csrf_field() ?><input type="hidden" name="action" value="enable"><input type="hidden" name="type" value="<?= cms_e($tk) ?>"><button class="ad-btn ad-btn-sm" type="submit">Activar en <?= cms_e($lab) ?></button></form>
+<?php endforeach; ?>
+  <p class="ad-help">Se guarda en Ajustes (<code>categories_on</code>), sin tocar el código del tema. También se puede fijar en <code>site/config.php</code> con <code>'categories' => true</code> en el tipo.</p>
+</section>
+<?php else: ?>
+<p class="ad-help">Ninguna colección tiene un campo de texto llamado <code>category</code> o <code>categoria</code>. Añade uno al tipo en <code>site/config.php</code> (o declara <code>'categories' => ['field' => 'tu_campo']</code>) y vuelve aquí.</p>
+<?php endif; ?>
 <?php admin_footer(); exit; endif;
 $cats = cms_categories($type, true);
 $counts = cms_categories_counts($type);
@@ -109,8 +138,17 @@ $seg = cms_segment($def, $dl);
       </tbody>
     </table>
 <?php endif; ?>
-    <p><form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="rebuild"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit" title="Registra las categorías que ya aparecen escritas en los elementos y aún no están en esta lista">Añadir las que faltan</button></form></p>
+    <p><form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="rebuild"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit" title="Registra las categorías que ya aparecen escritas en los elementos y aún no están en esta lista">Añadir las que faltan</button></form>
+<?php if (!cms_categories_from_config($type)): ?>    <form method="post" class="ad-inline" data-confirm="Las subsecciones /<?= cms_e($seg) ?>/categoria/ dejarán de responder y el campo volverá a ser texto libre. El registro se conserva. ¿Desactivar?"><?= admin_csrf_field() ?><input type="hidden" name="action" value="disable"><input type="hidden" name="type" value="<?= cms_e($type) ?>"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit">Desactivar en esta colección</button></form>
+<?php else: ?>    <span class="ad-help">Activadas desde <code>site/config.php</code>.</span><?php endif; ?></p>
   </section>
+<?php if ($candidates): ?>
+  <section class="ad-box" style="grid-column:1/-1"><h2>Otras colecciones</h2>
+<?php foreach ($candidates as $tk => $lab): ?>
+    <form method="post" class="ad-inline" style="margin:0 8px 8px 0"><?= admin_csrf_field() ?><input type="hidden" name="action" value="enable"><input type="hidden" name="type" value="<?= cms_e($tk) ?>"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit">Activar categorías en <?= cms_e($lab) ?></button></form>
+<?php endforeach; ?>
+  </section>
+<?php endif; ?>
   <section class="ad-box">
     <h2>Añadir categoría</h2>
     <form method="post" class="ad-form">

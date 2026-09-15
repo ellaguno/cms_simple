@@ -9,5 +9,5 @@ if (preg_match('/^#[0-9a-f]{3,8}$/i', (string) $b['color'])) $style .= ';--ag-ci
 if (in_array((string) $b['opacity'], ['0.8', '0.6'], true)) $style .= ';--ag-circle-opacity:' . $b['opacity'];
 ?>
 <div class="ag-band-in ag-band-h-<?= $h ?><?= !empty($b['fixed']) ? ' ag-fixed' : '' ?>" style="<?= $style ?>">
-  <<?= $tag ?> class="ag-circle ag-circle-<?= $sz ?> ag-circle-<?= (string) $b['text_color'] === 'dark' ? 'dark' : 'light' ?>"<?= $tag === 'a' ? ' href="' . cms_e((string) $b['url']) . '"' : '' ?>><span><?= ag_inline((string) $b['text']) ?></span></<?= $tag ?>>
+  <<?= $tag ?> class="ag-circle ag-circle-<?= $sz ?> ag-circle-<?= (string) $b['text_color'] === 'dark' ? 'dark' : 'light' ?>"<?= $tag === 'a' ? ' href="' . cms_e(ag_href((string) $b['url'])) . '"' : '' ?>><span><?= ag_inline((string) $b['text']) ?></span></<?= $tag ?>>
 </div>

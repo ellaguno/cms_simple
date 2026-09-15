@@ -9,6 +9,11 @@
 .ag-hero-short { height: 38vh; min-height: 240px; max-height: 420px; }
 .ag-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease; }
 .ag-slide.is-active { opacity: 1; z-index: 1; }
+/* desplazamiento horizontal: la activa entra desde la derecha y la anterior sale por la izquierda */
+.ag-slide-h .ag-slide { opacity: 1; transform: translateX(100%); transition: transform 1.2s cubic-bezier(.4, 0, .2, 1); z-index: 1; }
+.ag-slide-h .ag-slide.is-active { transform: none; z-index: 2; }
+.ag-slide-h .ag-slide.is-prev { transform: translateX(-100%); z-index: 1; }
+.ag-slide-h .ag-slide.is-hidden { visibility: hidden; transition: none; }
 /* parallax: la imagen se queda fija al viewport y el recorte (clip-path) la limita a la caja de la portada */
 .ag-hero-in.ag-fixed { clip-path: inset(0); }
 .ag-hero-in.ag-fixed .ag-slide { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100lvh; }

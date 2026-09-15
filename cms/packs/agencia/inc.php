@@ -34,6 +34,17 @@ if (!function_exists('ag_svg')) {
     }
 }
 
+if (!function_exists('ag_href')) {
+    /** URL de un campo de enlace: una ruta interna ("/contacto") recibe la base del sitio cuando está en subcarpeta. */
+    function ag_href(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') return '#';
+        if ($url[0] === '/' && !preg_match('#^//#', $url) && CMS_BASE !== '' && strpos($url, CMS_BASE . '/') !== 0) return CMS_BASE . $url;
+        return $url;
+    }
+}
+
 if (!function_exists('ag_share_tab')) {
     /** Pestaña curva con el botón de compartir (Facebook, X, LinkedIn, WhatsApp, copiar enlace). Va al pie de una portada. */
     function ag_share_tab(string $lang, string $label = ''): string

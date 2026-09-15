@@ -27,6 +27,7 @@ function ad_href(string $url): string { $url = trim($url); return $url === '' ? 
 function ad_url(string $url, string $lang): string
 {
     if ($url === '' || preg_match('#^(https?:)?//|^mailto:|^tel:|^\##i', $url)) return $url;
+    if (CMS_BASE !== '' && (strpos($url, CMS_BASE . '/') === 0 || $url === CMS_BASE)) return $url;   // ya trae la base (cms_url)
     return cms_menu_url($url, $lang);
 }
 

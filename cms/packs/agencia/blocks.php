@@ -20,6 +20,7 @@ return [
             'images'   => ['type' => 'images', 'label' => 'Imágenes, una por línea (con varias se hace pase de diapositivas): ruta | texto alternativo', 'rows' => 4, 'required' => true],
             'height'   => ['type' => 'select', 'label' => 'Altura', 'options' => ['full' => 'Toda la pantalla', 'tall' => 'Alta', 'medium' => 'Media', 'short' => 'Baja'], 'default' => 'medium', 'half' => true],
             'interval' => ['type' => 'number', 'label' => 'Segundos entre imágenes', 'default' => 5, 'min' => 2, 'max' => 30, 'half' => true],
+            'transition' => ['type' => 'select', 'label' => 'Transición', 'options' => ['fade' => 'Fundido', 'slide' => 'Desplazamiento horizontal'], 'default' => 'fade', 'half' => true],
             'title'    => ['type' => 'text', 'label' => 'Título sobre la imagen (opcional)', 'half' => true],
             'subtitle' => ['type' => 'text', 'label' => 'Texto bajo el título (opcional)', 'half' => true],
             'position' => ['type' => 'select', 'label' => 'Encuadre de la imagen', 'options' => ['center' => 'Centro', 'top' => 'Arriba', 'bottom' => 'Abajo'], 'default' => 'center', 'half' => true],

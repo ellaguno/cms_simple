@@ -9,7 +9,7 @@ $multi = count($imgs) > 1;
 $hasText = trim((string) $b['title']) !== '' || trim((string) $b['subtitle']) !== '';
 $ov = $hasText ? max(0, min(90, (int) $b['overlay'])) : 0;
 ?>
-<div class="ag-hero-in ag-hero-<?= $h ?> ag-pos-<?= $pos ?><?= $multi ? ' is-slideshow' : '' ?><?= !empty($b['fixed']) ? ' ag-fixed' : '' ?>"<?= $multi ? ' data-ag-slideshow data-interval="' . max(2, (int) $b['interval']) * 1000 . '"' : '' ?><?= $ov ? ' style="--ag-overlay:' . $ov / 100 . '"' : '' ?>>
+<div class="ag-hero-in ag-hero-<?= $h ?> ag-pos-<?= $pos ?><?= $multi ? ' is-slideshow' : '' ?><?= !empty($b['fixed']) ? ' ag-fixed' : '' ?><?= (string) $b['transition'] === 'slide' ? ' ag-slide-h' : '' ?>"<?= $multi ? ' data-ag-slideshow data-interval="' . max(2, (int) $b['interval']) * 1000 . '"' : '' ?><?= $ov ? ' style="--ag-overlay:' . $ov / 100 . '"' : '' ?>>
 <?php foreach ($imgs as $i => [$src, $alt]): ?>
   <div class="ag-slide<?= $i === 0 ? ' is-active' : '' ?>"><?= cms_picture($src, $alt !== '' ? $alt : strip_tags((string) $b['title']), 'class="ag-slide-img"', true) ?></div>
 <?php endforeach; ?>

@@ -30,8 +30,14 @@
   CMS.block("agencia/portada", function (sec) {
     var root = sec.querySelector("[data-ag-slideshow]");
     if (root) {
-      var slides = qsa(".ag-slide", root);
-      if (slides.length > 1) carousel(root, slides, qsa("[data-ag-dot]", root), parseInt(root.getAttribute("data-interval"), 10) || 5000, function (el, on) { el.classList.toggle("is-active", on); });
+      var slides = qsa(".ag-slide", root), horizontal = root.classList.contains("ag-slide-h");
+      if (horizontal) slides.forEach(function (s, k) { if (k) s.classList.add("is-hidden"); });
+      if (slides.length > 1) carousel(root, slides, qsa("[data-ag-dot]", root), parseInt(root.getAttribute("data-interval"), 10) || 5000, function (el, on) {
+        if (horizontal) {
+          if (on) { el.classList.remove("is-hidden", "is-prev"); void el.offsetWidth; el.classList.add("is-active"); }
+          else { el.classList.remove("is-active"); el.classList.add("is-prev"); setTimeout(function () { if (!el.classList.contains("is-active")) { el.classList.remove("is-prev"); el.classList.add("is-hidden"); } }, 1250); }
+        } else el.classList.toggle("is-active", on);
+      });
     }
     var btn = sec.querySelector("[data-ag-share]"), menu = sec.querySelector("[data-ag-share-menu]");
     if (!btn || !menu) return;

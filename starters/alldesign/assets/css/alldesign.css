@@ -79,7 +79,7 @@ button { font: inherit; cursor: pointer; }
 .ad-prose hr { border: 0; border-top: 1px solid var(--ad-line); margin: 2em 0; }
 
 /* ---------- cabecera ---------- */
-.ad-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; }
+.ad-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; will-change: transform; }   /* el JS la sube hasta 37 px para esconder la barra social */
 .ad-topbar { background: var(--ad-topbar); height: 37px; border-bottom: 1px solid #e6e6e6; }
 .ad-topbar-in { display: flex; justify-content: flex-end; align-items: stretch; height: 36px; }
 .ad-social { display: flex; gap: 0; }

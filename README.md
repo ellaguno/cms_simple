@@ -330,7 +330,8 @@ reescritas con clases `ag-*` y variables del tema para que sirvan en cualquier t
 
 La portada y la banda tienen la opción **parallax** (1.31.1): la imagen se queda fija al viewport y la página pasa por encima;
 se hace con `position: fixed` dentro de un `clip-path: inset(0)`, sin JavaScript, así que funciona también en iOS. La banda
-admite altura muy alta y el círculo puede ser translúcido sin que lo sea su texto.
+admite altura muy alta y el círculo puede ser translúcido sin que lo sea su texto. La portada pasa las imágenes con fundido
+o con desplazamiento horizontal (1.31.2).
 
 Se activa con `'packs' => ['agencia']` en `site/config.php` o desde el Catálogo; el tema lienzo ya lo trae.
 

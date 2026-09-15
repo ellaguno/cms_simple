@@ -1,5 +1,6 @@
-/* All Design — comportamientos del tema: menú, pase de diapositivas, acordeón, equipo, barras, compartir,
-   visor de galerías (GLightbox por CMS.load), formulario y volver arriba. Sin dependencias. */
+/* All Design — comportamientos del tema: menú, cabecera que esconde la barra social, acordeón, visor de galerías
+   (GLightbox por CMS.load), formulario y volver arriba. El pase de imágenes, el equipo, las barras y el botón de
+   compartir los pone el paquete agencia del núcleo. Sin dependencias. */
 (function () {
   "use strict";
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -34,34 +35,6 @@
     });
   }
 
-  /* ---------- pase de diapositivas de la portada ---------- */
-  function slideshow(root) {
-    var slides = qsa(".ad-slide", root), dots = qsa("[data-ad-dot]", root), i = 0, timer = null;
-    var interval = parseInt(root.getAttribute("data-interval"), 10) || 5000;
-    if (slides.length < 2) return;
-    function go(n) {
-      slides[i].classList.remove("is-active"); if (dots[i]) dots[i].classList.remove("is-active");
-      i = (n + slides.length) % slides.length;
-      slides[i].classList.add("is-active"); if (dots[i]) dots[i].classList.add("is-active");
-    }
-    function play() { if (reduce) return; stop(); timer = setInterval(function () { go(i + 1); }, interval); }
-    function stop() { if (timer) clearInterval(timer); timer = null; }
-    var prev = qs("[data-ad-prev]", root), next = qs("[data-ad-next]", root);
-    if (prev) on(prev, "click", function () { go(i - 1); play(); });
-    if (next) on(next, "click", function () { go(i + 1); play(); });
-    dots.forEach(function (d) { on(d, "click", function () { go(parseInt(d.getAttribute("data-ad-dot"), 10)); play(); }); });
-    on(root, "mouseenter", stop); on(root, "mouseleave", play);
-    var x0 = null;
-    on(root, "touchstart", function (e) { x0 = e.touches[0].clientX; }, { passive: true });
-    on(root, "touchend", function (e) {
-      if (x0 === null) return;
-      var dx = e.changedTouches[0].clientX - x0; x0 = null;
-      if (Math.abs(dx) > 40) { go(dx < 0 ? i + 1 : i - 1); play(); }
-    }, { passive: true });
-    on(document, "visibilitychange", function () { document.hidden ? stop() : play(); });
-    play();
-  }
-
   /* ---------- acordeón ---------- */
   function accordion(root) {
     var items = qsa(".ad-acc-item", root);
@@ -73,56 +46,6 @@
         if (!open) { item.classList.add("is-open"); panel.hidden = false; btn.setAttribute("aria-expanded", "true"); }
       });
     });
-  }
-
-  /* ---------- equipo ---------- */
-  function team(root) {
-    var members = qsa(".ad-member", root), i = 0, timer = null;
-    var interval = parseInt(root.getAttribute("data-interval"), 10) || 0;
-    if (members.length < 2) { qsa(".ad-team-btn", root).forEach(function (b) { b.style.visibility = "hidden"; }); return; }
-    function go(n) {
-      members[i].classList.remove("is-active"); members[i].hidden = true;
-      i = (n + members.length) % members.length;
-      members[i].hidden = false; members[i].classList.add("is-active");
-    }
-    function play() { if (!interval || reduce) return; stop(); timer = setInterval(function () { go(i + 1); }, interval); }
-    function stop() { if (timer) clearInterval(timer); timer = null; }
-    on(qs("[data-ad-prev]", root), "click", function () { go(i - 1); play(); });
-    on(qs("[data-ad-next]", root), "click", function () { go(i + 1); play(); });
-    var x0 = null;
-    on(root, "touchstart", function (e) { x0 = e.touches[0].clientX; }, { passive: true });
-    on(root, "touchend", function (e) { if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 40) { go(dx < 0 ? i + 1 : i - 1); play(); } }, { passive: true });
-    on(root, "mouseenter", stop); on(root, "mouseleave", play);
-    play();
-  }
-
-  /* ---------- barras de habilidades ---------- */
-  function skills(root) {
-    if (!("IntersectionObserver" in window) || reduce) { root.classList.add("is-visible"); return; }
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) { if (en.isIntersecting) { root.classList.add("is-visible"); io.disconnect(); } });
-    }, { threshold: 0.3 });
-    io.observe(root);
-  }
-
-  /* ---------- compartir ---------- */
-  function share(btn) {
-    var menu = btn.parentNode.querySelector("[data-ad-share-menu]");
-    var url = location.href, title = document.title;
-    var links = {
-      facebook: "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url),
-      x: "https://twitter.com/intent/tweet?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(title),
-      linkedin: "https://www.linkedin.com/sharing/share-offsite/?url=" + encodeURIComponent(url),
-      whatsapp: "https://wa.me/?text=" + encodeURIComponent(title + " " + url)
-    };
-    qsa("[data-share]", menu).forEach(function (a) { a.href = links[a.getAttribute("data-share")] || "#"; });
-    on(btn, "click", function (e) {
-      e.stopPropagation();
-      if (navigator.share && window.matchMedia("(hover: none)").matches) { navigator.share({ title: title, url: url }).catch(function () {}); return; }
-      var open = menu.hidden; menu.hidden = !open; btn.classList.toggle("is-open", open);
-    });
-    on(document, "click", function (e) { if (!e.target.closest(".ad-tab")) { menu.hidden = true; btn.classList.remove("is-open"); } });
-    on(document, "keydown", function (e) { if (e.key === "Escape") { menu.hidden = true; btn.classList.remove("is-open"); } });
   }
 
   /* ---------- visor de galerías ---------- */
@@ -156,6 +79,23 @@
     });
   }
 
+  /* ---------- cabecera: la barra social se esconde al hacer scroll y el menú se queda pegado arriba ---------- */
+  function header() {
+    var hdr = qs(".ad-header"), top = qs(".ad-topbar", hdr);
+    if (!hdr || !top) return;
+    var h = top.offsetHeight, last = -1, ticking = false;
+    function upd() {
+      ticking = false;
+      var y = Math.min(Math.max(window.scrollY || 0, 0), h);
+      if (y === last) return;
+      last = y; hdr.style.transform = y ? "translateY(-" + y + "px)" : "";
+      hdr.classList.toggle("is-scrolled", y >= h);
+    }
+    on(window, "scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(upd); } }, { passive: true });
+    on(window, "resize", function () { h = top.offsetHeight; last = -1; upd(); });
+    upd();
+  }
+
   /* ---------- volver arriba ---------- */
   function totop() {
     qsa("[data-ad-totop]").forEach(function (a) { on(a, "click", function (e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); }); });
@@ -163,11 +103,8 @@
 
   function init() {
     nav();
-    qsa("[data-ad-slideshow]").forEach(slideshow);
+    header();
     qsa("[data-ad-accordion]").forEach(accordion);
-    qsa("[data-ad-team]").forEach(team);
-    qsa("[data-ad-skills]").forEach(skills);
-    qsa("[data-ad-share]").forEach(share);
     qsa("[data-ad-form]").forEach(form);
     lightbox();
     totop();

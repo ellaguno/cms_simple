@@ -22,13 +22,10 @@ Por eso en el panel no encontrarás controles de "margen izquierdo" ni "color de
 ![Inicio del panel](img/panel-inicio.png)
 
 - **Inicio**: conteos, accesos rápidos y últimos cambios.
-- **Mapa del sitio**: el árbol de todo lo que responde en el sitio, con su estado. Desde ahí se crean, mueven y publican páginas.
-- **Páginas** (el grupo plegable): cada colección de contenido. Las páginas libres se arman con secciones; los artículos, con el editor visual; los planes, preguntas o integrantes son piezas que las páginas muestran.
-- **Medios**: imágenes, PDF y video subidos.
-- **Menú**, **Textos del sitio**, **Ajustes**: la navegación, los textos fijos que no pertenecen a ninguna página, y la configuración general.
-- **Redirecciones 301**: para que las URL viejas sigan funcionando.
-- **Usuarios** y **Contraseña**.
-- **Código del tema**: solo para quien programa; edita plantillas, CSS y JS con respaldo automático.
+- **Contenido** (grupo plegable): cada colección de contenido (las páginas libres se arman con secciones; los artículos, con el editor visual; los planes, preguntas o integrantes son piezas que las páginas muestran), **Medios** (imágenes, PDF y video subidos) y el **Mapa del sitio**, el árbol de todo lo que responde en el sitio, con su estado; desde ahí se crean, mueven y publican páginas.
+- **Diseño** (grupo): el tema y sus variaciones, el **Menú**, los **Textos del sitio** que no pertenecen a ninguna página, el **Código del tema** (solo para quien programa) e **Importar diseño** cuando el tema tiene constructor.
+- **Ajustes** (grupo): la configuración general en pestañas (General, Contacto y redes, Marca y SEO, tema, un paquete por pestaña, Cookies), con un solo botón Guardar siempre a la vista; **Redirecciones 301** para que las URL viejas sigan funcionando; y las páginas de los paquetes que tienen una (Audio, Redacción IA).
+- **Sistema** (grupo, plegado): Temas y paquetes, Respaldos, Usuarios (ahí cambias tu contraseña) y Actualizar.
 - **Manual**: este texto.
 
 ## Cómo seguir

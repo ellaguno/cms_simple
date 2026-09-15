@@ -18,6 +18,11 @@ if (admin_is_post()) {
             admin_flash(($ok ? $items[$id]['label'] . ': ' : '') . $msg, $ok ? 'ok' : 'err');
             if ($ok && $items[$id]['kind'] === 'theme') admin_flash('Actívalo en Diseño cuando quieras probarlo.');
         }
+    } elseif ($action === 'registries') {   // catálogos propios (antes en Ajustes)
+        $S = cms_json_read(CMS_DATA . '/settings.json', []);
+        $S['registries'] = implode("\n", array_filter(array_map('trim', preg_split('/\s+/', admin_post('registries')) ?: []), fn($u) => preg_match('#^https://#i', $u)));
+        if (cms_json_write(CMS_DATA . '/settings.json', $S)) { cms_registry_items(true); admin_flash('Catálogos guardados.'); }
+        else admin_flash('No se pudo guardar.', 'err');
     } elseif ($action === 'refresh') {
         cms_registry_items(true);
         admin_flash('Catálogo actualizado.');
@@ -79,8 +84,16 @@ function catalogo_card(array $it): void
 ?>
 <p class="ad-actions">
   <form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="refresh"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit">Actualizar el catálogo</button></form>
-  <span class="ad-help">Lo que instales aquí se descarga de internet y se ejecuta en tu servidor. Instala solo de catálogos de confianza; los defines en <a href="<?= admin_url('settings') ?>">Ajustes</a>.</span>
+  <span class="ad-help">Lo que instales aquí se descarga de internet y se ejecuta en tu servidor. Instala solo de catálogos de confianza.</span>
 </p>
+<details class="ad-box ad-details">
+  <summary><strong>Catálogos propios</strong> <span class="ad-help">(se suman al oficial; una dirección https por línea)</span></summary>
+  <form method="post" class="ad-form">
+    <?= admin_csrf_field() ?><input type="hidden" name="action" value="registries">
+    <div class="ad-field"><textarea name="registries" rows="2" placeholder="https://ejemplo.com/catalogo.json"><?= cms_e((string) (cms_settings()['registries'] ?? '')) ?></textarea><p class="ad-help">Un catálogo es un archivo JSON con los temas y paquetes que se pueden instalar. Sirve para probar un paquete propio antes de publicarlo.</p></div>
+    <button class="ad-btn ad-btn-sm" type="submit">Guardar catálogos</button>
+  </form>
+</details>
 <?php foreach ($errors as $url => $e): ?>
 <div class="ad-flash err">No se pudo leer <?= cms_e($url) ?>: <?= cms_e($e) ?></div>
 <?php endforeach; ?>

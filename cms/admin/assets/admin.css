@@ -77,6 +77,17 @@ code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 12px; 
 .ad-grid-main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 26px; align-items: start; }
 .ad-sidebar { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; position: sticky; top: 20px; }
 .ad-sticky-save { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 0; }
+.ad-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 18px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.ad-tabs button { border: 1px solid transparent; background: transparent; font: inherit; font-weight: 500; padding: 7px 13px; border-radius: 999px; cursor: pointer; color: var(--grey); }
+.ad-tabs button:hover { background: #fff; border-color: var(--line); color: var(--ink); }
+.ad-tabs button.on { background: #000; color: #fff; }
+.ad-tab-panel h2.ad-subtitle { margin: 22px 0 10px; font-size: 15px; }
+.ad-savebar { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 14px; margin: 18px -4px 0; padding: 12px 4px; background: rgba(248,248,249,.94); backdrop-filter: blur(6px); border-top: 1px solid var(--line); }
+.ad-savebar [data-dirty-note] { color: var(--errt); font-weight: 500; }
+.ad-fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+.ad-fields-grid > .ad-field { grid-column: 1 / -1; }
+.ad-fields-grid > .ad-field-half { grid-column: auto; }
+@media (max-width: 1000px) { .ad-fields-grid { grid-template-columns: 1fr; } }
 .ad-image-row { display: flex; gap: 8px; align-items: center; }
 .ad-image-row input { flex: 1; }
 .ad-thumb { width: 54px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: #fff; }

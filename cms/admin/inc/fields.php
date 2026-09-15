@@ -5,7 +5,8 @@
  * Definición de campo (site/config.php):
  *   'campo' => ['type' => text|textarea|html|date|number|url|email|select|checkbox|image|images|lines|tags,
  *               'label' => 'Etiqueta', 'help' => 'Ayuda', 'i18n' => true|false, 'required' => bool,
- *               'options' => [...] (select), 'rows' => n, 'sidebar' => true (columna derecha), 'placeholder' => '']
+ *               'options' => [...] (select), 'rows' => n, 'sidebar' => true (columna derecha), 'placeholder' => '',
+ *               'show_if' => ['otro_campo' => 'valor'] (solo se muestra cuando ese control vale eso; 'valor' puede ser una lista)]
  * Los tipos de contenido siempre tienen además: slug, status, seo_title, seo_desc, created, updated.
  */
 declare(strict_types=1);
@@ -74,7 +75,9 @@ function admin_control(string $inputName, array $def, $value, string $extra = ''
 function admin_field(string $name, array $def, $value): void
 {
     $label = admin_field_label(preg_replace('/^.*\[([^\]]+)\]$/', '$1', $name), $def);
-    echo '<div class="ad-field ad-field-' . cms_e($def['type'] ?? 'text') . '"><label>' . cms_e($label) . (!empty($def['required']) ? ' <span class="ad-req">*</span>' : '') . '</label>';
+    // 'show_if' => ['otro_campo' => 'valor' | ['a', 'b']]: el panel muestra el campo solo cuando ese control tiene ese valor (JS)
+    $showIf = !empty($def['show_if']) && is_array($def['show_if']) ? ' data-show-if=\'' . cms_e(json_encode($def['show_if'], JSON_UNESCAPED_UNICODE)) . '\'' : '';
+    echo '<div class="ad-field ad-field-' . cms_e($def['type'] ?? 'text') . (!empty($def['half']) ? ' ad-field-half' : '') . '"' . $showIf . '><label>' . cms_e($label) . (!empty($def['required']) ? ' <span class="ad-req">*</span>' : '') . '</label>';
     if (!empty($def['help'])) echo '<p class="ad-help">' . cms_e($def['help']) . '</p>';
     if (!empty($def['i18n'])) {
         echo '<div class="ad-langs">';

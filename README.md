@@ -178,7 +178,7 @@ de ignorar esas bandas. Colores y tipografía se ajustan en Ajustes → Diseño.
 
 ## Aviso de cookies (1.12)
 
-Ajustes → Aviso de cookies: barra con texto por idioma, botón, enlace a la política y posición (abajo o esquina). La
+Ajustes → Cookies: barra con texto por idioma, botón, enlace a la política y posición (abajo o esquina). La
 dibuja el núcleo desde `cms_head()` con un script, así que funciona con cualquier tema; la aceptación queda en
 `localStorage`. `'cookie_notice' => false` en `site/config.php` quita el grupo. El tema lienzo añade migas de pan en
 páginas con padre y cabecera y pie compartidos entre páginas (Ajustes → Cabecera y pie compartidos, con una página de
@@ -234,8 +234,8 @@ Un catálogo es un JSON servido por **https**:
   ] }
 ```
 
-El oficial es `catalog.json` en la raíz de este repositorio, servido por raw.githubusercontent. En Ajustes se pueden
-añadir catálogos propios (uno por línea). El resultado se guarda unas horas en `data/cache/`; si la red falla se usa
+El oficial es `catalog.json` en la raíz de este repositorio, servido por raw.githubusercontent. En Admin → Temas y paquetes
+(Catálogos propios) se pueden añadir otros (uno por línea). El resultado se guarda unas horas en `data/cache/`; si la red falla se usa
 lo último descargado.
 
 Los temas se instalan en `themes/<clave>` y los paquetes en `packs/<clave>`, en la raíz del sitio, así que sobreviven
@@ -309,6 +309,28 @@ la palabra y color del halo) y las cifras animadas (cuánto tarda la cuenta).
 
 **Corregido**: el fondo de ondas buscaba una clase `.hero` que ningún tema del proyecto usa, así que no llegaba a
 dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los parámetros como uniforms.
+
+## Panel ordenado: menú en grupos, Ajustes con pestañas y barra de guardar fija (1.29)
+
+Con varios paquetes activos el panel se llenaba de entradas y Ajustes exigía mucho scroll con el botón Guardar al
+final. Cambios, todos de panel (el núcleo de datos no se toca):
+
+- **Menú lateral en cinco grupos plegables** (recuerdan si están abiertos): **Contenido** (las colecciones, Medios,
+  Mapa del sitio), **Diseño** (Diseño, Menú, Textos del sitio, Código del tema, Importar diseño), **Ajustes** (Ajustes,
+  Redirecciones 301 y las páginas de los paquetes: Audio, Redacción IA…) y **Sistema** (Temas y paquetes, Respaldos,
+  Usuarios, Actualizar), plegado por defecto; más Inicio y Manual sueltos. Las colecciones con `'group'` propio en
+  `config.php` conservan su grupo. "Importar diseño" solo aparece si el tema tiene constructor.
+- **Contraseña** deja de ser una entrada: la propia se cambia en Usuarios ("Tu contraseña"); `?p=password` redirige.
+- **Ajustes en pestañas**: General, Contacto y redes, Marca y SEO, la sección del tema, una pestaña por paquete con
+  ajustes y Cookies. Un solo formulario: **Guardar guarda todas las pestañas**. La pestaña activa va en `?tab=` (así la
+  página de un paquete puede enlazar a la suya) y se conserva al guardar. **Barra de guardar fija abajo**, con aviso de
+  "cambios sin guardar" y confirmación al salir con cambios.
+- Lo que no era un ajuste se fue a su sitio: **Generar versiones WebP** a Medios y **Catálogos propios** a Temas y paquetes.
+- **Campos condicionados**: `'show_if' => ['otro_campo' => 'valor']` en cualquier definición de campo (config, bloques,
+  paquetes) lo muestra solo cuando ese control tiene ese valor (o uno de una lista). Audio y Redacción lo usan para
+  enseñar solo las claves y opciones del proveedor elegido: la pestaña de Audio pasa de 21 campos a la vista a 8.
+- Regla para que no vuelva a crecer: un paquete no añade entradas al menú salvo su página propia, que siempre va en
+  el grupo Ajustes; sus ajustes van en su pestaña. Una pestaña larga se divide con subtítulos, no con otra pestaña.
 
 ## Audio (texto a voz), Redacción con IA, páginas de paquete y cron (1.28)
 

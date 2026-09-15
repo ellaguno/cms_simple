@@ -3,40 +3,41 @@
 declare(strict_types=1);
 
 /**
- * Entradas del menú lateral. Cada entrada es [label, href] o, para un grupo de tipos de contenido,
- * ['group' => label, 'items' => [clave => [label, href], …]]. Un tipo entra en un grupo con 'group' => 'Nombre'
- * en site/config.php; los tipos sin grupo se listan sueltos, en el orden de la configuración.
+ * Entradas del menú lateral (1.29: cinco grupos plegables). Cada entrada es [label, href] o un grupo
+ * ['group' => label, 'items' => [clave => [label, href], …], 'collapsed' => bool]. Las colecciones van en "Contenido",
+ * salvo las que declaren 'group' => 'Nombre' en site/config.php, que conservan su grupo propio.
  */
 function admin_nav(): array
 {
-    $nav = ['dashboard' => ['Inicio', admin_url('dashboard')], 'map' => ['Mapa del sitio', admin_url('map')]];
-    if (cms_config('importer', true) !== false) $nav['importar'] = ['Importar diseño', admin_url('importar')];
+    $nav = ['dashboard' => ['Inicio', admin_url('dashboard')]];
+    // Contenido: las colecciones sin grupo propio, Medios y Mapa del sitio; las colecciones con 'group' conservan su grupo
+    $content = []; $groups = [];
     foreach (cms_config('types') as $k => $def) {
         $entry = [$def['label'] ?? $k, admin_url('content', ['type' => $k])];
         $g = trim((string) ($def['group'] ?? ''));
-        if ($g === '') { $nav['content:' . $k] = $entry; continue; }
+        if ($g === '') { $content['content:' . $k] = $entry; continue; }
         $gk = 'group:' . cms_slugify($g);
-        if (!isset($nav[$gk])) $nav[$gk] = ['group' => $g, 'items' => []];
-        $nav[$gk]['items']['content:' . $k] = $entry;
+        if (!isset($groups[$gk])) $groups[$gk] = ['group' => $g, 'items' => []];
+        $groups[$gk]['items']['content:' . $k] = $entry;
     }
-    $nav += [
-        'media'     => ['Medios', admin_url('media')],
-        'diseno'    => ['Diseño', admin_url('diseno')],
-        'catalogo'  => ['Catálogo', admin_url('catalogo')],
-    ];
-    // páginas propias de los paquetes activos ('admin' => ['label' => …, 'file' => …] en pack.php)
-    foreach (cms_packs() as $pn => $pk) if (!empty($pk['admin']['file'])) $nav['pack:' . $pn] = [(string) ($pk['admin']['label'] ?? $pk['label']), admin_url('pack:' . $pn)];
-    $nav += [
-        'menu'      => ['Menú', admin_url('menu')],
-        'strings'   => ['Textos del sitio', admin_url('strings')],
-        'settings'  => ['Ajustes', admin_url('settings')],
-        'redirects' => ['Redirecciones 301', admin_url('redirects')],
-        'backup'    => ['Respaldos', admin_url('backup')],
-        'users'     => ['Usuarios', admin_url('users')],
-        'password'  => ['Contraseña', admin_url('password')],
-    ];
-    if (cms_config('code_editor', true) !== false) $nav['code'] = ['Código del tema', admin_url('code')];
-    $nav['actualizar'] = ['Actualizar', admin_url('actualizar')];
+    $content['media'] = ['Medios', admin_url('media')];
+    $content['map'] = ['Mapa del sitio', admin_url('map')];
+    $nav['group:contenido'] = ['group' => 'Contenido', 'items' => $content];
+    $nav += $groups;
+    // Diseño: temas y variaciones, menú, textos, código del tema e importar (solo si el tema tiene constructor)
+    $design = ['diseno' => ['Diseño', admin_url('diseno')], 'menu' => ['Menú', admin_url('menu')], 'strings' => ['Textos del sitio', admin_url('strings')]];
+    if (cms_config('code_editor', true) !== false) $design['code'] = ['Código del tema', admin_url('code')];
+    if (cms_config('importer', true) !== false && cms_builder_type() !== null) $design['importar'] = ['Importar diseño', admin_url('importar')];
+    $nav['group:diseno'] = ['group' => 'Diseño', 'items' => $design];
+    // Ajustes: ajustes, redirecciones y las páginas propias de los paquetes activos ('admin' => ['label' => …, 'file' => …] en pack.php)
+    $settings = ['settings' => ['Ajustes', admin_url('settings')], 'redirects' => ['Redirecciones 301', admin_url('redirects')]];
+    foreach (cms_packs() as $pn => $pk) if (!empty($pk['admin']['file'])) $settings['pack:' . $pn] = [(string) ($pk['admin']['label'] ?? $pk['label']), admin_url('pack:' . $pn)];
+    $nav['group:ajustes'] = ['group' => 'Ajustes', 'items' => $settings];
+    // Sistema: lo que se abre pocas veces; plegado por defecto
+    $nav['group:sistema'] = ['group' => 'Sistema', 'collapsed' => true, 'items' => [
+        'catalogo' => ['Temas y paquetes', admin_url('catalogo')], 'backup' => ['Respaldos', admin_url('backup')],
+        'users' => ['Usuarios', admin_url('users')], 'actualizar' => ['Actualizar', admin_url('actualizar')],
+    ]];
     $nav['manual'] = ['Manual', admin_url('manual')];
     return $nav;
 }
@@ -70,8 +71,8 @@ function admin_header(string $title, string $active = ''): void
   <aside class="ad-side">
     <a class="ad-brand" href="<?= admin_url() ?>"><?php if ($logo): ?><img src="<?= cms_e(cms_img($logo)) ?>" alt="<?= cms_e($site) ?>"><?php else: ?><strong><?= cms_e($site) ?></strong><?php endif; ?><span>Admin</span></a>
     <nav class="ad-nav">
-<?php foreach (admin_nav() as $k => $entry): if (isset($entry['group'])): $inside = isset($entry['items'][$active]); ?>
-      <details class="ad-nav-group" data-nav-group="<?= cms_e($k) ?>"<?= $inside ? ' open data-active' : '' ?>>
+<?php foreach (admin_nav() as $k => $entry): if (isset($entry['group'])): $inside = isset($entry['items'][$active]) || ($active === 'password' && isset($entry['items']['users'])); ?>
+      <details class="ad-nav-group" data-nav-group="<?= cms_e($k) ?>"<?= $inside ? ' open data-active' : '' ?><?= !empty($entry['collapsed']) ? ' data-collapsed' : '' ?>>
         <summary><?= cms_e($entry['group']) ?></summary>
 <?php foreach ($entry['items'] as $ik => [$label, $href]): ?>
         <a href="<?= cms_e($href) ?>"<?= $active === $ik ? ' class="on"' : '' ?>><?= cms_e($label) ?></a>

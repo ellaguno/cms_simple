@@ -8,7 +8,7 @@
     var key = "adnav:" + d.getAttribute("data-nav-group");
     try {
       var saved = localStorage.getItem(key);
-      if (!d.hasAttribute("data-active")) d.open = saved === null ? true : saved === "1";
+      if (!d.hasAttribute("data-active")) d.open = saved === null ? !d.hasAttribute("data-collapsed") : saved === "1";
     } catch (e) {}
     d.addEventListener("toggle", function () { try { localStorage.setItem(key, d.open ? "1" : "0"); } catch (e) {} });
   });
@@ -500,6 +500,50 @@
     var dirty = false;
     cm.on("change", function () { dirty = true; });
     ta.form.addEventListener("submit", function () { cm.save(); dirty = false; });
+    window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+  });
+
+  /* ---------------- campos condicionados: data-show-if='{"campo":"valor"}' se muestra solo si ese control tiene ese valor (o uno de la lista) ---------------- */
+  document.querySelectorAll("[data-show-if]").forEach(function (el) {
+    var cond; try { cond = JSON.parse(el.getAttribute("data-show-if")); } catch (e) { return; }
+    var form = el.closest("form") || document;
+    function val(name) {
+      var c = form.querySelector('[name="' + name + '"]:not([type=hidden])') || form.querySelector('[name="' + name + '"]');
+      if (!c) return "";
+      if (c.type === "checkbox") return c.checked ? "1" : "0";
+      return c.value;
+    }
+    function sync() {
+      var ok = true;
+      Object.keys(cond).forEach(function (k) { var want = cond[k], v = val(k); if (!(Array.isArray(want) ? want.indexOf(v) !== -1 : String(want) === v)) ok = false; });
+      el.hidden = !ok;
+    }
+    Object.keys(cond).forEach(function (k) { form.querySelectorAll('[name="' + k + '"]').forEach(function (c) { c.addEventListener("change", sync); c.addEventListener("input", sync); }); });
+    sync();
+  });
+
+  /* ---------------- pestañas (Ajustes): [data-tabs] con botones data-tab y paneles data-tab-panel; la activa va en ?tab= y en el campo oculto del formulario ---------------- */
+  document.querySelectorAll("[data-tabs]").forEach(function (bar) {
+    var scope = bar.closest("form") || document, btns = bar.querySelectorAll("[data-tab]"), panels = scope.querySelectorAll("[data-tab-panel]"), hidden = scope.querySelector("input[name=tab]");
+    function show(key, push) {
+      var found = false;
+      panels.forEach(function (p) { var on = p.getAttribute("data-tab-panel") === key; p.hidden = !on; if (on) found = true; });
+      if (!found && panels.length) { key = panels[0].getAttribute("data-tab-panel"); panels.forEach(function (p, i) { p.hidden = i !== 0; }); }
+      btns.forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-tab") === key); });
+      if (hidden) hidden.value = key;
+      if (push && window.history && history.replaceState) { var u = new URL(location.href); u.searchParams.set("tab", key); history.replaceState(null, "", u.toString()); }
+    }
+    btns.forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); show(b.getAttribute("data-tab"), true); }); });
+    var q = new URL(location.href).searchParams.get("tab") || (hidden && hidden.value) || (btns[0] && btns[0].getAttribute("data-tab"));
+    show(q, false);
+  });
+
+  /* ---------------- aviso de cambios sin guardar: form[data-dirty-warn]; marca [data-dirty-note] y avisa al salir ---------------- */
+  document.querySelectorAll("form[data-dirty-warn]").forEach(function (f) {
+    var dirty = false, note = f.querySelector("[data-dirty-note]");
+    function mark() { if (dirty) return; dirty = true; if (note) note.hidden = false; }
+    f.addEventListener("input", mark); f.addEventListener("change", mark);
+    f.addEventListener("submit", function () { dirty = false; });
     window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
   });
 

@@ -16,6 +16,14 @@ if (admin_is_post()) {
     if ($action === 'delete') {
         if (media_delete(admin_post('path'))) admin_flash('Archivo eliminado.');
         else admin_flash('No se pudo eliminar el archivo.', 'err');
+    } elseif ($action === 'webp') {   // antes en Ajustes → Rendimiento
+        $n = 0; $t0 = microtime(true);
+        foreach ([CMS_SITE . '/assets/img', CMS_UPLOADS] as $dir) {
+            if (!is_dir($dir)) continue;
+            $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+            foreach ($it as $f) if ($f->isFile() && preg_match('/\.(jpe?g|png)$/i', $f->getFilename()) && cms_webp_make($f->getPathname())) $n++;
+        }
+        admin_flash("Versiones WebP listas ($n imágenes revisadas en " . round(microtime(true) - $t0, 1) . ' s).');
     } elseif ($action === 'delete_many') {
         $paths = array_filter(array_map('strval', (array) ($_POST['paths'] ?? [])));
         $n = 0; $bad = [];
@@ -102,6 +110,7 @@ admin_header('Medios', 'media');
   </div>
 <?php endforeach; ?>
 </div>
+<form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="webp"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit" title="Genera o actualiza las versiones WebP de las imágenes del tema y de uploads/; las nuevas se convierten solas al subirlas">Generar versiones WebP</button></form>
 <p class="ad-help">Las imágenes marcadas TEMA viven en <code>site/assets/img/</code>: son el logotipo, capturas y demás recursos del diseño; se pueden usar en cualquier campo de imagen y borrar si ya no se usan. Para usar un PDF o video en una entrada, copia su URL y pégala como enlace en el editor.</p>
 <script>
 (function () {

@@ -12,7 +12,7 @@ Hazlo antes de cualquier cambio grande y, en general, una vez al mes. Descarga l
 
 ## Aviso de cookies
 
-En **Ajustes → Aviso de cookies** se activa una barra que pide aceptar el uso de cookies, con texto por idioma, botón, enlace a la política de privacidad y posición (abajo o en la esquina). Aparece hasta que la persona la acepta y no vuelve a salir en ese navegador. Si el sitio solo usa cookies técnicas, como la sesión del panel, no es obligatoria; si añades analítica o video incrustado, conviene activarla y enlazar la política.
+En **Ajustes → Cookies** se activa una barra que pide aceptar el uso de cookies, con texto por idioma, botón, enlace a la política de privacidad y posición (abajo o en la esquina). Aparece hasta que la persona la acepta y no vuelve a salir en ese navegador. Si el sitio solo usa cookies técnicas, como la sesión del panel, no es obligatoria; si añades analítica o video incrustado, conviene activarla y enlazar la política.
 
 ## Versiones de contenido
 
@@ -29,7 +29,7 @@ El motor es la carpeta `cms/`. Actualizar es sustituirla por la versión nueva; 
 ## Usuarios
 
 - Un usuario por persona. No compartas contraseñas.
-- Cada quien cambia la suya en **Contraseña**.
+- Cada quien cambia la suya en **Usuarios → Tu contraseña**.
 - Cuando alguien deja de colaborar, borra su usuario en **Usuarios** ese mismo día.
 - Tras cinco intentos fallidos de acceso, la dirección queda bloqueada quince minutos.
 

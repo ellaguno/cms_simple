@@ -30,6 +30,17 @@ if (admin_is_post()) {
             if ($found && cms_json_write(CMS_DATA . '/users.json', $users)) admin_flash('Contraseña de "' . $user . '" actualizada.');
             else admin_flash('No se pudo actualizar.', 'err');
         }
+    } elseif ($action === 'me') {   // contraseña y nombre propios (antes, página "Contraseña")
+        $cur = (string) ($_POST['current'] ?? ''); $new = (string) ($_POST['new'] ?? ''); $rep = (string) ($_POST['repeat'] ?? '');
+        if (!password_verify($cur, (string) ($me['hash'] ?? ''))) admin_flash('La contraseña actual no es correcta.', 'err');
+        elseif (strlen($new) < 10) admin_flash('La nueva contraseña debe tener al menos 10 caracteres.', 'err');
+        elseif ($new !== $rep) admin_flash('Las contraseñas nuevas no coinciden.', 'err');
+        else {
+            foreach ($users as &$row) if (($row['user'] ?? '') === ($me['user'] ?? '')) { $row['hash'] = password_hash($new, PASSWORD_DEFAULT); if (admin_post('name') !== '') $row['name'] = admin_post('name'); }
+            unset($row);
+            if (cms_json_write(CMS_DATA . '/users.json', $users)) admin_flash('Contraseña actualizada.');
+            else admin_flash('No se pudo guardar users.json.', 'err');
+        }
     } elseif ($action === 'delete') {
         if ($user === ($me['user'] ?? '')) admin_flash('No puedes eliminar tu propio usuario.', 'err');
         elseif (count($users) <= 1) admin_flash('Debe quedar al menos un usuario.', 'err');
@@ -44,7 +55,7 @@ if (admin_is_post()) {
 
 admin_header('Usuarios', 'users');
 ?>
-<p class="ad-help">Todos los usuarios tienen los mismos permisos de administración. Cada quien puede cambiar su propia contraseña en "Contraseña"; desde aquí puedes restablecer la de otros.</p>
+<p class="ad-help">Todos los usuarios tienen los mismos permisos de administración. Tu contraseña la cambias abajo; la de otros se restablece desde su fila.</p>
 <div class="ad-grid2">
   <section class="ad-box">
     <h2>Usuarios actuales</h2>
@@ -77,6 +88,20 @@ admin_header('Usuarios', 'users');
       </tbody>
     </table>
   </section>
+  <div>
+  <section class="ad-box">
+    <h2>Tu contraseña</h2>
+    <form method="post" class="ad-form" autocomplete="off">
+      <?= admin_csrf_field() ?><input type="hidden" name="action" value="me">
+      <div class="ad-field"><label>Nombre para mostrar</label><input type="text" name="name" value="<?= cms_e($me['name'] ?? '') ?>"></div>
+      <div class="ad-field"><label>Contraseña actual</label><input type="password" name="current" required autocomplete="current-password"></div>
+      <div class="ad-two">
+        <div class="ad-field"><label>Nueva contraseña (mínimo 10)</label><input type="password" name="new" required minlength="10" autocomplete="new-password"></div>
+        <div class="ad-field"><label>Repetir nueva contraseña</label><input type="password" name="repeat" required minlength="10" autocomplete="new-password"></div>
+      </div>
+      <button class="ad-btn" type="submit">Cambiar mi contraseña</button>
+    </form>
+  </section>
   <section class="ad-box">
     <h2>Agregar usuario</h2>
     <form method="post" class="ad-form" autocomplete="off">
@@ -87,5 +112,6 @@ admin_header('Usuarios', 'users');
       <button class="ad-btn" type="submit">Crear usuario</button>
     </form>
   </section>
+  </div>
 </div>
 <?php admin_footer();

@@ -11,7 +11,7 @@ require_once __DIR__ . '/inc/layout.php';
 require_once __DIR__ . '/inc/fields.php';
 require_once __DIR__ . '/inc/media.php';
 
-$pages = ['dashboard', 'map', 'importar', 'manual', 'login', 'logout', 'content', 'edit', 'preview', 'demo', 'diseno', 'catalogo', 'actualizar', 'media', 'menu', 'strings', 'settings', 'redirects', 'backup', 'users', 'password', 'upload', 'code'];
+$pages = ['dashboard', 'map', 'importar', 'manual', 'login', 'logout', 'content', 'edit', 'preview', 'demo', 'diseno', 'catalogo', 'actualizar', 'media', 'menu', 'strings', 'settings', 'redirects', 'backup', 'users', 'password', 'upload', 'code', 'categorias'];
 $p = (string) ($_GET['p'] ?? 'dashboard');
 // página propia de un paquete activo: ?p=pack:<nombre> → <paquete>/<archivo declarado en 'admin' => ['file' => …]>
 $packPage = '';

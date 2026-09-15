@@ -1,7 +1,7 @@
 {
-  "version": "1.29.0",
+  "version": "1.30.0",
   "date": "2026-09-14",
-  "notes": "Panel ordenado. Menú lateral en cinco grupos plegables: Contenido (colecciones, Medios, Mapa), Diseño (Diseño, Menú, Textos, Código del tema, Importar), Ajustes (Ajustes, Redirecciones y las páginas de los paquetes) y Sistema (Temas y paquetes, Respaldos, Usuarios, Actualizar; plegado), más Inicio y Manual. La contraseña propia se cambia en Usuarios.\nAjustes en pestañas (General, Contacto y redes, Marca y SEO, tema, una por paquete, Cookies) con un solo Guardar que guarda todas, barra de guardar fija abajo y aviso de cambios sin guardar; la pestaña activa se conserva al guardar. WebP pasa a Medios y los catálogos propios a Temas y paquetes.\nPara programadores: 'show_if' => ['campo' => 'valor'] en cualquier campo lo muestra solo cuando ese control vale eso; Audio y Redacción lo usan para enseñar solo el proveedor elegido.\nAntes: audio y redacción con IA (1.28), paquetes con código y enlaces automáticos (1.27).",
+  "notes": "Categorías como subsecciones: una colección con 'categories' => true convierte cada categoría en una página indexable /coleccion/categoria/ con título, descripción y SEO propios, presente en el mapa y el sitemap; el filtro viejo ?cat= redirige. Registro por colección en data/categories/ con nombre por idioma, orden y textos SEO. El campo de categoría del editor pasa a ser un selector con \"+ Nueva categoría\", para evitar duplicados por mayúsculas o erratas. Página Diseño → Categorías: renombrar (corrige los elementos), fusionar (mueve los elementos), ordenar, eliminar y \"añadir las que faltan\". Desde el mapa, \"+ Nuevo en esta categoría\".\nMenú: las páginas de los paquetes (Audio, Redacción IA) pasan al grupo Contenido.\nAntes: panel ordenado (1.29), audio y redacción con IA (1.28).",
   "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
   "subdir": "cms",
   "min_version": "1.10.0",

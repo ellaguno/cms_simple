@@ -22,9 +22,9 @@ Por eso en el panel no encontrarás controles de "margen izquierdo" ni "color de
 ![Inicio del panel](img/panel-inicio.png)
 
 - **Inicio**: conteos, accesos rápidos y últimos cambios.
-- **Contenido** (grupo plegable): cada colección de contenido (las páginas libres se arman con secciones; los artículos, con el editor visual; los planes, preguntas o integrantes son piezas que las páginas muestran), **Medios** (imágenes, PDF y video subidos) y el **Mapa del sitio**, el árbol de todo lo que responde en el sitio, con su estado; desde ahí se crean, mueven y publican páginas.
-- **Diseño** (grupo): el tema y sus variaciones, el **Menú**, los **Textos del sitio** que no pertenecen a ninguna página, el **Código del tema** (solo para quien programa) e **Importar diseño** cuando el tema tiene constructor.
-- **Ajustes** (grupo): la configuración general en pestañas (General, Contacto y redes, Marca y SEO, tema, un paquete por pestaña, Cookies), con un solo botón Guardar siempre a la vista; **Redirecciones 301** para que las URL viejas sigan funcionando; y las páginas de los paquetes que tienen una (Audio, Redacción IA).
+- **Contenido** (grupo plegable): cada colección de contenido (las páginas libres se arman con secciones; los artículos, con el editor visual; los planes, preguntas o integrantes son piezas que las páginas muestran), **Medios** (imágenes, PDF y video subidos), el **Mapa del sitio** (el árbol de todo lo que responde en el sitio, con su estado; desde ahí se crean, mueven y publican páginas) y las páginas de los paquetes que producen contenido (Audio, Redacción IA).
+- **Diseño** (grupo): el tema y sus variaciones, el **Menú**, los **Textos del sitio** que no pertenecen a ninguna página, las **Categorías** de las colecciones que las usan, el **Código del tema** (solo para quien programa) e **Importar diseño** cuando el tema tiene constructor.
+- **Ajustes** (grupo): la configuración general en pestañas (General, Contacto y redes, Marca y SEO, tema, un paquete por pestaña, Cookies), con un solo botón Guardar siempre a la vista; y **Redirecciones 301** para que las URL viejas sigan funcionando.
 - **Sistema** (grupo, plegado): Temas y paquetes, Respaldos, Usuarios (ahí cambias tu contraseña) y Actualizar.
 - **Manual**: este texto.
 

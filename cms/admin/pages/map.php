@@ -46,7 +46,7 @@ $map = cms_site_map($lang);
 $menuUrls = array_column(cms_menu($lang), 'url');
 $treeTypes = array_keys(array_filter(cms_config('types'), fn($d) => !empty($d['tree'])));
 $counts = cms_map_counts($map);
-$icons = ['home' => '⌂', 'page' => '▭', 'type' => '▤', 'item' => '·', 'static' => '▣', 'external' => '↗'];
+$icons = ['home' => '⌂', 'page' => '▭', 'type' => '▤', 'category' => '▥', 'item' => '·', 'static' => '▣', 'external' => '↗'];
 $statusLabel = ['published' => 'publicado', 'draft' => 'borrador', 'scheduled' => 'programado', 'expired' => 'caducado'];
 
 function admin_map_node(array $n, array $icons, array $statusLabel, int $depth = 0, array $ctx = []): void
@@ -73,11 +73,12 @@ function admin_map_node(array $n, array $icons, array $statusLabel, int $depth =
     // acciones
     echo '<span class="ad-map-actions">';
     if ($n['edit'] !== '') echo '<a class="ad-btn ad-btn-sm ad-btn-light" href="' . cms_e($n['edit']) . '">Editar</a>';
-    if ($n['kind'] === 'item' || $isTreeType || $n['kind'] === 'home' && $ctx['treeTypes']) {
+    if ($n['kind'] === 'item' || $n['kind'] === 'category' || $isTreeType || $n['kind'] === 'home' && $ctx['treeTypes']) {
         echo '<details class="ad-map-menu"><summary class="ad-btn ad-btn-sm ad-btn-light" title="Más acciones">⋯</summary><div class="ad-map-menu-box">';
         $f = fn(string $action, array $fields, string $label, string $confirm = '') => '<form method="post"' . ($confirm ? ' data-confirm="' . cms_e($confirm) . '"' : '') . '>' . admin_csrf_field() . '<input type="hidden" name="action" value="' . $action . '">' . implode('', array_map(fn($k, $v) => '<input type="hidden" name="' . cms_e($k) . '" value="' . cms_e($v) . '">', array_keys($fields), $fields)) . '<button type="submit">' . cms_e($label) . '</button></form>';
         if ($n['kind'] === 'home') foreach ($ctx['treeTypes'] as $tt) echo '<a href="' . admin_url('edit', ['type' => $tt]) . '">+ Nueva ' . cms_e(mb_strtolower($types[$tt]['label_singular'] ?? 'página')) . ' en la raíz</a>';
         if ($isTreeType) echo '<a href="' . admin_url('edit', ['type' => $n['type']]) . '">+ Nueva ' . cms_e(mb_strtolower($types[$n['type']]['label_singular'] ?? 'página')) . '</a>';
+        if ($n['kind'] === 'category') echo '<a href="' . admin_url('edit', ['type' => $n['type'], 'cat' => $n['slug']]) . '">+ Nuevo en esta categoría</a><a href="' . admin_url('categorias', ['type' => $n['type']]) . '">Renombrar, fusionar u ordenar</a>';
         if ($isTreeItem) {
             echo '<a href="' . admin_url('edit', ['type' => $n['type'], 'parent' => $n['slug']]) . '">+ Nueva página hija</a>';
             echo $f('order', ['type' => $n['type'], 'slug' => $n['slug'], 'dir' => 'up'], '↑ Subir entre hermanas') . $f('order', ['type' => $n['type'], 'slug' => $n['slug'], 'dir' => 'down'], '↓ Bajar entre hermanas');
@@ -111,7 +112,7 @@ admin_header('Mapa del sitio', 'map');
   <span><span class="ad-pill warn">programado</span> <?= (int) $counts['scheduled'] ?></span>
 <?php if (!empty($counts['expired'])): ?>  <span><span class="ad-pill warn">caducado</span> <?= (int) $counts['expired'] ?></span>
 <?php endif; ?>
-  <span class="ad-help">▭ plantilla fija · ▤ colección de contenido · ▣ carpeta fuera del CMS · ↗ enlace externo</span>
+  <span class="ad-help">▭ plantilla fija · ▤ colección de contenido · ▥ categoría · ▣ carpeta fuera del CMS · ↗ enlace externo</span>
   <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= CMS_BASE ?>/sitemap.xml" target="_blank" rel="noopener">sitemap.xml ↗</a>
 </div>
 <ul class="ad-map">

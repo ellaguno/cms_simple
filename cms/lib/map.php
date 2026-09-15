@@ -2,7 +2,7 @@
 /**
  * cms_simple — mapa del sitio: árbol calculado a partir de la configuración, el contenido, el menú y las carpetas.
  *
- * Nodo: ['kind' => home|page|type|item|static|external, 'label', 'url' (relativa, con CMS_BASE), 'route',
+ * Nodo: ['kind' => home|page|type|category|item|static|external, 'label', 'url' (relativa, con CMS_BASE), 'route',
  *        'status' => published|draft|scheduled|expired|'', 'noindex' => bool, 'source' => texto, 'updated' => 'AAAA-MM-DD',
  *        'edit' => url del panel o '', 'children' => [nodos], 'type' => clave del tipo, 'slug']
  */
@@ -51,6 +51,23 @@ function cms_map_type_children(string $type, array $def, string $lang): array
     $items = cms_items($type, false);
     $nodes = [];
     foreach ($items as $it) if (!cms_is_home_item($type, $it['slug'])) $nodes[$it['slug']] = cms_map_item_node($type, $def, $it, $lang);
+    if (empty($def['tree']) && cms_categories_field($type) !== null) {   // categorías como ramas; lo sin categoría al final
+        $byCat = []; $rest = [];
+        foreach ($items as $it) {
+            if (!isset($nodes[$it['slug']])) continue;
+            $s = cms_item_category($type, $it);
+            if ($s !== '' && cms_category($type, $s)) $byCat[$s][] = $nodes[$it['slug']]; else $rest[] = $nodes[$it['slug']];
+        }
+        $out = [];
+        foreach (cms_categories($type) as $slug => $cat) {
+            $kids = $byCat[$slug] ?? [];
+            $out[] = ['kind' => 'category', 'type' => $type, 'slug' => $slug, 'label' => cms_category_label($cat, $lang), 'route' => 'cat:' . $type,
+                'url' => empty($def['no_list']) ? cms_url('cat:' . $type, $lang, $slug) : '', 'status' => '', 'noindex' => !empty($def['noindex']) || !empty($def['no_list']),
+                'source' => 'categoría · ' . count($kids) . ($kids === [] || count($kids) > 1 ? ' elementos' : ' elemento'), 'updated' => '',
+                'edit' => ADMIN_URL . '/?p=categorias&type=' . rawurlencode($type), 'children' => $kids, 'count' => count($kids)];
+        }
+        return array_merge($out, $rest);
+    }
     if (empty($def['tree'])) return array_values($nodes);
     $roots = [];
     foreach ($items as $it) {

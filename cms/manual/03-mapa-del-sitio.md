@@ -37,3 +37,7 @@ Después de mover una página cuya URL ya estaba publicada, crea una redirecció
 ## URL reservadas
 
 En la raíz no se puede usar una URL que ya ocupa otra sección, como `/articulos` o `/precios`. El panel lo avisa. Si necesitas ese nombre, ponla debajo de una página padre.
+
+## Categorías en el mapa
+
+Cuando una colección usa categorías, cada una es una rama de la colección con sus elementos debajo, y su URL es una subsección real (`/articulos/derecho/`). Con ⋯ sobre la categoría se crea un elemento ya asignado a ella o se salta a **Diseño → Categorías** para renombrarla, fusionarla u ordenarla. Lo que no tiene categoría queda al final de la colección.

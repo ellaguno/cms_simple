@@ -27,6 +27,7 @@ return [
             'sort' => ['field' => 'date', 'dir' => 'desc'],
             'list' => ['date', 'category'],   // columnas en el listado del admin
             'title_field' => 'title', 'excerpt_field' => 'excerpt', 'image_field' => 'image',
+            'categories' => true,             // /blog/<categoria>/ como subsección (campo 'category'; Admin → Diseño → Categorías)
             'fields' => [
                 'title'    => ['type' => 'text', 'label' => 'Título', 'i18n' => true, 'required' => true],
                 'excerpt'  => ['type' => 'textarea', 'label' => 'Resumen (listado y buscadores)', 'i18n' => true, 'rows' => 3],

@@ -32,6 +32,7 @@ if ($is_new) {
         $item[$name] = !empty($fd['i18n']) ? array_fill_keys(cms_langs(), $d) : $d;
     }
     if ($tree && isset($_GET['parent'])) $item['parent'] = cms_slugify((string) $_GET['parent']);
+    if (($cf = cms_categories_field($type)) !== null && isset($_GET['cat']) && ($c0 = cms_category($type, (string) $_GET['cat']))) $item[$cf] = cms_category_value($type, $c0);
 }
 
 $errors = [];

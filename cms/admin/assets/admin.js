@@ -547,6 +547,14 @@
     window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
   });
 
+  /* ---------------- campo categoría: "+ Nueva categoría…" muestra el cuadro del nombre ---------------- */
+  document.querySelectorAll("[data-category]").forEach(function (box) {
+    var sel = box.querySelector("[data-category-select]"), inp = box.querySelector("[data-category-new]");
+    if (!sel || !inp) return;
+    function sync() { inp.hidden = sel.value !== "__new__"; if (!inp.hidden) { inp.required = true; inp.focus(); } else inp.required = false; }
+    sel.addEventListener("change", sync); sync();
+  });
+
   /* ---------------- confirmaciones ---------------- */
   /* campo de color: el selector y el texto hex van a la par; × vuelve al color del tema */
   document.querySelectorAll(".ad-color-row").forEach(function (row) {

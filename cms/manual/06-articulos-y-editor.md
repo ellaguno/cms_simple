@@ -73,3 +73,9 @@ Campos que importan y por qué:
 Igual que en las páginas: borrador, publicado, publicación programada, vista previa con enlace privado y versiones anteriores. Un artículo publicado entra al sitemap y al índice de artículos de forma automática.
 
 **Retirar a partir de** es la fecha de caducidad: desde ese día el artículo deja de verse en el sitio, los listados y el sitemap, aunque sigue publicado. En el listado aparece como *Caducado*; quita o cambia la fecha para que vuelva. Sirve para promociones, convocatorias o avisos con fecha límite.
+
+## Categorías: subsecciones de una colección
+
+Si la colección usa categorías (lo decide el tema), el campo Categoría del artículo es un selector con las existentes y "+ Nueva categoría…". Cada categoría es una subsección con URL propia, `/articulos/derecho/` por ejemplo, que aparece en el mapa del sitio, en el sitemap y en buscadores, con su título, descripción y textos SEO.
+
+Escribir la categoría a mano llevaba a tener "Derecho", "derecho" y "Derecho " como tres cosas distintas. Por eso se elige de la lista, y la lista se cuida en **Diseño → Categorías**: nombre por idioma, descripción, título y descripción SEO, orden; **renombrar** corrige todos los artículos que la usan y **fusionar** mueve los de una categoría a otra y borra la primera, que es la forma de arreglar una errata o un duplicado. Desde el mapa del sitio, "+ Nuevo en esta categoría" abre el editor con la categoría ya puesta.

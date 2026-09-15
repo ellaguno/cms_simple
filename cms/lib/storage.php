@@ -67,6 +67,11 @@ function cms_type(string $type): ?array
     $types = cms_config('types');
     if (!isset($types[$type])) return null;
     $def = $types[$type] + ['key' => $type];
+    // categorías (1.30): el campo declarado en 'categories' se edita con un selector del registro (cms/lib/categories.php)
+    if (($cf = cms_categories_field($type)) !== null) {
+        $def['categories'] = ['field' => $cf];
+        $def['fields'][$cf] = ['type' => 'category', '_type' => $type] + array_diff_key((array) $def['fields'][$cf], ['type' => 1]);
+    }
     // campos que añaden los paquetes activos: 'item_fields' => ['*' => [campo => def]] (todos los tipos) o [tipo => [...]]
     foreach (cms_packs() as $p) foreach ((array) ($p['item_fields'] ?? []) as $for => $fields) {
         if ($for !== '*' && $for !== $type) continue;

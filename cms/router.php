@@ -95,6 +95,11 @@ if ($seg === []) {
         $d += ['key' => $k];
         if ($seg[0] !== cms_segment($d, $lang)) continue;
         if (count($seg) === 1 && empty($d['no_list'])) {
+            // filtro viejo ?cat=Etiqueta → la subsección /coleccion/categoria/ (301), si el tipo usa categorías
+            if (($_GET['cat'] ?? '') !== '' && ($_GET['q'] ?? '') === '' && ($_GET['tag'] ?? '') === '' && cms_categories_field($k) !== null
+                && ($cs = cms_category_slug_of($k, (string) $_GET['cat'])) !== '' && cms_category($k, $cs)) {
+                header('Location: ' . cms_url('cat:' . $k, $lang, $cs) . (!empty($_GET['pg']) ? '?pg=' . (int) $_GET['pg'] : ''), true, 301); exit;
+            }
             $template = $d['template_list'] ?? $k;
             $type = $k; $def = $d;
             $filtered = ($_GET['q'] ?? '') !== '' || ($_GET['tag'] ?? '') !== '' || ($_GET['cat'] ?? '') !== '';
@@ -118,6 +123,20 @@ if ($seg === []) {
             $page['route'] = 'item:' . $k;
             if (!cms_item_is_live($item)) { $page['noindex'] = true; $page['preview'] = true; }
             $page['jsonld'] = [cms_jsonld_graph(cms_jsonld_org(), cms_jsonld_breadcrumbs([$home_crumb, [$label, cms_url('list:' . $k, $lang)], [$title, $url]]), cms_jsonld_item($d, $item, $lang, $url))];
+        } elseif (count($seg) === 2 && empty($d['no_list']) && cms_categories_field($k) !== null && ($cat = cms_category($k, $seg[1]))) {
+            // subsección por categoría: el índice de la colección filtrado, indexable, con su título y descripción
+            $template = $d['template_list'] ?? $k;
+            $type = $k; $def = $d;
+            $label = $t($k . '_title', $d['label'] ?? $k);
+            $cl = cms_category_label($cat, $lang);
+            $curl = cms_url('cat:' . $k, $lang, $cat['slug']);
+            $page += ['title' => (cms_category_text($cat, 'seo_title', $lang) ?: $cl . ' · ' . $label) . ' · ' . $site,
+                'desc' => cms_category_text($cat, 'seo_desc', $lang) ?: cms_category_text($cat, 'desc', $lang),
+                'alt' => $alt('cat:' . $k, $cat['slug']), 'noindex' => !empty($d['noindex']),
+                'category' => $cat + ['label_text' => $cl, 'url' => $curl, 'type' => $k]];
+            $page['route'] = 'cat:' . $k;
+            $page['jsonld'] = [cms_jsonld_graph(cms_jsonld_org(), cms_jsonld_breadcrumbs([$home_crumb, [$label, cms_url('list:' . $k, $lang)], [$cl, $curl]]))];
+            $_GET['cat'] = $cl;   // compatibilidad: una plantilla de índice que filtra por ?cat= funciona sin cambios
         }
         break;
     }

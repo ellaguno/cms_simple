@@ -15,7 +15,7 @@ Nació para [katapolt.mx](https://katapolt.mx) y está pensado para reutilizarse
 - **Tipos de contenido por esquema**: declaras en `site/config.php` los tipos (entradas, proyectos, servicios…) y sus campos; el panel genera listados (con buscador, filtros por estado y por columna, y paginación de 50 en 50; `'admin_per_page'` en el tipo cambia el tamaño) y formularios. Tipos de campo: texto, área de texto, editor visual (Quill), fecha, número, URL, correo, selector, casilla, imagen, lista de imágenes, líneas, etiquetas.
 - **Multilingüe**: cualquier campo marcado `i18n` se edita por idioma con un conmutador (un idioma a la vez, con el texto del idioma base como referencia). URLs con prefijo por idioma (`/en/...`), `hreflang`, respaldo al idioma predeterminado cuando falta traducción.
 - **Medios**: subida por botón o arrastrando (imágenes, PDF, video), biblioteca para insertar en el editor o en campos de imagen, WebP automático, aviso de "en uso" antes de borrar.
-- **Menú, textos fijos, ajustes, redirecciones 301** editables desde el panel. Publicación programada y fecha de retiro (caducidad) por elemento, sin cron.
+- **Menú, textos fijos, ajustes, redirecciones 301** editables desde el panel. Publicación programada y fecha de retiro (caducidad) por elemento, sin cron. **Categorías** por colección con registro propio (Diseño → Categorías) y subsecciones indexables `/coleccion/categoria/`.
 - **Paquetes**: bloques y efectos para el constructor y, desde 1.27, código con ganchos (`content`, `head`, `item.save`, `admin.item.sidebar`, `cron`), ajustes, campos propios y página en el panel. Incluidos: visual, motion, media, marketing, contenido, enlaces (enlazado interno automático), audio (texto a voz) y redaccion (artículos y resúmenes de noticias con IA).
 - **Código del tema**: editor de código en el panel para plantillas, layout, CSS y JS, con respaldos, restauración y verificación de sintaxis PHP.
 - **SEO de serie**: `title`/`description` por página y campos SEO por elemento, `canonical`, `hreflang`, Open Graph y Twitter Card, JSON-LD (`Organization`, `WebSite`, `BreadcrumbList` y `Article`/`CreativeWork`/… según el tipo), `sitemap.xml` con `lastmod`, `robots.txt`, `noindex` en filtros y 404, imágenes con `<picture>` WebP y dimensiones.
@@ -310,14 +310,43 @@ la palabra y color del halo) y las cifras animadas (cuánto tarda la cuenta).
 **Corregido**: el fondo de ondas buscaba una clase `.hero` que ningún tema del proyecto usa, así que no llegaba a
 dibujarse; ahora se ajusta a la sección. Su código GLSL se reescribió con los parámetros como uniforms.
 
+## Categorías como subsecciones y página Categorías (1.30)
+
+Una colección puede declarar `'categories' => true` en su tipo (usa el campo `category`; con `['field' => 'x']` se elige
+otro). Con eso, cada categoría se vuelve una **subsección con URL propia**, `/articulos/derecho/` o `/noticias/derecho/`:
+
+- **Enrutador**: `/coleccion/categoria/` dibuja la plantilla de índice de la colección filtrada por esa categoría, con su
+  título (o el título SEO de la categoría), descripción, canonical, `hreflang`, migas de pan y JSON-LD, e **indexable**.
+  La plantilla recibe `$page['category']` (slug, etiqueta, URL, descripción) y `cms_items_in_category()`; una plantilla
+  vieja que filtre por `?cat=` sigue funcionando porque el enrutador le pasa la etiqueta. El filtro viejo `?cat=Etiqueta`
+  redirige con 301 a la subsección. `cms_url('cat:tipo', $lang, $slug)` construye la URL.
+- **Registro** en `data/categories/<tipo>.json`: nombre por idioma, descripción, título y descripción SEO, orden. Se
+  construye solo la primera vez con lo que ya traen los elementos. El elemento sigue guardando la etiqueta en su campo,
+  así que índices, bloques y plantillas que leen `cms_f($item, 'category')` no cambian.
+- **Editor**: el campo de categoría pasa a ser un **selector** con las existentes y "+ Nueva categoría…", para que no
+  aparezcan "Derecho", "derecho" y "Derecho " como tres categorías. Desde el mapa, "+ Nuevo en esta categoría" abre el
+  editor con la categoría puesta.
+- **Diseño → Categorías**: nombre por idioma, descripción, SEO y orden por categoría; **renombrar** corrige todos los
+  elementos; **fusionar** mueve los de una a otra y la borra (para erratas y duplicados); eliminar; "Añadir las que
+  faltan" registra las escritas a mano. La página solo aparece si algún tipo usa categorías.
+- **Mapa del sitio**: las categorías son ramas de la colección con sus elementos debajo; lo sin categoría, al final.
+  **Sitemap**: entra cada subsección con algo publicado. **Listado del panel**: filtro por categoría.
+- Funciones: `cms_categories($tipo)`, `cms_category($tipo, $slug)`, `cms_category_label($cat, $lang)`,
+  `cms_item_category($tipo, $item)`, `cms_items_in_category($tipo, $slug)`, `cms_categories_counts($tipo)`.
+
+Es opcional: un sitio que no declare `categories` no cambia en nada. El tema de ejemplo lo activa en `posts`.
+
+Además, las páginas de los paquetes (Audio, Redacción IA) pasan del grupo Ajustes al grupo **Contenido** del menú, que
+es lo que producen; un paquete puede pedir otro grupo con `'admin' => ['group' => 'diseno'|'ajustes'|'sistema']`.
+
 ## Panel ordenado: menú en grupos, Ajustes con pestañas y barra de guardar fija (1.29)
 
 Con varios paquetes activos el panel se llenaba de entradas y Ajustes exigía mucho scroll con el botón Guardar al
 final. Cambios, todos de panel (el núcleo de datos no se toca):
 
 - **Menú lateral en cinco grupos plegables** (recuerdan si están abiertos): **Contenido** (las colecciones, Medios,
-  Mapa del sitio), **Diseño** (Diseño, Menú, Textos del sitio, Código del tema, Importar diseño), **Ajustes** (Ajustes,
-  Redirecciones 301 y las páginas de los paquetes: Audio, Redacción IA…) y **Sistema** (Temas y paquetes, Respaldos,
+  Mapa del sitio y las páginas de los paquetes que producen contenido: Audio, Redacción IA…), **Diseño** (Diseño, Menú,
+  Textos del sitio, Código del tema, Importar diseño), **Ajustes** (Ajustes y Redirecciones 301) y **Sistema** (Temas y paquetes, Respaldos,
   Usuarios, Actualizar), plegado por defecto; más Inicio y Manual sueltos. Las colecciones con `'group'` propio en
   `config.php` conservan su grupo. "Importar diseño" solo aparece si el tema tiene constructor.
 - **Contraseña** deja de ser una entrada: la propia se cambia en Usuarios ("Tu contraseña"); `?p=password` redirige.
@@ -329,8 +358,8 @@ final. Cambios, todos de panel (el núcleo de datos no se toca):
 - **Campos condicionados**: `'show_if' => ['otro_campo' => 'valor']` en cualquier definición de campo (config, bloques,
   paquetes) lo muestra solo cuando ese control tiene ese valor (o uno de una lista). Audio y Redacción lo usan para
   enseñar solo las claves y opciones del proveedor elegido: la pestaña de Audio pasa de 21 campos a la vista a 8.
-- Regla para que no vuelva a crecer: un paquete no añade entradas al menú salvo su página propia, que siempre va en
-  el grupo Ajustes; sus ajustes van en su pestaña. Una pestaña larga se divide con subtítulos, no con otra pestaña.
+- Regla para que no vuelva a crecer: un paquete no añade entradas al menú salvo su página propia, que va en Contenido
+  (o en el grupo que declare con `'admin' => ['group' => 'diseno'|'ajustes'|'sistema']`); sus ajustes van en su pestaña. Una pestaña larga se divide con subtítulos, no con otra pestaña.
 
 ## Audio (texto a voz), Redacción con IA, páginas de paquete y cron (1.28)
 
@@ -614,6 +643,6 @@ MIT. Incluye [Parsedown](https://github.com/erusev/parsedown) (MIT). El panel ca
 `cms_simple` is a flat-file PHP CMS: JSON content, a schema-driven admin panel (content types and fields declared in `site/config.php`),
 multilingual fields with a language switcher, media library (images/PDF/video with automatic WebP), menus, site texts, settings,
 301 redirects, users, a built-in code editor for theme files (with backups and PHP syntax check), and SEO out of the box (meta, canonical, hreflang, Open Graph, JSON-LD, sitemap with lastmod, robots, `<picture>`).
-Packs extend it with page-builder blocks and, since 1.27, with code: a pack's `inc.php` is loaded on every request and can hook `content`, `head`, `item.save`, `admin.item.sidebar` and `cron`, declare a settings group, per-item fields and its own admin page. Scheduled publishing and an expiry date per item, no cron needed; a host cron endpoint (`/_cms/cron?token=…`) runs pack jobs. Bundled packs: `enlaces` (automatic internal linking), `audio` (text-to-speech with OpenAI, ElevenLabs, Azure or Google) and `redaccion` (AI-written articles and news digests with OpenRouter, OpenAI, Anthropic or DeepSeek).
+Packs extend it with page-builder blocks and, since 1.27, with code: a pack's `inc.php` is loaded on every request and can hook `content`, `head`, `item.save`, `admin.item.sidebar` and `cron`, declare a settings group, per-item fields and its own admin page. Categories per collection with their own registry and indexable `/collection/category/` subsections. Scheduled publishing and an expiry date per item, no cron needed; a host cron endpoint (`/_cms/cron?token=…`) runs pack jobs. Bundled packs: `enlaces` (automatic internal linking), `audio` (text-to-speech with OpenAI, ElevenLabs, Azure or Google) and `redaccion` (AI-written articles and news digests with OpenRouter, OpenAI, Anthropic or DeepSeek).
 Requires PHP 7.4+ and Apache with mod_rewrite. Copy to your web root, make `data/` and `uploads/` writable, open `/admin/` and create the first user.
 The admin UI is in Spanish. MIT license.

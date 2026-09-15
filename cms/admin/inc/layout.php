@@ -22,22 +22,29 @@ function admin_nav(): array
     }
     $content['media'] = ['Medios', admin_url('media')];
     $content['map'] = ['Mapa del sitio', admin_url('map')];
-    $nav['group:contenido'] = ['group' => 'Contenido', 'items' => $content];
+    // páginas propias de los paquetes activos: 'admin' => ['label' => …, 'file' => …, 'group' => contenido|diseno|ajustes|sistema]
+    // (por defecto en Contenido: Audio, Redacción IA… producen contenido; sus ajustes ya están en Ajustes)
+    $packPages = ['contenido' => [], 'diseno' => [], 'ajustes' => [], 'sistema' => []];
+    foreach (cms_packs() as $pn => $pk) {
+        if (empty($pk['admin']['file'])) continue;
+        $g = (string) ($pk['admin']['group'] ?? 'contenido');
+        $packPages[isset($packPages[$g]) ? $g : 'contenido']['pack:' . $pn] = [(string) ($pk['admin']['label'] ?? $pk['label']), admin_url('pack:' . $pn)];
+    }
+    $nav['group:contenido'] = ['group' => 'Contenido', 'items' => $content + $packPages['contenido']];
     $nav += $groups;
     // Diseño: temas y variaciones, menú, textos, código del tema e importar (solo si el tema tiene constructor)
     $design = ['diseno' => ['Diseño', admin_url('diseno')], 'menu' => ['Menú', admin_url('menu')], 'strings' => ['Textos del sitio', admin_url('strings')]];
+    if (cms_categories_types()) $design['categorias'] = ['Categorías', admin_url('categorias')];
     if (cms_config('code_editor', true) !== false) $design['code'] = ['Código del tema', admin_url('code')];
     if (cms_config('importer', true) !== false && cms_builder_type() !== null) $design['importar'] = ['Importar diseño', admin_url('importar')];
-    $nav['group:diseno'] = ['group' => 'Diseño', 'items' => $design];
-    // Ajustes: ajustes, redirecciones y las páginas propias de los paquetes activos ('admin' => ['label' => …, 'file' => …] en pack.php)
-    $settings = ['settings' => ['Ajustes', admin_url('settings')], 'redirects' => ['Redirecciones 301', admin_url('redirects')]];
-    foreach (cms_packs() as $pn => $pk) if (!empty($pk['admin']['file'])) $settings['pack:' . $pn] = [(string) ($pk['admin']['label'] ?? $pk['label']), admin_url('pack:' . $pn)];
-    $nav['group:ajustes'] = ['group' => 'Ajustes', 'items' => $settings];
+    $nav['group:diseno'] = ['group' => 'Diseño', 'items' => $design + $packPages['diseno']];
+    // Ajustes: ajustes y redirecciones (los ajustes de cada paquete son una pestaña de Ajustes)
+    $nav['group:ajustes'] = ['group' => 'Ajustes', 'items' => ['settings' => ['Ajustes', admin_url('settings')], 'redirects' => ['Redirecciones 301', admin_url('redirects')]] + $packPages['ajustes']];
     // Sistema: lo que se abre pocas veces; plegado por defecto
     $nav['group:sistema'] = ['group' => 'Sistema', 'collapsed' => true, 'items' => [
         'catalogo' => ['Temas y paquetes', admin_url('catalogo')], 'backup' => ['Respaldos', admin_url('backup')],
         'users' => ['Usuarios', admin_url('users')], 'actualizar' => ['Actualizar', admin_url('actualizar')],
-    ]];
+    ] + $packPages['sistema']];
     $nav['manual'] = ['Manual', admin_url('manual')];
     return $nav;
 }

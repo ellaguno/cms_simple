@@ -54,6 +54,16 @@ function admin_control(string $inputName, array $def, $value, string $extra = ''
                 . '<img class="ad-thumb" src="' . ($v ? cms_e(cms_img($v)) : '') . '" alt="" data-preview' . ($v ? '' : ' hidden') . '></div>';
         case 'sections':
             return admin_sections_control($inputName, $def, is_array($value) ? $value : []);
+        case 'category':   // selector del registro de categorías del tipo (+ nueva); el valor guardado sigue siendo la etiqueta
+            $tk = (string) ($def['_type'] ?? '');
+            $cur = $tk !== '' ? cms_category_slug_of($tk, $value) : '';
+            if ($tk !== '' && $cur !== '' && !cms_category($tk, $cur)) $cur = cms_category_create($tk, is_array($value) ? (string) (cms_f(['v' => $value], 'v', cms_default_lang()) ?: reset($value)) : (string) $value);   // valor viejo sin registrar
+            $out = '<div class="ad-category" data-category><select name="' . cms_e($inputName) . '" data-category-select><option value="">— Sin categoría —</option>';
+            foreach ($tk !== '' ? cms_categories($tk) : [] as $slug => $c) $out .= '<option value="' . cms_e((string) $slug) . '"' . ((string) $slug === $cur ? ' selected' : '') . '>' . cms_e(cms_category_label($c, cms_default_lang())) . '</option>';
+            $out .= '<option value="__new__">+ Nueva categoría…</option></select>';
+            $out .= '<input type="text" name="' . cms_e($inputName) . '__new" placeholder="Nombre de la nueva categoría" data-category-new hidden></div>';
+            if ($tk !== '') $out .= '<p class="ad-help">Se administran en <a href="' . ADMIN_URL . '/?p=categorias&type=' . rawurlencode($tk) . '">Diseño → Categorías</a> (nombre por idioma, orden, descripción, fusionar).</p>';
+            return $out;
         case 'code':
             return '<textarea name="' . cms_e($inputName) . '" rows="' . (int) ($def['rows'] ?? 8) . '" class="ad-code"' . $ph . ' spellcheck="false">' . cms_e((string) $value) . '</textarea>';
         case 'color':
@@ -79,7 +89,7 @@ function admin_field(string $name, array $def, $value): void
     $showIf = !empty($def['show_if']) && is_array($def['show_if']) ? ' data-show-if=\'' . cms_e(json_encode($def['show_if'], JSON_UNESCAPED_UNICODE)) . '\'' : '';
     echo '<div class="ad-field ad-field-' . cms_e($def['type'] ?? 'text') . (!empty($def['half']) ? ' ad-field-half' : '') . '"' . $showIf . '><label>' . cms_e($label) . (!empty($def['required']) ? ' <span class="ad-req">*</span>' : '') . '</label>';
     if (!empty($def['help'])) echo '<p class="ad-help">' . cms_e($def['help']) . '</p>';
-    if (!empty($def['i18n'])) {
+    if (!empty($def['i18n']) && ($def['type'] ?? '') !== 'category') {
         echo '<div class="ad-langs">';
         foreach (cms_langs() as $l) {
             $v = is_array($value) && !isset($value[0]) ? ($value[$l] ?? '') : ($l === cms_default_lang() ? $value : '');
@@ -126,12 +136,25 @@ function admin_read_control(array $def, $raw)
 function admin_read_field(string $name, array $def, ?array $src = null)
 {
     $src = $src ?? $_POST;
+    if (($def['type'] ?? '') === 'category') return admin_read_category($name, $def, $src);
     if (!empty($def['i18n'])) {
         $out = [];
         foreach (cms_langs() as $l) $out[$l] = admin_read_control($def, $src[$name][$l] ?? null);
         return $out;
     }
     return admin_read_control($def, $src[$name] ?? null);
+}
+
+/** Campo 'category': el select trae el slug (o "__new__" con el nombre en <campo>__new); se guarda la etiqueta del registro. */
+function admin_read_category(string $name, array $def, array $src)
+{
+    $tk = (string) ($def['_type'] ?? '');
+    $empty = !empty($def['i18n']) ? array_fill_keys(cms_langs(), '') : '';
+    $raw = trim((string) ($src[$name] ?? ''));
+    if ($tk === '' || $raw === '') return $empty;
+    if ($raw === '__new__') { $raw = cms_category_create($tk, (string) ($src[$name . '__new'] ?? '')); if ($raw === '') return $empty; }
+    $cat = cms_category($tk, $raw);
+    return $cat ? cms_category_value($tk, $cat) : $empty;
 }
 
 /** Lee un campo 'sections' del POST: valida tipo de bloque y limpia cada dato según la definición del bloque. */

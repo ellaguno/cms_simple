@@ -40,6 +40,11 @@ function cms_url(string $route, string $lang, ?string $slug = null): string
         }
         return $kind === 'list' ? $base . '/' . $seg . '/' : $base . '/' . $seg . '/' . rawurlencode((string) $slug);
     }
+    if ($kind === 'cat') {   // subsección por categoría: /coleccion/categoria/
+        $def = cms_type($key);
+        if (!$def || $slug === null || $slug === '') return $base . '/';
+        return $base . '/' . cms_segment($def, $lang) . '/' . rawurlencode(cms_slugify((string) $slug)) . '/';
+    }
     if ($kind === 'page') {
         $pages = cms_config('pages');
         if (!isset($pages[$key])) return $base . '/';

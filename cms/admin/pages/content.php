@@ -81,7 +81,7 @@ if ($status !== '') $items = array_filter($items, fn($it) => $itemStatus($it) ==
 $colOptions = [];
 foreach ($cols as $c) {
     $ft = $def['fields'][$c]['type'] ?? '';
-    if (!in_array($ft, ['text', 'select', 'tags'], true)) continue;
+    if (!in_array($ft, ['text', 'select', 'tags', 'category'], true)) continue;
     $vals = [];
     foreach ($all as $it) { $x = cms_f($it, $c, $dl); foreach ((array) $x as $one) { $one = trim((string) $one); if ($one !== '') $vals[$one] = true; } }
     if ($ft === 'select') foreach ((array) ($def['fields'][$c]['options'] ?? []) as $ok => $ov) $vals[is_int($ok) ? (string) $ov : (string) $ok] = true;

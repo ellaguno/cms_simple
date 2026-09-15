@@ -1,22 +1,16 @@
-<?php /** Una noticia (PyMEs, Feng Shui, premios…). Variables: $lang, $S, $t, $page, $item, $def */ declare(strict_types=1);
-$hero = (string) ($item['hero'] ?? '');
+<?php /** Un artículo (PyMEs, Feng Shui, premios…): fondo claro, imagen arriba, fecha y etiqueta, título con icono y texto. Variables: $lang, $S, $t, $page, $item, $def */ declare(strict_types=1);
+$img = (string) (($item['hero'] ?? '') ?: ($item['image'] ?? ''));
+$date = (string) ($item['date'] ?? '');
+$tag = (string) cms_f($item, 'tag', $lang);
 ?>
-<?php if ($hero !== ''): ?>
-<section class="sec ag-hero"><div class="ag-hero-in ag-hero-short ag-pos-center"><div class="ag-slide is-active"><?= cms_picture($hero, (string) cms_f($item, 'title', $lang), 'class="ag-slide-img"', true) ?></div><?= function_exists('ag_share_tab') ? ag_share_tab($lang, cms_t('share_label', $lang, 'Compartir esta página')) : '' ?></div></section>
+<section class="sec sec-bg-light ad-article-light"><div class="ad-container ad-article">
+<?php if ($img !== ''): ?>
+  <div class="ad-article-hero"><?= cms_picture($img, (string) cms_f($item, 'title', $lang), '', true) ?></div>
 <?php endif; ?>
-<section class="sec ad-texto"><div class="ad-container ad-article">
-  <div class="ad-article-head">
-    <span class="ad-news-icon" aria-hidden="true"></span>
-    <div>
-<?php if (!empty($item['date'])): ?>      <span class="ad-kicker"><?= cms_e(mb_strtoupper(cms_date((string) $item['date'], $lang))) ?><?= cms_f($item, 'kicker', $lang) ? ' · ' . cms_e(cms_f($item, 'kicker', $lang)) : '' ?></span>
-<?php elseif (cms_f($item, 'kicker', $lang)): ?>      <span class="ad-kicker"><?= cms_e(cms_f($item, 'kicker', $lang)) ?></span>
+<?php if ($date !== '' || $tag !== ''): ?>
+  <div class="ad-article-meta"><span><?= $date !== '' ? cms_e(mb_strtoupper(cms_date($date, $lang))) : '' ?></span><span><?= cms_e($tag) ?></span></div>
 <?php endif; ?>
-      <h1 class="ad-h-light"><?= cms_e(cms_f($item, 'title', $lang)) ?></h1>
-    </div>
-  </div>
-  <div class="ad-article-grid">
-    <div class="ad-prose"><?= cms_content((string) cms_f($item, 'body', $lang)) ?></div>
-<?php if (!empty($item['image']) && $hero === ''): ?>    <div class="ad-article-img"><?= cms_picture((string) $item['image'], (string) cms_f($item, 'title', $lang)) ?></div>
-<?php endif; ?>
-  </div>
+  <hr class="ad-article-rule">
+  <h1 class="ad-article-title"><img class="ad-article-icon" src="<?= cms_e(cms_img('icono-noticia.png')) ?>" alt="" width="27" height="32"><?= cms_e(cms_f($item, 'title', $lang)) ?></h1>
+  <div class="ad-prose ad-article-body"><?= cms_content((string) cms_f($item, 'body', $lang)) ?></div>
 </div></section>

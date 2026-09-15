@@ -328,13 +328,21 @@ button { font: inherit; cursor: pointer; }
 .ad-project { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 50px; align-items: start; }
 .ad-project-text { font-size: 13px; }
 @media (max-width: 760px) { .ad-project { grid-template-columns: 1fr; gap: 26px; } }
-.ad-article { max-width: 900px; }
-.ad-article-head { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 30px; }
-.ad-news-icon { flex: 0 0 auto; width: 44px; height: 52px; margin-top: 4px; border: 2px solid #9a9a9a; border-radius: 3px; background: linear-gradient(#9a9a9a 0 0) 8px 10px / 24px 3px no-repeat, linear-gradient(#9a9a9a 0 0) 8px 18px / 24px 3px no-repeat, linear-gradient(#9a9a9a 0 0) 8px 26px / 16px 3px no-repeat; }
-.ad-article-head h1 { font-size: 30px; margin: 0; }
-.ad-article-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 40px; align-items: start; }
-.ad-article-grid .ad-prose { font-size: 13px; }
-@media (max-width: 760px) { .ad-article-grid { grid-template-columns: 1fr; } .ad-article-head h1 { font-size: 24px; } }
+/* artículo con fondo claro (Noticias y artículos), como las páginas PyMEs / Feng Shui / Premio del sitio original */
+.ad-article-light { background: #efefef; padding: 50px 0 120px; }
+.ad-article { max-width: 810px; }
+.ad-article-hero { margin-bottom: 20px; }
+.ad-article-hero img { max-width: 100%; height: auto; margin: 0 auto; }
+.ad-article-meta { display: flex; justify-content: space-between; gap: 16px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #9a9a9a; margin: 0 0 6px; }
+.ad-article-rule { border: 0; border-top: 1px solid #d5d5d5; margin: 40px 0 34px; }
+.ad-article-title { display: flex; align-items: center; gap: 12px; font: 300 26px/1.2 var(--ad-font); color: #555; margin: 0 0 26px; }
+.ad-article-icon { width: 27px; height: auto; flex: 0 0 auto; }
+.ad-article-body { max-width: 700px; font-size: 12px; font-weight: 300; line-height: 1.75; letter-spacing: .3px; color: #444; }
+.ad-article-body strong { color: #222; }
+.ad-article-body a { color: #333; }
+.ad-article-body img { display: block; margin: 40px auto; max-width: 100%; }
+.ad-article-body .ad-center img { margin-left: auto; margin-right: auto; }
+@media (max-width: 700px) { .ad-article-light { padding: 30px 0 70px; } .ad-article-title { font-size: 22px; } }
 .cms-pager { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 30px; font-size: 12px; letter-spacing: 1px; }
 .cms-pager a, .cms-pager span { padding: 6px 12px; border: 1px solid var(--ad-line); }
 .cms-pager .cms-pager-cur { background: var(--ad-accent); color: #111; border-color: var(--ad-accent); }

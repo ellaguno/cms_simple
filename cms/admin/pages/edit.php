@@ -47,6 +47,12 @@ if (admin_is_post() && admin_post('action') === 'restore' && !$is_new) {
     admin_flash('No se pudo restaurar esa versión.', 'err');
     admin_redirect(admin_url('edit', ['type' => $type, 'slug' => $orig]));
 }
+if (admin_is_post() && admin_post('action') === 'delete' && !$is_new) {
+    admin_csrf_check();
+    [$ok, $msg] = cms_item_remove($type, $orig);
+    admin_flash($msg, $ok ? 'ok' : 'err');
+    admin_redirect($ok ? admin_url('content', ['type' => $type]) : admin_url('edit', ['type' => $type, 'slug' => $orig]));
+}
 if (admin_is_post()) {
     admin_csrf_check();
     [$item, $errors] = admin_read_item($type, $def, $fields, $item, $orig);
@@ -111,6 +117,8 @@ $titleInputName = !empty($fields[$titleField]['i18n']) ? $titleField . '[' . $dl
 <?php endforeach; endif; ?>
       </div>
 <?php if (!$is_new): ?>      <p class="ad-help">Creado: <?= cms_e($item['created'] ?? '—') ?> · Actualizado: <?= cms_e($item['updated'] ?? '—') ?></p>
+<?php if (!cms_is_home_item($type, $item['slug'])): ?>      <p><button class="ad-btn ad-btn-sm ad-btn-danger" type="submit" form="delete-item">Eliminar <?= cms_e(mb_strtolower($singular)) ?></button><?php if ($tree): ?> <small class="ad-help">Si tiene páginas hijas, pasan al nivel superior.</small><?php endif; ?></p>
+<?php endif; ?>
 <?php $versions = cms_item_versions($type, $item['slug']); if ($versions): ?>
       <details class="ad-versions"><summary>Versiones anteriores (<?= count($versions) ?>)</summary>
         <ul class="ad-list">
@@ -124,6 +132,7 @@ $titleInputName = !empty($fields[$titleField]['i18n']) ? $titleField . '[' . $dl
 <?php if (!empty($item['import']) && is_array($item['import'])): $imp = $item['import']; ?>
       <details class="ad-versions ad-import-ref"><summary>Diseño importado<?= !empty($imp['source']) ? ' · ' . cms_e($imp['source']) : '' ?></summary>
 <?php if (!empty($imp['screens'])): ?>        <div class="ad-import-screens"><?php foreach ((array) $imp['screens'] as $i => $sc): ?><a href="<?= cms_e(cms_img($sc)) ?>" target="_blank" rel="noopener" title="Pantalla <?= $i + 1 ?>"><img src="<?= cms_e(cms_img($sc)) ?>" alt="Pantalla <?= $i + 1 ?>" loading="lazy"></a><?php endforeach; ?></div>
+<?php endif; if (!empty($imp['stats']) && is_array($imp['stats'])): $st = $imp['stats']; ?>        <p class="ad-help">Modelo: <?= cms_e((string) ($st['served_model'] ?? $st['model'] ?? '')) ?> · formato de respuesta: <?= cms_e((string) ($st['format'] ?? '?')) ?><?= ($st['format'] ?? '') !== 'json_schema' ? ' <span class="ad-pill warn" title="El proveedor no aceptó el esquema JSON; el resultado puede venir incompleto">sin esquema</span>' : '' ?> · imágenes colocadas: <?= (int) ($imp['images_used'] ?? 0) ?> de <?= count((array) ($imp['images'] ?? [])) ?> · respuesta cruda en <code>data/import/<?= cms_e($item['slug']) ?>-respuesta.json</code></p>
 <?php endif; if (!empty($imp['notes'])): ?>        <p class="ad-help"><strong>Notas del análisis</strong></p><ul class="ad-list ad-help"><?php foreach ((array) $imp['notes'] as $n): ?><li><?= cms_e($n) ?></li><?php endforeach; ?></ul>
 <?php endif; if (!empty($imp['unmapped'])): ?>        <p class="ad-help"><strong>Sin bloque equivalente</strong></p><ul class="ad-list ad-help"><?php foreach ((array) $imp['unmapped'] as $n): ?><li><?= cms_e($n) ?></li><?php endforeach; ?></ul>
 <?php endif; if (!empty($imp['palette'])): ?>        <p class="ad-help"><strong>Paleta:</strong> <?php foreach ((array) $imp['palette'] as $k => $c): ?><span class="ad-pill" style="border-left:12px solid <?= cms_e((string) $c) ?>"><?= cms_e($k) ?> <?= cms_e((string) $c) ?></span> <?php endforeach; ?></p>
@@ -133,6 +142,9 @@ $titleInputName = !empty($fields[$titleField]['i18n']) ? $titleField . '[' . $dl
     </aside>
   </div>
 </form>
+<?php if (!$is_new && !cms_is_home_item($type, $item['slug'])): ?>
+<form method="post" id="delete-item" class="ad-inline" data-confirm="¿Eliminar «<?= cms_e((string) (cms_f($item, $titleField, $dl) ?: $item['slug'])) ?>»? No se puede deshacer."><?= admin_csrf_field() ?><input type="hidden" name="action" value="delete"></form>
+<?php endif; ?>
 <?php if (!$is_new) foreach (cms_item_versions($type, $item['slug']) as $v): ?>
 <form method="post" id="restore-<?= cms_e($v['name']) ?>" class="ad-inline" data-confirm="¿Restaurar la versión del <?= cms_e($v['when']) ?>? La versión actual quedará guardada."><?= admin_csrf_field() ?><input type="hidden" name="action" value="restore"><input type="hidden" name="version" value="<?= cms_e($v['name']) ?>"></form>
 <?php endforeach; ?>

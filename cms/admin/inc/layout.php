@@ -15,7 +15,7 @@ function admin_nav(): array
     foreach (cms_config('types') as $k => $def) {
         $entry = [$def['label'] ?? $k, admin_url('content', ['type' => $k])];
         $g = trim((string) ($def['group'] ?? ''));
-        if ($g === '') { $content['content:' . $k] = $entry; continue; }
+        if ($g === '' || cms_slugify($g) === 'contenido') { $content['content:' . $k] = $entry; continue; }   // "Contenido" es el grupo por defecto
         $gk = 'group:' . cms_slugify($g);
         if (!isset($groups[$gk])) $groups[$gk] = ['group' => $g, 'items' => []];
         $groups[$gk]['items']['content:' . $k] = $entry;

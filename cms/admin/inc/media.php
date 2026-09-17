@@ -121,6 +121,40 @@ function media_delete(string $rel): bool
 }
 
 /**
+ * Renombra un archivo (y su WebP) conservando carpeta y extensión, y actualiza las referencias en el contenido
+ * (ajustes, textos, menú, elementos e índices). Devuelve [ok, nuevaRuta|error].
+ */
+function media_rename(string $rel, string $newName): array
+{
+    $abs = media_safe_path($rel);
+    if (!$abs) return [false, 'Archivo no encontrado.'];
+    $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
+    $base = cms_slugify(preg_replace('/\.' . preg_quote($ext, '/') . '$/i', '', trim($newName)));
+    if ($base === '') return [false, 'Escribe un nombre válido (letras, números y guiones).'];
+    $newRel = dirname($rel) . '/' . $base . '.' . $ext;
+    if ($newRel === $rel) return [true, $rel];
+    $dest = dirname($abs) . '/' . $base . '.' . $ext;
+    if (file_exists($dest)) return [false, 'Ya existe un archivo llamado ' . $base . '.' . $ext . ' en esa carpeta.'];
+    if (!@rename($abs, $dest)) return [false, 'No se pudo renombrar. Revisa permisos.'];
+    $w = preg_replace('/\.[^.]+$/', '.webp', $abs); $w2 = preg_replace('/\.[^.]+$/', '.webp', $dest);
+    if ($w !== $abs && is_file($w)) @rename($w, $w2);
+    // referencias: la ruta completa y, para imágenes del tema, las formas cortas ("logo.svg", assets/img/logo.svg, "| logo.svg")
+    $pairs = [[$rel, $newRel]];
+    if (strpos($rel, 'site/assets/img/') === 0) {
+        $short = substr($rel, strlen('site/assets/img/')); $newShort = substr($newRel, strlen('site/assets/img/'));
+        $pairs[] = ['"' . $short . '"', '"' . $newShort . '"']; $pairs[] = ['assets/img/' . $short, 'assets/img/' . $newShort]; $pairs[] = ['| ' . $short, '| ' . $newShort];
+    }
+    $files = array_merge(glob(CMS_DATA . '/*.json') ?: [], glob(CMS_DATA . '/content/*/*.json') ?: [], glob(CMS_DATA . '/index/*.json') ?: []);
+    foreach ($files as $f) {
+        $c = (string) file_get_contents($f); $n = $c;
+        foreach ($pairs as [$a, $b]) $n = str_replace($a, $b, $n);
+        if ($n !== $c) file_put_contents($f, $n, LOCK_EX);
+    }
+    if (function_exists('cms_items_flush')) cms_items_flush();
+    return [true, $newRel];
+}
+
+/**
  * Guarda un archivo subido ($_FILES[...]) en uploads/AAAA/MM. Devuelve [ok, path|error].
  */
 function media_store(array $f): array

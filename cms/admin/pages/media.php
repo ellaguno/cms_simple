@@ -24,6 +24,9 @@ if (admin_is_post()) {
             foreach ($it as $f) if ($f->isFile() && preg_match('/\.(jpe?g|png)$/i', $f->getFilename()) && cms_webp_make($f->getPathname())) $n++;
         }
         admin_flash("Versiones WebP listas ($n imágenes revisadas en " . round(microtime(true) - $t0, 1) . ' s).');
+    } elseif ($action === 'rename') {
+        [$ok, $res] = media_rename(admin_post('path'), admin_post('name'));
+        admin_flash($ok ? 'Archivo renombrado a ' . basename($res) . '. Las referencias en el contenido se actualizaron.' : $res, $ok ? 'ok' : 'err');
     } elseif ($action === 'delete_many') {
         $paths = array_filter(array_map('strval', (array) ($_POST['paths'] ?? [])));
         $n = 0; $bad = [];
@@ -45,13 +48,20 @@ if (admin_is_post()) {
         if ($n) admin_flash($n . ' archivo(s) subido(s).');
         foreach ($errs as $e) admin_flash($e, 'err');
     }
-    admin_redirect(admin_url('media', array_filter(['type' => (string) ($_POST['type'] ?? ''), 'source' => (string) ($_POST['source'] ?? '')])));
+    admin_redirect(admin_url('media', array_filter(['type' => (string) ($_POST['type'] ?? ''), 'source' => (string) ($_POST['source'] ?? ''), 'q' => (string) ($_POST['q'] ?? '')])));
 }
 
 $type = in_array($_GET['type'] ?? '', ['image', 'pdf', 'video'], true) ? $_GET['type'] : '';
 $source = in_array($_GET['source'] ?? '', ['subidos', 'tema'], true) ? $_GET['source'] : '';
+$q = trim((string) ($_GET['q'] ?? ''));
+$filters = array_filter(['type' => $type, 'source' => $source, 'q' => $q]);
 $all = media_list();
 $items = array_filter($all, fn($m) => ($type === '' || $m['type'] === $type) && ($source === '' || $m['source'] === $source));
+if ($q !== '') {   // buscador: todas las palabras deben estar en el nombre o la ruta (sin distinguir mayúsculas ni acentos)
+    $fold = fn(string $x) => strtr(mb_strtolower($x), ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n']);
+    $words = preg_split('/\s+/u', $fold($q)) ?: [];
+    $items = array_filter($items, function ($m) use ($words, $fold) { $hay = $fold($m['path']); foreach ($words as $w) if ($w !== '' && strpos($hay, $w) === false) return false; return true; });
+}
 $total = array_sum(array_column(array_filter($all, fn($m) => $m['source'] === 'subidos'), 'size'));
 $counts = ['image' => 0, 'pdf' => 0, 'video' => 0, 'tema' => 0];
 foreach ($all as $m) { if (isset($counts[$m['type']])) $counts[$m['type']]++; if ($m['source'] === 'tema') $counts['tema']++; }
@@ -68,23 +78,29 @@ admin_header('Medios', 'media');
   </form>
 </section>
 
+<form method="get" class="ad-media-search" role="search">
+  <input type="hidden" name="p" value="media"><?php if ($type): ?><input type="hidden" name="type" value="<?= cms_e($type) ?>"><?php endif; if ($source): ?><input type="hidden" name="source" value="<?= cms_e($source) ?>"><?php endif; ?>
+  <input type="search" name="q" value="<?= cms_e($q) ?>" placeholder="Buscar por nombre de archivo o carpeta (2025/08, logo, portada…)" aria-label="Buscar en medios">
+  <button class="ad-btn ad-btn-sm" type="submit">Buscar</button>
+  <?php if ($q !== ''): ?><a class="ad-btn ad-btn-sm ad-btn-light" href="<?= admin_url('media', array_filter(['type' => $type, 'source' => $source])) ?>">Limpiar</a> <span class="ad-help"><?= count($items) ?> resultado<?= count($items) === 1 ? '' : 's' ?></span><?php endif; ?>
+</form>
 <p class="ad-actions">
-  <a class="ad-pill <?= $type === '' ? 'on' : '' ?>" href="<?= admin_url('media') ?>">Todos (<?= count($all) ?>)</a>
-  <a class="ad-pill <?= $type === 'image' ? 'on' : '' ?>" href="<?= admin_url('media', ['type' => 'image']) ?>">Imágenes (<?= $counts['image'] ?>)</a>
-  <a class="ad-pill <?= $type === 'pdf' ? 'on' : '' ?>" href="<?= admin_url('media', ['type' => 'pdf']) ?>">PDF (<?= $counts['pdf'] ?>)</a>
-  <a class="ad-pill <?= $type === 'video' ? 'on' : '' ?>" href="<?= admin_url('media', ['type' => 'video']) ?>">Video (<?= $counts['video'] ?>)</a>
-  <a class="ad-pill <?= $source === 'tema' ? 'on' : '' ?>" href="<?= admin_url('media', ['source' => 'tema']) ?>" title="Imágenes del diseño, en site/assets/img/">Del tema (<?= $counts['tema'] ?>)</a>
+  <a class="ad-pill <?= $type === '' && $source === '' ? 'on' : '' ?>" href="<?= admin_url('media', array_filter(['q' => $q])) ?>">Todos (<?= count($all) ?>)</a>
+  <a class="ad-pill <?= $type === 'image' ? 'on' : '' ?>" href="<?= admin_url('media', array_filter(['type' => 'image', 'q' => $q])) ?>">Imágenes (<?= $counts['image'] ?>)</a>
+  <a class="ad-pill <?= $type === 'pdf' ? 'on' : '' ?>" href="<?= admin_url('media', array_filter(['type' => 'pdf', 'q' => $q])) ?>">PDF (<?= $counts['pdf'] ?>)</a>
+  <a class="ad-pill <?= $type === 'video' ? 'on' : '' ?>" href="<?= admin_url('media', array_filter(['type' => 'video', 'q' => $q])) ?>">Video (<?= $counts['video'] ?>)</a>
+  <a class="ad-pill <?= $source === 'tema' ? 'on' : '' ?>" href="<?= admin_url('media', array_filter(['source' => 'tema', 'q' => $q])) ?>" title="Imágenes del diseño, en site/assets/img/">Del tema (<?= $counts['tema'] ?>)</a>
   <span class="ad-help">Espacio en subidos: <?= media_human((int) $total) ?></span>
 </p>
 
 <form method="post" class="ad-media-bulk" id="media-bulk" data-media-bulk hidden>
-  <?= admin_csrf_field() ?><input type="hidden" name="action" value="delete_many"><input type="hidden" name="type" value="<?= cms_e($type) ?>"><input type="hidden" name="source" value="<?= cms_e($source) ?>">
+  <?= admin_csrf_field() ?><input type="hidden" name="action" value="delete_many"><input type="hidden" name="type" value="<?= cms_e($type) ?>"><input type="hidden" name="source" value="<?= cms_e($source) ?>"><input type="hidden" name="q" value="<?= cms_e($q) ?>">
   <label class="ad-check"><input type="checkbox" data-media-all> Seleccionar todos los visibles</label>
   <button class="ad-btn ad-btn-sm ad-btn-danger" type="submit" data-media-delete disabled>Eliminar seleccionados</button>
   <span class="ad-help" data-media-count>0 seleccionados</span>
 </form>
 
-<?php if (!$items): ?><p class="ad-help">No hay archivos<?= $type ? ' de este tipo' : '' ?>. Los archivos que subas desde el editor también aparecen aquí.</p><?php endif; ?>
+<?php if (!$items): ?><p class="ad-help"><?= $q !== '' ? 'Ningún archivo coincide con «' . cms_e($q) . '».' : 'No hay archivos' . ($type ? ' de este tipo' : '') . '. Los archivos que subas desde el editor también aparecen aquí.' ?></p><?php endif; ?>
 <div class="ad-media-grid">
 <?php foreach ($items as $m): $used = media_in_use($m['path']); ?>
   <div class="ad-media<?= $m['source'] === 'tema' ? ' ad-media-theme' : '' ?>">
@@ -101,18 +117,33 @@ admin_header('Medios', 'media');
       <div class="ad-media-actions">
         <button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-copy="<?= cms_e($m['path']) ?>" title="Copiar la ruta para pegarla en un campo de imagen">Copiar ruta</button>
         <button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-copy="<?= cms_e($m['url']) ?>" title="Copiar la URL para usarla en un enlace">Copiar URL</button>
+        <button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-media-rename title="Cambiar el nombre del archivo (las referencias en el contenido se actualizan)">Renombrar</button>
         <form method="post" class="ad-inline" data-confirm="<?= $used ? '¡Este archivo está en uso en el contenido! ' : '' ?><?= $m['source'] === 'tema' ? 'Es una imagen del tema; si el diseño la usa por defecto, dejará de verse. ' : '' ?>¿Eliminar <?= cms_e($m['name']) ?>? No se puede deshacer.">
-          <?= admin_csrf_field() ?><input type="hidden" name="action" value="delete"><input type="hidden" name="path" value="<?= cms_e($m['path']) ?>"><input type="hidden" name="type" value="<?= cms_e($type) ?>">
+          <?= admin_csrf_field() ?><input type="hidden" name="action" value="delete"><input type="hidden" name="path" value="<?= cms_e($m['path']) ?>"><input type="hidden" name="type" value="<?= cms_e($type) ?>"><input type="hidden" name="source" value="<?= cms_e($source) ?>"><input type="hidden" name="q" value="<?= cms_e($q) ?>">
           <button class="ad-btn ad-btn-sm ad-btn-danger" type="submit">Eliminar</button>
         </form>
       </div>
+<?php $ext = pathinfo($m['name'], PATHINFO_EXTENSION); ?>
+      <form method="post" class="ad-media-rename" data-media-rename-form>
+        <?= admin_csrf_field() ?><input type="hidden" name="action" value="rename"><input type="hidden" name="path" value="<?= cms_e($m['path']) ?>"><input type="hidden" name="type" value="<?= cms_e($type) ?>"><input type="hidden" name="source" value="<?= cms_e($source) ?>"><input type="hidden" name="q" value="<?= cms_e($q) ?>">
+        <input type="text" name="name" value="<?= cms_e(pathinfo($m['name'], PATHINFO_FILENAME)) ?>" aria-label="Nuevo nombre" required pattern="[^/\\]+"><small>.<?= cms_e($ext) ?></small>
+        <button class="ad-btn ad-btn-sm" type="submit">OK</button>
+      </form>
     </div>
   </div>
 <?php endforeach; ?>
 </div>
 <form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="webp"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit" title="Genera o actualiza las versiones WebP de las imágenes del tema y de uploads/; las nuevas se convierten solas al subirlas">Generar versiones WebP</button></form>
-<p class="ad-help">Las imágenes marcadas TEMA viven en <code>site/assets/img/</code>: son el logotipo, capturas y demás recursos del diseño; se pueden usar en cualquier campo de imagen y borrar si ya no se usan. Para usar un PDF o video en una entrada, copia su URL y pégala como enlace en el editor.</p>
+<p class="ad-help">Las imágenes marcadas TEMA viven en <code>site/assets/img/</code>: son el logotipo, capturas y demás recursos del diseño; se pueden usar en cualquier campo de imagen y borrar si ya no se usan. Para usar un PDF o video en una entrada, copia su URL y pégala como enlace en el editor. Al renombrar un archivo, el nombre se normaliza (minúsculas, sin acentos ni espacios) y las páginas que lo usan se actualizan solas.</p>
 <script>
+(function () {
+  document.querySelectorAll("[data-media-rename]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var f = b.closest(".ad-media").querySelector("[data-media-rename-form]");
+      f.classList.toggle("on"); if (f.classList.contains("on")) { var i = f.querySelector("input[name=name]"); i.focus(); i.select(); }
+    });
+  });
+})();
 (function () {
   var bulk = document.querySelector("[data-media-bulk]"), items = document.querySelectorAll("[data-media-item]"), all = document.querySelector("[data-media-all]");
   var btn = document.querySelector("[data-media-delete]"), count = document.querySelector("[data-media-count]");

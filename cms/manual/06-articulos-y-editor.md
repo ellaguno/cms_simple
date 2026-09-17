@@ -66,7 +66,7 @@ Campos que importan y por qué:
 
 ![Medios](img/medios.png)
 
-**Medios** es la biblioteca de todo lo subido y, marcadas con la etiqueta TEMA, de las imágenes del diseño (logotipo, capturas, fotos del equipo) que viven en la carpeta del tema. Desde ahí copias rutas, subes por lotes arrastrando, o borras uno a uno o varios a la vez marcando sus casillas. El panel avisa si un archivo está en uso antes de borrarlo, y en las del tema advierte que el diseño puede depender de ellas.
+**Medios** es la biblioteca de todo lo subido y, marcadas con la etiqueta TEMA, de las imágenes del diseño (logotipo, capturas, fotos del equipo) que viven en la carpeta del tema. Desde ahí buscas por nombre o carpeta, copias rutas, subes por lotes arrastrando, renombras (el nombre se normaliza a minúsculas sin acentos ni espacios, se conserva la extensión y las páginas que usan el archivo se actualizan solas) o borras uno a uno o varios a la vez marcando sus casillas. El panel avisa si un archivo está en uso antes de borrarlo, y en las del tema advierte que el diseño puede depender de ellas.
 
 ## Publicar y programar
 

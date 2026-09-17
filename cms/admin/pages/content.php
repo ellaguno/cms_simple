@@ -23,8 +23,8 @@ $listUrl = fn(array $over = []) => admin_url('content', array_filter($over + $st
 if (admin_is_post()) {
     admin_csrf_check();
     if (admin_post('action') === 'delete') {
-        if (cms_item_delete($type, admin_post('slug'))) admin_flash('Elemento eliminado.');
-        else admin_flash('No se pudo eliminar.', 'err');
+        [$ok, $msg] = cms_item_remove($type, admin_post('slug'));
+        admin_flash($msg, $ok ? 'ok' : 'err');
     } elseif (admin_post('action') === 'duplicate') {
         $src = cms_item($type, admin_post('slug'), false);
         if ($src) {

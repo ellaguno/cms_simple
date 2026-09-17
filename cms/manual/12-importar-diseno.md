@@ -54,6 +54,10 @@ Al terminar se muestra la lista de secciones creadas, el costo, y tres cosas que
 
 Todo esto queda guardado en la página: en el constructor, en la columna derecha, el panel **Diseño importado** muestra las pantallas de referencia en miniatura y las notas, para comparar mientras editas.
 
+## Si el borrador sale sin texto o sin imágenes
+
+Las secciones se crearon pero llegaron vacías: el modelo devolvió los campos con otra forma o el proveedor ignoró el formato de respuesta. Desde 1.32 el importador lo tolera (acepta los campos aunque vengan fuera de `data` o con otro nombre) y lo anota en las notas del análisis; el panel **Diseño importado** del editor muestra el modelo, el formato de respuesta (con el aviso "sin esquema" cuando el proveedor no aceptó el esquema JSON) y cuántas imágenes se colocaron, y la respuesta cruda queda en `data/import/<slug>-respuesta.json`. Si se repite con un modelo, prueba con otro (los que respetan el esquema JSON dan el mejor resultado) o con la CLI de Claude Code.
+
 ## Qué revisar en el borrador
 
 - **Imágenes.** Las extraídas del PDF ya están en su sitio; revisa que cada una sea la correcta. Las provisionales grises llevan en el pie la descripción de la que va: súbela desde Medios.

@@ -441,3 +441,14 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-theme-warn { color: #7a5200; background: #fff4d6; padding: 6px 8px; border-radius: 8px; flex: 0; }
 .ad-theme-install { display: flex; align-items: center; gap: 8px; }
 .ad-theme-install input[type=text] { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; max-width: 240px; }
+
+/* 1.32: mapa del sitio con botón + y medios con buscador y renombrar */
+.ad-map-plus { font-weight: 600; padding-left: 9px; padding-right: 9px; }
+.ad-map-menu-box button.ad-danger { color: #b42318; }
+.ad-map-menu-box button.ad-danger:hover { background: #fff1f0; }
+.ad-media-search { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 14px; }
+.ad-media-search input[type=search] { flex: 1 1 240px; max-width: 420px; }
+.ad-media-rename { display: none; gap: 6px; align-items: center; margin-top: 6px; }
+.ad-media-rename.on { display: flex; }
+.ad-media-rename input { flex: 1 1 60px; min-width: 0; font-size: 12px; padding: 5px 7px; }
+.ad-media-rename small { color: var(--grey); font-size: 12px; }

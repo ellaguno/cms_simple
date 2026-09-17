@@ -20,13 +20,15 @@ A la derecha ves de dónde sale cada cosa y cuándo se editó por última vez.
 
 ## Crear páginas desde el mapa
 
-El botón **⋯** de cada nodo abre las acciones:
+El botón **+** de cada fila crea una página nueva en ese punto: en la raíz, en una colección, colgando de la página donde pulsas (su URL se forma con la ruta del padre, por ejemplo `/servicios/branding`) o dentro de una categoría.
 
-- En la raíz: **Nueva página en la raíz**.
-- En una página: **Nueva página hija**. La nueva se crea ya colgando de esa página y su URL se forma con la ruta del padre, por ejemplo `/servicios/branding`.
+El botón **⋯** abre el resto de acciones:
+
+- **Nueva página hija** o **en la raíz** (lo mismo que +).
 - **Publicar** o **Pasar a borrador**, sin abrir el editor.
 - **Añadir al menú**, que crea el enlace en la cabecera con el título de la página.
 - **Subir** o **Bajar entre hermanas**, que cambia el orden con el que se listan.
+- **Eliminar**, con confirmación. La portada no se puede borrar; si la página tiene hijas, pasan al nivel superior. El mismo botón está al pie de la columna derecha del editor y en el listado de la colección.
 
 ## Mover una página
 

@@ -101,6 +101,7 @@ function cms_import_catalog(): array
         foreach ($allowed as $sk) { [$sp] = cms_import_field($sk, (array) $styles[$sk]); $styleProps[$sk] = $sp; }
         $meta[$key] = [
             'label' => (string) ($def['label'] ?? $key),
+            'fields' => array_keys((array) ($def['fields'] ?? [])),
             'i18n'  => array_keys(array_filter((array) ($def['fields'] ?? []), fn($f) => !empty($f['i18n']))),
             'lines' => array_keys(array_filter((array) ($def['fields'] ?? []), fn($f) => ($f['type'] ?? '') === 'lines')),
             'image' => array_keys(array_filter((array) ($def['fields'] ?? []), fn($f) => ($f['type'] ?? '') === 'image')),
@@ -110,8 +111,9 @@ function cms_import_catalog(): array
             'type' => 'object',
             'properties' => [
                 'type'   => ['type' => 'string', 'enum' => [$key]],
-                'data'   => ['type' => 'object', 'properties' => $props ?: new stdClass, 'required' => $req, 'additionalProperties' => false],
-                'style'  => ['type' => 'object', 'properties' => $styleProps ?: new stdClass, 'additionalProperties' => false],
+                // modo estricto (OpenAI/OpenRouter): todas las propiedades van en required; lo vacío se manda como "" y se descarta al materializar
+                'data'   => ['type' => 'object', 'properties' => $props ?: new stdClass, 'required' => array_keys($props), 'additionalProperties' => false],
+                'style'  => ['type' => 'object', 'properties' => $styleProps ?: new stdClass, 'required' => array_keys($styleProps), 'additionalProperties' => false],
                 'note'   => ['type' => 'string', 'description' => 'Qué del diseño no cupo en este bloque, o dudas. Vacío si todo encajó.'],
                 'screen' => ['type' => 'integer', 'description' => 'Número de pantalla (imagen) donde empieza esta sección'],
             ],
@@ -200,7 +202,14 @@ $navRule
 - screen: el número de pantalla donde empieza la sección.
 - unmapped: partes del diseño que no caben en ningún bloque (con la pantalla). palette y fonts: lo que se aprecie.
 - lang: idioma del texto del diseño.
-- Responde únicamente con el JSON pedido.
+- Responde únicamente con el JSON pedido, con EXACTAMENTE esta forma (los campos de cada sección van dentro de
+  "data", con los nombres de campo del catálogo; "style" solo con claves permitidas para ese bloque):
+  {"title": "…", "summary": "…", "lang": "es", "palette": {"primary": "#…", "accent": "#…", "background": "#…", "text": "#…"},
+   "fonts": ["…"], "unmapped": ["…"],
+   "sections": [
+     {"type": "hero", "data": {"title": "Texto exacto del diseño", "text": "…", "image": "#1"}, "style": {"bg": "dark"}, "note": "", "screen": 1},
+     {"type": "tarjetas", "data": {"title": "…", "items": ["Título | Texto", "Título | Texto"]}, "style": {}, "note": "", "screen": 2}
+   ]}
 
 Sitio de destino: $site.
 
@@ -220,13 +229,13 @@ function cms_import_materialize(array $result, string $type, string $slug, strin
     // "#N", "N" o "imagen N" → ruta de la imagen extraída; "@S:x,y,w,h" → recorte de la pantalla S; null si no es referencia
     $ref = function ($v) use ($imagePaths, $screens, $slug, &$used, &$crops) {
         if (!is_string($v)) return null;
-        if (preg_match('/^\s*(?:#|imagen\s*)?(\d{1,3})\s*$/iu', $v, $m)) {
+        if (preg_match('/^\s*(?:imagen\s*)?#?\s*(\d{1,3})\s*(?:\|.*)?$/iu', $v, $m)) {   // "#3", "3", "imagen 3", "imagen #3", "#3 | pie"
             $n = (int) $m[1];
             if (!isset($imagePaths[$n])) return null;
             $used[$n] = true;
             return $imagePaths[$n];
         }
-        if (preg_match('/^\s*@\s*(?:pantalla\s*)?(\d{1,2})\s*[:;]\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*$/iu', $v, $m)) {
+        if (preg_match('/^\s*@\s*(?:pantalla\s*[:#]?\s*)?(\d{1,2})\s*[:;,]\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*$/iu', $v, $m)) {   // "@2:x,y,w,h", "@pantalla 2: …", "@pantalla:2,…"
             $path = cms_import_crop($screens, (int) $m[1], (int) $m[2], (int) $m[3], (int) $m[4], (int) $m[5], $slug, ++$crops);
             if ($path === null) { $crops--; return null; }
             $used['c' . $crops] = true;
@@ -239,15 +248,32 @@ function cms_import_materialize(array $result, string $type, string $slug, strin
     $dl = cms_default_lang();
     $lang = in_array(substr((string) ($result['lang'] ?? ''), 0, 2), $langs, true) ? substr((string) $result['lang'], 0, 2) : $lang;
     // el texto va en el idioma del diseño y, si es otro, también en el predeterminado (si no, el sitio lo mostraría vacío); se traduce después
-    $i18n = fn($v) => $lang === $dl ? [$lang => $v] : [$dl => $v, $lang => $v];
-    $notes = []; $sections = [];
-    foreach ((array) ($result['sections'] ?? []) as $s) {
-        $t = (string) ($s['type'] ?? '');
+    $i18n = function ($v) use ($lang, $dl) {
+        if (cms_is_i18n_value($v)) return $v + [$dl => (string) reset($v)];   // el modelo ya lo devolvió por idioma: no envolver dos veces
+        return $lang === $dl ? [$lang => $v] : [$dl => $v, $lang => $v];
+    };
+    $fold = fn(string $k) => strtolower(strtr(trim($k), ['-' => '_', ' ' => '_', 'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ñ' => 'n']));
+    $notes = []; $sections = []; $empty = 0;
+    $rawSections = $result['sections'] ?? $result['secciones'] ?? $result['blocks'] ?? [];
+    foreach ((array) $rawSections as $s) {
+        if (!is_array($s)) continue;
+        $t = (string) ($s['type'] ?? $s['block'] ?? $s['tipo'] ?? '');
         $m = $meta[$t] ?? null;
+        if (!$m && $t !== '') foreach ($meta as $mk => $mm) if ($fold($mk) === $fold($t) || $fold(basename($mk)) === $fold($t)) { $t = $mk; $m = $mm; break; }
         if (!$m) { $notes[] = "Bloque desconocido «$t» descartado."; continue; }
-        $data = []; $imgNotes = [];
-        foreach ((array) ($s['data'] ?? []) as $k => $v) {
-            if ($v === '' || $v === null || $v === []) continue;
+        // los campos pueden venir en "data" (lo pedido), en otra clave, o sueltos al nivel de la sección
+        $src = null;
+        foreach (['data', 'fields', 'props', 'content', 'campos', 'values'] as $dk) if (isset($s[$dk]) && is_array($s[$dk])) { $src = $s[$dk]; break; }
+        if ($src === null) $src = array_diff_key($s, array_flip(['type', 'block', 'tipo', 'style', 'note', 'screen', 'id', 'hidden']));
+        // nombres de campo normalizados contra los del bloque; los desconocidos se anotan
+        $byFold = []; foreach ($m['fields'] as $fk) $byFold[$fold($fk)] = $fk;
+        $data = []; $imgNotes = []; $unknown = [];
+        foreach ($src as $k0 => $v) {
+            $k = $byFold[$fold((string) $k0)] ?? null;
+            if ($k === null) { $unknown[] = (string) $k0; continue; }
+            if ($v === '' || $v === null || $v === [] || (is_string($v) && trim($v) === '')) continue;
+            // una lista donde el bloque espera texto (p. ej. párrafos sueltos) se une por líneas
+            if (is_array($v) && !in_array($k, $m['lines'], true) && !in_array($k, $m['images'], true) && !cms_is_i18n_value($v)) $v = implode("\n", array_map(fn($x) => is_scalar($x) ? (string) $x : json_encode($x, JSON_UNESCAPED_UNICODE), $v));
             if (in_array($k, $m['lines'], true) && is_string($v)) $v = array_values(array_filter(array_map('trim', explode("\n", $v)), 'strlen'));
             if (in_array($k, $m['image'], true)) {
                 // "#N" → imagen del diseño; una descripción → imagen provisional y la descripción va a las notas
@@ -269,14 +295,19 @@ function cms_import_materialize(array $result, string $type, string $slug, strin
                 if (!$v) continue;
                 if ($prov && $placeholder !== '') $imgNotes[] = $prov . ' imágenes provisionales en «' . $k . '»; el pie de cada una dice cuál va';
             }
-            $data[$k] = in_array($k, $m['i18n'], true) ? $i18n($v) : $v;
+            $data[$k] = in_array($k, $m['i18n'], true) ? $i18n($v) : (cms_is_i18n_value($v) ? (string) ($v[$lang] ?? reset($v)) : $v);
         }
         $style = array_filter((array) ($s['style'] ?? []), fn($v) => $v !== '' && $v !== null && $v !== false && $v !== 0 && $v !== '0');
         $sections[] = ['id' => substr(bin2hex(random_bytes(4)), 0, 6), 'type' => $t, 'data' => $data, 'style' => $style, 'hidden' => false];
         $n = trim((string) ($s['note'] ?? ''));
         if ($imgNotes) $n = trim($n . ($n !== '' ? ' ' : '') . implode('. ', $imgNotes) . '.');
+        if ($unknown) $n = trim($n . ' Campos que el bloque no tiene y se descartaron: ' . implode(', ', array_unique($unknown)) . '.');
+        if (!$data && $m['fields']) { $empty++; $n = trim($n . ' La sección llegó sin contenido.'); }
         if ($n !== '') $notes[] = '[' . $m['label'] . '] pantalla ' . (int) ($s['screen'] ?? 0) . ': ' . $n;
     }
+    if ($empty && $empty === count($sections)) $notes[] = 'Ninguna sección trajo contenido: el modelo no devolvió los campos dentro de "data" o el proveedor ignoró el formato de respuesta. Revisa data/import/' . $slug . '-respuesta.json y prueba con otro modelo.';
+    elseif ($empty) $notes[] = $empty . ' sección(es) llegaron sin contenido.';
+    if ($imagePaths && !array_filter(array_keys($used), 'is_int')) $notes[] = 'El modelo no colocó ninguna de las ' . count($imagePaths) . ' imágenes extraídas (no usó las referencias "#N"); están en Medios, en uploads/import/' . $slug . '/.';
     $today = date('Y-m-d');
     $def = cms_type($type) ?: [];
     $titleField = $def['title_field'] ?? 'title';

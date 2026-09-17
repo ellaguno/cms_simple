@@ -86,7 +86,8 @@ admin_header('Ajustes', 'settings');
       <div class="ad-field"><label class="ad-check"><input type="checkbox" name="lang_<?= $l ?>" value="1"<?= !empty($S['languages'][$l]) ? ' checked' : '' ?>> Activar la versión en <?= cms_e($langNames[$l] ?? strtoupper($l)) ?> (/<?= $l ?>/)</label></div>
 <?php endforeach; ?>
       <div class="ad-field"><label>URL canónica del sitio (con https y sin barra final; fija el dominio en canonical, sitemap y datos estructurados aunque entren por www)</label><input type="url" name="site_url" value="<?= cms_e($S['site_url'] ?? '') ?>" placeholder="https://midominio.com"></div>
-      <div class="ad-field"><label>Otros sitios (enlaces del footer): una por línea, "Texto | URL"</label><textarea name="other_sites" rows="3"><?= cms_e(implode("\n", array_map(fn($o) => ($o['label'] ?? '') . ' | ' . ($o['url'] ?? ''), (array) ($S['other_sites'] ?? [])))) ?></textarea></div>
+      <div class="ad-field"><label>Otros sitios (enlaces del footer): una por línea, "Texto | URL"</label><textarea name="other_sites" rows="3"><?= cms_e(implode("\n", array_map(fn($o) => ($o['label'] ?? '') . ' | ' . ($o['url'] ?? ''), (array) ($S['other_sites'] ?? [])))) ?></textarea>
+        <p class="ad-help">Los datos de contacto y redes del pie están en la pestaña Contacto. Los <strong>textos fijos</strong> de la cabecera y el pie (títulos, copyright, etiquetas) se editan en <a href="<?= admin_url('strings') ?>">Textos del sitio</a>; el menú, en <a href="<?= admin_url('menu') ?>">Menú</a>.</p></div>
     </section>
   </div>
 

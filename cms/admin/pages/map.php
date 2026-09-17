@@ -27,6 +27,9 @@ if (admin_is_post()) {
             foreach ($siblings as $k => $sb) if (($sb['order'] ?? null) !== $k + 1) { $sb['order'] = $k + 1; cms_item_save($type, $sb); }
             admin_flash('Orden actualizado.');
         }
+    } elseif ($it && $action === 'delete') {
+        [$ok, $msg] = cms_item_remove($type, $slug);
+        admin_flash($msg, $ok ? 'ok' : 'err');
     } elseif ($it && $action === 'status') {
         $it['status'] = admin_post('status') === 'published' ? 'published' : 'draft'; $it['updated'] = date('Y-m-d');
         cms_item_save($type, $it); admin_flash($it['status'] === 'published' ? 'Publicado.' : 'Pasado a borrador.');
@@ -73,6 +76,12 @@ function admin_map_node(array $n, array $icons, array $statusLabel, int $depth =
     // acciones
     echo '<span class="ad-map-actions">';
     if ($n['edit'] !== '') echo '<a class="ad-btn ad-btn-sm ad-btn-light" href="' . cms_e($n['edit']) . '">Editar</a>';
+    // botón "+" a la vista: página nueva en la raíz, en la colección, hija de esta página o en esta categoría
+    $plus = fn(string $href, string $title) => '<a class="ad-btn ad-btn-sm ad-btn-light ad-map-plus" href="' . $href . '" title="' . cms_e($title) . '" aria-label="' . cms_e($title) . '">+</a>';
+    if ($n['kind'] === 'home' && $ctx['treeTypes']) echo $plus(admin_url('edit', ['type' => $ctx['treeTypes'][0]]), 'Nueva ' . mb_strtolower($types[$ctx['treeTypes'][0]]['label_singular'] ?? 'página') . ' en la raíz');
+    elseif ($isTreeType || $n['kind'] === 'type') echo $plus(admin_url('edit', ['type' => $n['type']]), 'Nuevo: ' . ($types[$n['type']]['label_singular'] ?? 'elemento'));
+    elseif ($isTreeItem) echo $plus(admin_url('edit', ['type' => $n['type'], 'parent' => $n['slug']]), 'Nueva página hija de «' . $n['label'] . '»');
+    elseif ($n['kind'] === 'category') echo $plus(admin_url('edit', ['type' => $n['type'], 'cat' => $n['slug']]), 'Nuevo en la categoría «' . $n['label'] . '»');
     if ($n['kind'] === 'item' || $n['kind'] === 'category' || $isTreeType || $n['kind'] === 'home' && $ctx['treeTypes']) {
         echo '<details class="ad-map-menu"><summary class="ad-btn ad-btn-sm ad-btn-light" title="Más acciones">⋯</summary><div class="ad-map-menu-box">';
         $f = fn(string $action, array $fields, string $label, string $confirm = '') => '<form method="post"' . ($confirm ? ' data-confirm="' . cms_e($confirm) . '"' : '') . '>' . admin_csrf_field() . '<input type="hidden" name="action" value="' . $action . '">' . implode('', array_map(fn($k, $v) => '<input type="hidden" name="' . cms_e($k) . '" value="' . cms_e($v) . '">', array_keys($fields), $fields)) . '<button type="submit">' . cms_e($label) . '</button></form>';
@@ -90,6 +99,7 @@ function admin_map_node(array $n, array $icons, array $statusLabel, int $depth =
             if (CMS_BASE !== '' && strpos($rel, CMS_BASE) === 0) $rel = substr($rel, strlen(CMS_BASE));
             if (!in_array($rel, $ctx['menuUrls'], true) && !in_array(rtrim($rel, '/') . '/', $ctx['menuUrls'], true)) echo $f('menu', ['label' => $n['label'], 'url' => $rel], '☰ Añadir al menú');
             else echo '<span class="ad-help">Ya está en el menú</span>';
+            if (!cms_is_home_item($n['type'], $n['slug'])) echo $f('delete', ['type' => $n['type'], 'slug' => $n['slug']], '✕ Eliminar', '¿Eliminar «' . $n['label'] . '»? No se puede deshacer.' . ($isTreeItem && $has ? ' Sus páginas hijas pasarán al nivel superior.' : ''));
         }
         echo '</div></details>';
     }
@@ -104,7 +114,7 @@ function admin_map_node(array $n, array $icons, array $statusLabel, int $depth =
 
 admin_header('Mapa del sitio', 'map');
 ?>
-<p class="ad-help">Todo lo que responde en el sitio, de dónde sale cada cosa y en qué estado está. Las ramas se pliegan y despliegan. Con ⋯ creas páginas hijas, publicas, ordenas o añades al menú; arrastra una página sobre otra para moverla.
+<p class="ad-help">Todo lo que responde en el sitio, de dónde sale cada cosa y en qué estado está. Las ramas se pliegan y despliegan. Con + creas una página nueva en ese punto (en la raíz, dentro de una página o en una categoría); con ⋯ publicas, ordenas, añades al menú o eliminas; arrastra una página sobre otra para moverla.
 <?php if (count(cms_langs()) > 1): ?> Idioma: <?php foreach (cms_active_langs() as $l): ?><a href="<?= admin_url('map', ['lang' => $l]) ?>"<?= $l === $lang ? ' class="on"' : '' ?>><?= strtoupper($l) ?></a> <?php endforeach; endif; ?></p>
 <div class="ad-map-legend">
   <span><span class="ad-pill on">publicado</span> <?= (int) $counts['published'] ?></span>

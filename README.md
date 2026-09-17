@@ -342,6 +342,30 @@ espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con 
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
 
+## Medios con buscador y renombrar, borrar páginas, botón + en el mapa e importador más robusto (1.32)
+
+- **Medios**: buscador por nombre de archivo o carpeta (sin distinguir mayúsculas ni acentos, combinable con los
+  filtros de tipo) y botón **Renombrar** en cada archivo: el nombre se normaliza (minúsculas, sin acentos ni espacios),
+  se conserva la extensión y la carpeta, se renombra también la versión WebP y **las referencias en el contenido se
+  actualizan** (ajustes, textos, menú, elementos e índices).
+- **Eliminar páginas** desde el editor (botón al pie de la columna derecha) y desde el menú ⋯ del Mapa del sitio, además
+  del listado. La portada (`home_item`) no se puede borrar; en colecciones en árbol, las páginas hijas de la borrada
+  pasan al nivel superior en vez de perderse.
+- **Mapa del sitio**: botón **+** a la vista en la raíz, en cada colección, en cada página (nueva hija) y en cada
+  categoría, sin abrir el menú ⋯.
+- **Panel**: las colecciones declaradas con `'group' => 'Contenido'` en `site/config.php` se funden con el grupo
+  Contenido en vez de desaparecer del menú (antes el grupo propio con ese nombre chocaba con el predeterminado).
+- **Ajustes → General** explica dónde se editan los textos fijos de cabecera y pie (Textos del sitio) y el menú.
+- **Importar diseño**: el prompt incluye un ejemplo literal de la forma del JSON (secciones con sus campos dentro de
+  `data`), así que funciona aunque el proveedor ignore el esquema; el esquema es compatible con el modo estricto de
+  OpenRouter/OpenAI (`required` completo en `data` y `style`), que antes fallaba y caía en silencio a "sin esquema";
+  la materialización acepta los campos aunque vengan en `fields`, `props`, `content` o sueltos en la sección, normaliza
+  los nombres de campo y de bloque (mayúsculas, guiones, acentos), no envuelve dos veces los valores que ya vienen por
+  idioma, admite `"#3 | pie"` e `"imagen #3"` como referencia y anota lo que descarta (campos que el bloque no tiene,
+  secciones sin contenido, imágenes extraídas que el modelo no colocó). La respuesta cruda del modelo se guarda en
+  `data/import/<slug>-respuesta.json` y el panel Diseño importado del editor muestra modelo, formato de respuesta
+  (con aviso "sin esquema") e imágenes colocadas.
+
 ## Categorías como subsecciones y página Categorías (1.30)
 
 Se activa por colección desde **Diseño → Categorías** (queda en Ajustes, `categories_on`) o fijándolo en el tipo con

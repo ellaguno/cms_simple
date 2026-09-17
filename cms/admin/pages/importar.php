@@ -155,6 +155,9 @@ if (admin_is_post()) {
             // imagen provisional junto a las pantallas de referencia: los bloques con imágenes se ven y se sustituyen desde Medios
             $ph = '';
             if (is_file(CMS_DIR . '/assets/img/pendiente.png') && copy(CMS_DIR . '/assets/img/pendiente.png', $dir . '/pendiente.png')) $ph = 'uploads/import/' . $slug . '/pendiente.png';
+            // respuesta cruda del modelo, para diagnosticar una importación que salió sin texto o sin imágenes
+            if (!is_dir(CMS_DATA . '/import')) @mkdir(CMS_DATA . '/import', 0755, true);
+            cms_json_write(CMS_DATA . '/import/' . $slug . '-respuesta.json', ['date' => date('Y-m-d H:i:s'), 'provider' => $prov, 'model' => $mod, 'stats' => $stats, 'images' => $imagePaths, 'result' => $result]);
             [$item, $notes] = cms_import_materialize($result, $type, $slug, $lang, $extra, admin_post('source'), $ph, $imagePaths, $screens);
             if ($title !== '') $item[$def['title_field'] ?? 'title'] = [$lang => $title] + (array) $item[$def['title_field'] ?? 'title'];
             $item['import']['screens'] = array_map(fn($p) => 'uploads/import/' . $slug . '/' . basename($p), $screens);

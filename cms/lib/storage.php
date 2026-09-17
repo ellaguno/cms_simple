@@ -364,6 +364,31 @@ function cms_item_delete(string $type, string $slug): bool
     return $ok;
 }
 
+/**
+ * Elimina un elemento desde el panel con las comprobaciones de siempre: la portada (home_item) no se borra y,
+ * en tipos en árbol, las páginas hijas pasan a colgar del padre de la eliminada (no se pierden). Devuelve [ok, mensaje].
+ */
+function cms_item_remove(string $type, string $slug): array
+{
+    $slug = cms_slugify($slug);
+    $def = cms_type($type);
+    if (!$def || $slug === '') return [false, 'Elemento desconocido.'];
+    if (cms_is_home_item($type, $slug)) return [false, 'La portada no se puede eliminar: cámbiala en site/config.php (home_item) si quieres otra.'];
+    $it = cms_item($type, $slug, false);
+    if (!$it) return [false, 'El elemento no existe.'];
+    $moved = 0;
+    if (!empty($def['tree'])) {
+        $parent = (string) ($it['parent'] ?? '');
+        foreach (cms_items($type, false) as $ch) if ((string) ($ch['parent'] ?? '') === $slug) {
+            $full = cms_item($type, (string) $ch['slug'], false);
+            if ($full) { $full['parent'] = $parent; cms_json_write(cms_content_dir($type) . '/' . $full['slug'] . '.json', $full); $moved++; }
+        }
+    }
+    if (!cms_item_delete($type, $slug)) return [false, 'No se pudo eliminar el archivo. Revisa permisos de data/content/' . $type . '/.'];
+    if (!empty($def['tree'])) cms_tree_rebuild($type);
+    return [true, 'Elemento eliminado.' . ($moved ? ' Sus ' . $moved . ' página(s) hija(s) pasaron a colgar del nivel superior.' : '')];
+}
+
 /** ¿Es un valor por idioma? (arreglo cuyas claves son códigos de idioma del sitio) */
 function cms_is_i18n_value($v): bool
 {

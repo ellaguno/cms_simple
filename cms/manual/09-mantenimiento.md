@@ -87,6 +87,11 @@ obtienes con "Descargar el tema en uso" en el sitio original), o publicar un **c
 carpeta con una dirección que no se adivine, con el JSON y los zips, y añadir esa dirección en Catálogo → Catálogos propios.
 Los temas marcados `"private": true` en su `theme.json` y en el catálogo llevan el distintivo **Privado** en el panel.
 
+**Temas hijos.** Varios temas del catálogo (Cima, Base, Revista, Oceánico, Cadencia, Nieve, Casiopea, Hélice, Cuaderno,
+Agencia) son hijos del lienzo: cambian el aspecto pero usan sus mismos bloques, así que el contenido que armes con uno
+sirve con cualquier otro. Al instalarlos el catálogo instala también el lienzo si falta, y al activarlos en Diseño se
+añaden cuatro páginas de muestra como borrador (portada, servicios, nosotros y contacto) que puedes editar o borrar.
+
 ## Actualizar el CMS con un botón
 
 En **Actualizar** ves la versión que tienes y la publicada. Pulsa **Buscar actualizaciones** (esa consulta sale a

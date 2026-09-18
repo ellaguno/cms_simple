@@ -1,0 +1,64 @@
+{
+  "slug": "nosotros",
+  "status": "draft",
+  "title": {
+    "es": "Nosotros"
+  },
+  "sections": [
+    {
+      "id": "d1ddf5",
+      "type": "encabezado",
+      "data": {
+        "title": {
+          "es": "Nosotros"
+        },
+        "text": {
+          "es": "Cómo trabajamos"
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "cfaf87",
+      "type": "texto",
+      "data": {
+        "body": {
+          "es": "<p>Equipos pequeños, decisiones rápidas y entregas cada dos semanas. Sin presentaciones de cien páginas.</p>"
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "1abaea",
+      "type": "equipo",
+      "data": {
+        "title": {
+          "es": "El equipo"
+        },
+        "text": {
+          "es": ""
+        },
+        "items": {
+          "es": [
+            "Ana López | Dirección | cms/assets/img/demo/persona-1.jpg | Lidera el equipo desde 2015.",
+            "Marco Díaz | Proyectos | cms/assets/img/demo/persona-2.jpg | Convierte ideas en calendarios que se cumplen.",
+            "Lucía Fernández | Diseño | cms/assets/img/demo/persona-3.jpg | Ojo para lo que importa."
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 3,
+  "parent": "",
+  "path": "nosotros",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

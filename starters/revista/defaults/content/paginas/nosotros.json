@@ -1,0 +1,64 @@
+{
+  "slug": "nosotros",
+  "status": "draft",
+  "title": {
+    "es": "Nosotros"
+  },
+  "sections": [
+    {
+      "id": "b074af",
+      "type": "encabezado",
+      "data": {
+        "title": {
+          "es": "Nosotros"
+        },
+        "text": {
+          "es": "Quiénes somos"
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "8cd195",
+      "type": "texto",
+      "data": {
+        "body": {
+          "es": "<p>Somos una redacción pequeña con colaboradores en tres ciudades. Nos financian las suscripciones, no la publicidad.</p>"
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "8c30f7",
+      "type": "equipo",
+      "data": {
+        "title": {
+          "es": "El equipo"
+        },
+        "text": {
+          "es": ""
+        },
+        "items": {
+          "es": [
+            "Ana López | Dirección | cms/assets/img/demo/persona-1.jpg | Lidera el equipo desde 2015.",
+            "Marco Díaz | Proyectos | cms/assets/img/demo/persona-2.jpg | Convierte ideas en calendarios que se cumplen.",
+            "Lucía Fernández | Diseño | cms/assets/img/demo/persona-3.jpg | Ojo para lo que importa."
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 3,
+  "parent": "",
+  "path": "nosotros",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

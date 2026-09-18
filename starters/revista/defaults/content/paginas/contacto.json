@@ -1,0 +1,41 @@
+{
+  "slug": "contacto",
+  "status": "draft",
+  "title": {
+    "es": "Contacto"
+  },
+  "sections": [
+    {
+      "id": "b57fb4",
+      "type": "contacto",
+      "data": {
+        "title": {
+          "es": "Contacto"
+        },
+        "text": {
+          "es": "Escríbenos y te respondemos pronto."
+        },
+        "email": "hola@ejemplo.com",
+        "phone": "55 1234 5678",
+        "address": {
+          "es": "Ciudad de México"
+        },
+        "form": true,
+        "button_text": {
+          "es": "Enviar"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 4,
+  "parent": "",
+  "path": "contacto",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

@@ -1,0 +1,181 @@
+{
+  "slug": "inicio",
+  "status": "draft",
+  "title": {
+    "es": "Inicio"
+  },
+  "sections": [
+    {
+      "id": "c51ec1",
+      "type": "cabecera",
+      "data": {
+        "name": {
+          "es": "Hélice"
+        },
+        "menu": {
+          "es": [
+            "Inicio | /",
+            "Servicios | /servicios",
+            "Nosotros | /nosotros",
+            "Contacto | /contacto"
+          ]
+        },
+        "button_text": {
+          "es": "Contacto"
+        },
+        "button_url": "/contacto",
+        "sticky": true
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "b0d430",
+      "type": "hero",
+      "data": {
+        "badge": {
+          "es": "Estudio · CDMX"
+        },
+        "title": {
+          "es": "Diseñamos marcas que giran cabezas"
+        },
+        "subtitle": {
+          "es": "Estudio de diseño y desarrollo. Identidad, sitios web y campañas para quienes no quieren pasar desapercibidos."
+        },
+        "buttons": {
+          "es": [
+            "Empezar | /contacto | primary",
+            "Saber más | /nosotros | outline"
+          ]
+        },
+        "image": "cms/assets/img/demo/foto-4.jpg",
+        "layout": "left"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "d43d31",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": "Qué hacemos"
+        },
+        "subtitle": {
+          "es": "Tres formas de ayudarte"
+        },
+        "items": {
+          "es": [
+            "Identidad | Nombre, logotipo y sistema visual completo. | ti-palette",
+            "Sitios web | Diseño y desarrollo a medida, rápidos y medibles. | ti-world",
+            "Campañas | Conceptos y piezas para redes y medios. | ti-speakerphone"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "1fa787",
+      "type": "columnas",
+      "data": {
+        "title": {
+          "es": "Cómo trabajamos"
+        },
+        "body": {
+          "es": "<p>Equipos pequeños, decisiones rápidas y entregas cada dos semanas. Sin presentaciones de cien páginas.</p>"
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "side": "left",
+        "button_text": {
+          "es": "Conócenos"
+        },
+        "button_url": "/nosotros"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "2b0633",
+      "type": "testimonios",
+      "data": {
+        "title": {
+          "es": "Lo que dicen"
+        },
+        "items": {
+          "es": [
+            "Entendieron la marca mejor que nosotros. | Valeria Cano | CMO, Lumen",
+            "Entregan lo que prometen, cuando lo prometen. | Mario Salinas | Director, Bruma"
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "be49a2",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "¿Tienes un proyecto?"
+        },
+        "text": {
+          "es": "Cuéntanos qué necesitas y te proponemos cómo."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "02ee48",
+      "type": "pie",
+      "data": {
+        "name": {
+          "es": "Hélice"
+        },
+        "text": {
+          "es": "Estudio de diseño y desarrollo. Identidad, sitios web y campañas para quienes."
+        },
+        "columns": {
+          "es": [
+            "Sitio | Inicio > / | Servicios > /servicios | Nosotros > /nosotros | Contacto > /contacto"
+          ]
+        },
+        "contact": {
+          "es": [
+            "hola@ejemplo.com",
+            "55 1234 5678"
+          ]
+        },
+        "social": [
+          "Instagram | #",
+          "LinkedIn | #"
+        ],
+        "copy": {
+          "es": "© {year} Hélice. Todos los derechos reservados"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 1,
+  "parent": "",
+  "path": "inicio",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

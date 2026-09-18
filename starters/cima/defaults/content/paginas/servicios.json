@@ -1,0 +1,95 @@
+{
+  "slug": "servicios",
+  "status": "draft",
+  "title": {
+    "es": "Servicios"
+  },
+  "sections": [
+    {
+      "id": "1636fb",
+      "type": "encabezado",
+      "data": {
+        "title": {
+          "es": "Servicios"
+        },
+        "text": {
+          "es": "Lo que hacemos, explicado sin rodeos."
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "9b3177",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": ""
+        },
+        "subtitle": {
+          "es": ""
+        },
+        "items": {
+          "es": [
+            "Consultoría | Diagnóstico, plan y acompañamiento hasta que los resultados lleguen. | ti-briefcase",
+            "Tecnología | Implementamos y damos soporte a las herramientas que tu operación necesita. | ti-device-laptop",
+            "Capacitación | Formamos a tu equipo para que los cambios se sostengan. | ti-school"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "fc5274",
+      "type": "faq",
+      "data": {
+        "title": {
+          "es": "Preguntas frecuentes"
+        },
+        "items": {
+          "es": [
+            "¿Cómo empezamos? | Con una llamada de 30 minutos para entender qué necesitas.",
+            "¿Cuánto tarda? | Depende del alcance; lo acordamos por escrito antes de empezar.",
+            "¿Trabajan fuera de la ciudad? | Sí, la mayoría de nuestros proyectos son a distancia."
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "67f18a",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Hablemos de tu proyecto"
+        },
+        "text": {
+          "es": "Agenda una llamada de 30 minutos sin costo."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 2,
+  "parent": "",
+  "path": "servicios",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

@@ -1,0 +1,95 @@
+{
+  "slug": "servicios",
+  "status": "draft",
+  "title": {
+    "es": "Servicios"
+  },
+  "sections": [
+    {
+      "id": "e7ef36",
+      "type": "encabezado",
+      "data": {
+        "title": {
+          "es": "Servicios"
+        },
+        "text": {
+          "es": "Lo que hacemos, explicado sin rodeos."
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "7ebdb5",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": ""
+        },
+        "subtitle": {
+          "es": ""
+        },
+        "items": {
+          "es": [
+            "Publica | Páginas y tiendas listas en minutos. | ti-rocket",
+            "Cobra | Pagos, suscripciones y facturas integradas. | ti-credit-card",
+            "Crece | Estadísticas y correo para tu audiencia. | ti-chart-line"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "c6a193",
+      "type": "faq",
+      "data": {
+        "title": {
+          "es": "Preguntas frecuentes"
+        },
+        "items": {
+          "es": [
+            "¿Cómo empezamos? | Con una llamada de 30 minutos para entender qué necesitas.",
+            "¿Cuánto tarda? | Depende del alcance; lo acordamos por escrito antes de empezar.",
+            "¿Trabajan fuera de la ciudad? | Sí, la mayoría de nuestros proyectos son a distancia."
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "146465",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Crea tu cuenta gratis"
+        },
+        "text": {
+          "es": "Únete a 12 000 creadores que ya venden con Nieve."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 2,
+  "parent": "",
+  "path": "servicios",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

@@ -1,4 +1,5 @@
 {
+  "key": "lienzo",
   "label": "Lienzo",
   "desc": "Tema en blanco para el constructor: la cabecera y el pie son bloques, y el catálogo cubre las secciones habituales de un sitio.",
   "version": "1.0.0",

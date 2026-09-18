@@ -1,0 +1,185 @@
+{
+  "slug": "inicio",
+  "status": "draft",
+  "title": {
+    "es": "Inicio"
+  },
+  "sections": [
+    {
+      "id": "aa3fb7",
+      "type": "cabecera",
+      "data": {
+        "name": {
+          "es": "Cima Consultores"
+        },
+        "menu": {
+          "es": [
+            "Inicio | /",
+            "Servicios | /servicios",
+            "Nosotros | /nosotros",
+            "Contacto | /contacto"
+          ]
+        },
+        "button_text": {
+          "es": "Contacto"
+        },
+        "button_url": "/contacto",
+        "sticky": true
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "7a8509",
+      "type": "hero",
+      "data": {
+        "badge": {
+          "es": "Desde 2009"
+        },
+        "title": {
+          "es": "Soluciones que hacen crecer tu empresa"
+        },
+        "subtitle": {
+          "es": "Consultoría, tecnología y operación para negocios que quieren dar el siguiente paso, con un equipo que responde."
+        },
+        "buttons": {
+          "es": [
+            "Empezar | /contacto | primary",
+            "Saber más | /nosotros | outline"
+          ]
+        },
+        "image": "cms/assets/img/demo/foto-2.jpg",
+        "layout": "right"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "25e84e",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": "Qué hacemos"
+        },
+        "subtitle": {
+          "es": "Tres formas de ayudarte"
+        },
+        "items": {
+          "es": [
+            "Consultoría | Diagnóstico, plan y acompañamiento hasta que los resultados lleguen. | ti-briefcase",
+            "Tecnología | Implementamos y damos soporte a las herramientas que tu operación necesita. | ti-device-laptop",
+            "Capacitación | Formamos a tu equipo para que los cambios se sostengan. | ti-school"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "38b719",
+      "type": "columnas",
+      "data": {
+        "title": {
+          "es": "Por qué elegirnos"
+        },
+        "body": {
+          "es": "<p>Trabajamos con empresas medianas de todo el país. Entendemos primero, proponemos después y medimos siempre.</p><ul><li>Equipo con más de 15 años de experiencia</li><li>Resultados medibles desde el primer trimestre</li><li>Un solo interlocutor para todo el proyecto</li></ul>"
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "side": "left",
+        "button_text": {
+          "es": "Conócenos"
+        },
+        "button_url": "/nosotros"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "9379f0",
+      "type": "testimonios",
+      "data": {
+        "title": {
+          "es": "Lo que dicen"
+        },
+        "items": {
+          "es": [
+            "Nos ayudaron a ordenar la operación en tres meses. | Laura Méndez | Directora, Grupo Norte",
+            "Claros, rápidos y muy profesionales. | Jorge Ruiz | Gerente general, Textiles Ruiz"
+          ]
+        }
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "29eeec",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Hablemos de tu proyecto"
+        },
+        "text": {
+          "es": "Agenda una llamada de 30 minutos sin costo."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "37dbcf",
+      "type": "pie",
+      "data": {
+        "name": {
+          "es": "Cima Consultores"
+        },
+        "text": {
+          "es": "Consultoría, tecnología y operación para negocios que quieren dar el siguiente."
+        },
+        "columns": {
+          "es": [
+            "Sitio | Inicio > / | Servicios > /servicios | Nosotros > /nosotros | Contacto > /contacto"
+          ]
+        },
+        "contact": {
+          "es": [
+            "hola@ejemplo.com",
+            "55 1234 5678"
+          ]
+        },
+        "social": [
+          "Instagram | #",
+          "LinkedIn | #"
+        ],
+        "copy": {
+          "es": "© {year} Cima Consultores. Todos los derechos reservados"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 1,
+  "parent": "",
+  "path": "inicio",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

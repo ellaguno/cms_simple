@@ -1,0 +1,8 @@
+{
+  "label": "Revista",
+  "desc": "Editorial: titulares grandes en serif, fondo hueso, líneas finas y mucho aire, al estilo del tema predeterminado más reciente de WordPress. Para medios, revistas, estudios y despachos que quieren que el texto mande.",
+  "version": "1.0.0",
+  "author": "cms_simple",
+  "license": "MIT",
+  "parent": "lienzo"
+}

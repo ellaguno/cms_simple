@@ -12,7 +12,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/bootstrap.php';
-require_once CMS_SITE . '/inc/layout.php';
+require_once cms_theme_file('inc/layout.php');
 
 // ---- ruta solicitada
 if (isset($_GET['p'])) {
@@ -27,7 +27,7 @@ $path = trim(rawurldecode($path), '/');
 if ($path !== '' && ($to = cms_redirect_for($path)) !== null) { header('Location: ' . $to, true, 301); exit; }
 if ($path === 'robots.txt') { cms_robots(); exit; }
 if ($path === 'sitemap.xml') { cms_sitemap(); exit; }
-if ($path === 'llms.txt' && is_file(CMS_SITE . '/llms.txt')) { header('Content-Type: text/plain; charset=utf-8'); echo str_replace('{{site}}', cms_site_url(), (string) file_get_contents(CMS_SITE . '/llms.txt')); exit; }
+if ($path === 'llms.txt' && is_file(cms_theme_file('llms.txt'))) { header('Content-Type: text/plain; charset=utf-8'); echo str_replace('{{site}}', cms_site_url(), (string) file_get_contents(cms_theme_file('llms.txt'))); exit; }
 if ($path === '_cms/form') { require CMS_DIR . '/form.php'; exit; }
 if ($path === '_cms/cron') { require CMS_DIR . '/cron.php'; exit; }
 
@@ -204,7 +204,7 @@ if ($template === '_layout') {
     cms_layout_preview_page($page);
     exit;
 }
-if ($template === null || !is_file(CMS_SITE . '/templates/' . $template . '.php')) {
+if ($template === null || !is_file(cms_theme_file('templates/' . $template . '.php'))) {
     http_response_code(404);
     $template = '404';
     $page += ['title' => $t('not_found_title', '404') . ' · ' . $site, 'desc' => '', 'alt' => $alt('home'), 'noindex' => true];
@@ -217,5 +217,5 @@ foreach (['header', 'footer'] as $lk) if (($lit = cms_layout($lk, $page)) !== nu
 $GLOBALS['cms_current']['page'] = $page;
 
 site_header($page);
-require CMS_SITE . '/templates/' . $template . '.php';
+require cms_theme_file('templates/' . $template . '.php');
 site_footer($page);

@@ -1,0 +1,95 @@
+{
+  "slug": "servicios",
+  "status": "draft",
+  "title": {
+    "es": "Servicios"
+  },
+  "sections": [
+    {
+      "id": "baa905",
+      "type": "encabezado",
+      "data": {
+        "title": {
+          "es": "Servicios"
+        },
+        "text": {
+          "es": "Lo que hacemos, explicado sin rodeos."
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "51df8e",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": ""
+        },
+        "subtitle": {
+          "es": ""
+        },
+        "items": {
+          "es": [
+            "Identidad | Nombre, logotipo y sistema visual completo. | ti-palette",
+            "Sitios web | Diseño y desarrollo a medida, rápidos y medibles. | ti-world",
+            "Campañas | Conceptos y piezas para redes y medios. | ti-speakerphone"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "ce77f0",
+      "type": "faq",
+      "data": {
+        "title": {
+          "es": "Preguntas frecuentes"
+        },
+        "items": {
+          "es": [
+            "¿Cómo empezamos? | Con una llamada de 30 minutos para entender qué necesitas.",
+            "¿Cuánto tarda? | Depende del alcance; lo acordamos por escrito antes de empezar.",
+            "¿Trabajan fuera de la ciudad? | Sí, la mayoría de nuestros proyectos son a distancia."
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "dbd295",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "¿Tienes un proyecto?"
+        },
+        "text": {
+          "es": "Cuéntanos qué necesitas y te proponemos cómo."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 2,
+  "parent": "",
+  "path": "servicios",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

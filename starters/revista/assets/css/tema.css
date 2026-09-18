@@ -1,0 +1,23 @@
+/* Revista: editorial serif */
+:root { --lz-primary: #111; --lz-accent: #b91c1c; --lz-text: #262626; --lz-muted: #6b6b6b; --lz-bg: #faf9f6; --lz-light: #f1efe9; --lz-line: #dcd8cf; --lz-radius: 0; --cms-radius: 0; --cms-radius-lg: 0; --lz-max: 1120px; --lz-space: clamp(3.5rem, 8vw, 7rem); }
+h1, h2, h3 { font-weight: 500; letter-spacing: -.01em; }
+h1 { font-size: clamp(2.6rem, 6vw, 4.6rem); line-height: 1.05; }
+h2 { font-size: clamp(2rem, 3.6vw, 2.9rem); }
+.lz-btn { border-radius: 0; padding: .85rem 1.6rem; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; font-size: .85rem; } .lz-btn:hover { transform: none; box-shadow: none; }
+.lz-btn-primary { background: var(--lz-primary); } .lz-btn-outline { border-width: 1px; }
+.lz-header { background: var(--lz-bg); backdrop-filter: none; border-bottom: 1px solid var(--lz-primary); }
+.lz-header-in { min-height: 84px; }
+.lz-brand { font-family: var(--lz-font-heading); font-weight: 500; font-size: 1.6rem; letter-spacing: -.01em; }
+.lz-nav a { font-size: .9rem; text-transform: uppercase; letter-spacing: .1em; }
+.lz-hero { background: var(--lz-bg); }
+.lz-hero-in { gap: 4rem; } .lz-hero-media img { border-radius: 0; box-shadow: none; }
+.lz-badge { background: transparent; border-bottom: 1px solid var(--lz-accent); border-radius: 0; padding: 0 0 .2rem; }
+.lz-head { max-width: 640px; } .lz-head h2 { margin-bottom: .4em; }
+.lz-card { background: transparent; border: 0; border-top: 1px solid var(--lz-primary); border-radius: 0; padding: 1.25rem 0 0; }
+.lz-card h3 { font-size: 1.35rem; font-weight: 500; }
+.lz-card-icon { background: transparent; padding: 0; width: auto; height: auto; justify-content: flex-start; }
+.lz-quote { background: transparent; border-radius: 0; padding: 0; } .lz-quote p { font-family: var(--lz-font-heading); font-size: 1.5rem; line-height: 1.3; }
+.lz-plan { border-radius: 0; background: transparent; } .lz-plan.is-featured { box-shadow: none; border-color: var(--lz-primary); }
+.lz-cta { background: var(--lz-primary); } .lz-cta h2 { font-size: clamp(2.2rem, 4.5vw, 3.4rem); }
+.lz-pagehead { background: var(--lz-bg); border-bottom: 1px solid var(--lz-line); }
+.lz-footer { background: var(--lz-bg); color: var(--lz-text); border-top: 1px solid var(--lz-primary); } .lz-footer :is(h4, strong) { color: var(--lz-primary); } .lz-footer a { color: var(--lz-text); } .lz-footer .lz-copy { border-color: var(--lz-line); }

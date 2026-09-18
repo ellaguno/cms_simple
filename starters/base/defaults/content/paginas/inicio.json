@@ -1,0 +1,182 @@
+{
+  "slug": "inicio",
+  "status": "draft",
+  "title": {
+    "es": "Inicio"
+  },
+  "sections": [
+    {
+      "id": "3ee754",
+      "type": "cabecera",
+      "data": {
+        "name": {
+          "es": "Base"
+        },
+        "menu": {
+          "es": [
+            "Inicio | /",
+            "Servicios | /servicios",
+            "Nosotros | /nosotros",
+            "Contacto | /contacto"
+          ]
+        },
+        "button_text": {
+          "es": "Contacto"
+        },
+        "button_url": "/contacto",
+        "sticky": true
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "b2c808",
+      "type": "hero",
+      "data": {
+        "badge": {
+          "es": ""
+        },
+        "title": {
+          "es": "Un sitio sencillo que se lee bien"
+        },
+        "subtitle": {
+          "es": "Sin distracciones: texto claro, buena tipografía y lo justo para contar lo que haces."
+        },
+        "buttons": {
+          "es": [
+            "Empezar | /contacto | primary",
+            "Saber más | /nosotros | outline"
+          ]
+        },
+        "image": "",
+        "layout": "none"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "94436b",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": "Qué hacemos"
+        },
+        "subtitle": {
+          "es": "Tres formas de ayudarte"
+        },
+        "items": {
+          "es": [
+            "Escribimos | Artículos, guías y notas sobre lo que sabemos hacer.",
+            "Enseñamos | Cursos y talleres cortos, en línea y presenciales.",
+            "Acompañamos | Asesoría uno a uno para proyectos concretos."
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "407b4c",
+      "type": "columnas",
+      "data": {
+        "title": {
+          "es": "Sobre este sitio"
+        },
+        "body": {
+          "es": "<p>Este es un sitio hecho con calma. Publicamos cuando hay algo que decir y guardamos lo demás para nosotros.</p><p>Si quieres escribirnos, el correo está abajo.</p>"
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "side": "left",
+        "button_text": {
+          "es": "Conócenos"
+        },
+        "button_url": "/nosotros"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "d44302",
+      "type": "testimonios",
+      "data": {
+        "title": {
+          "es": "Lo que dicen"
+        },
+        "items": {
+          "es": [
+            "Lo leo cada mes y siempre me llevo algo. | Ana Torres | Lectora"
+          ]
+        }
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "023bba",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Suscríbete al boletín"
+        },
+        "text": {
+          "es": "Una nota al mes, sin ruido."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "3b5063",
+      "type": "pie",
+      "data": {
+        "name": {
+          "es": "Base"
+        },
+        "text": {
+          "es": "Sin distracciones: texto claro, buena tipografía y lo justo para contar lo que."
+        },
+        "columns": {
+          "es": [
+            "Sitio | Inicio > / | Servicios > /servicios | Nosotros > /nosotros | Contacto > /contacto"
+          ]
+        },
+        "contact": {
+          "es": [
+            "hola@ejemplo.com",
+            "55 1234 5678"
+          ]
+        },
+        "social": [
+          "Instagram | #",
+          "LinkedIn | #"
+        ],
+        "copy": {
+          "es": "© {year} Base. Todos los derechos reservados"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 1,
+  "parent": "",
+  "path": "inicio",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

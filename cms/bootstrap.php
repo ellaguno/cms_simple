@@ -12,7 +12,7 @@
  */
 declare(strict_types=1);
 
-const CMS_VERSION = '1.34.0';
+const CMS_VERSION = '1.35.0';
 
 define('CMS_DIR', __DIR__);
 define('CMS_ROOT', dirname(__DIR__));
@@ -55,6 +55,45 @@ function cms_detect_base(): string
 define('CMS_BASE', cms_detect_base());
 /** URL pública de la carpeta del tema activo ("/site" o "/themes/<clave>"). */
 define('CMS_SITE_BASE', CMS_BASE . '/' . CMS_SITE_REL);
+
+/**
+ * Temas hijos (1.35): un tema puede declarar en theme.json "parent": "lienzo" y aportar solo lo que cambia (CSS,
+ * config, algunos bloques o plantillas, contenido inicial). Lo que no tenga se toma del padre: layout, plantillas,
+ * bloques, assets, defaults y variaciones. El padre vive en themes/<clave> (o es site/ si se llama "site").
+ */
+function cms_theme_parent_dir(): string
+{
+    static $p = null;
+    if ($p !== null) return $p;
+    $p = '';
+    $j = is_file(CMS_SITE . '/theme.json') ? json_decode((string) @file_get_contents(CMS_SITE . '/theme.json'), true) : null;
+    $k = is_array($j) ? (string) ($j['parent'] ?? '') : '';
+    if ($k === '' || !preg_match('/^[a-z0-9_-]+$/i', $k)) return $p;
+    $dir = $k === 'site' ? CMS_ROOT . '/site' : CMS_THEMES . '/' . $k;
+    if (!is_dir($dir) && $k !== 'site' && is_file(CMS_ROOT . '/site/theme.json')) {   // el padre puede ser el site/ clásico si su theme.json dice "key": "<clave>"
+        $sj = json_decode((string) @file_get_contents(CMS_ROOT . '/site/theme.json'), true);
+        if (is_array($sj) && strtolower((string) ($sj['key'] ?? '')) === strtolower($k)) $dir = CMS_ROOT . '/site';
+    }
+    if (is_dir($dir) && realpath($dir) !== realpath(CMS_SITE) && (is_file($dir . '/config.php') || is_file($dir . '/theme.json'))) $p = $dir;
+    return $p;
+}
+define('CMS_SITE_PARENT', cms_theme_parent_dir());
+/** URL pública de la carpeta del tema padre ('' si no hay). */
+define('CMS_SITE_PARENT_BASE', CMS_SITE_PARENT !== '' ? CMS_BASE . '/' . trim(str_replace('\\', '/', substr(CMS_SITE_PARENT, strlen(CMS_ROOT))), '/') : '');
+
+/** Ruta absoluta de un archivo del tema: el del tema activo si existe; si no, el del padre; si no, el del activo (inexistente). */
+function cms_theme_file(string $rel): string
+{
+    $rel = ltrim($rel, '/');
+    if (is_file(CMS_SITE . '/' . $rel) || CMS_SITE_PARENT === '') return CMS_SITE . '/' . $rel;
+    return is_file(CMS_SITE_PARENT . '/' . $rel) ? CMS_SITE_PARENT . '/' . $rel : CMS_SITE . '/' . $rel;
+}
+
+/** Configuración del tema padre (para que config.php de un tema hijo la tome de base y cambie solo lo suyo). */
+function cms_parent_config(): array
+{
+    return CMS_SITE_PARENT !== '' && is_file(CMS_SITE_PARENT . '/config.php') ? (array) require CMS_SITE_PARENT . '/config.php' : [];
+}
 
 /** Configuración del sitio (site/config.php) con valores por defecto. */
 function cms_config(?string $key = null, $default = null)
@@ -129,6 +168,7 @@ require_once CMS_DIR . '/lib/packs.php';
 require_once CMS_DIR . '/lib/styles.php';
 require_once CMS_DIR . '/lib/registry.php';
 require_once CMS_DIR . '/lib/update.php';
+if (CMS_SITE_PARENT !== '' && is_file(CMS_SITE_PARENT . '/inc/functions.php')) require_once CMS_SITE_PARENT . '/inc/functions.php';   // tema padre primero
 if (is_file(CMS_SITE . '/inc/functions.php')) require_once CMS_SITE . '/inc/functions.php';
 // paquetes con código: <paquete>/inc.php se carga una vez por petición si el paquete está activo (ganchos y helpers)
 foreach (cms_packs() as $cms_pack) if (is_file($cms_pack['dir'] . '/inc.php')) require_once $cms_pack['dir'] . '/inc.php';

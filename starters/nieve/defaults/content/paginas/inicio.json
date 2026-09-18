@@ -1,0 +1,206 @@
+{
+  "slug": "inicio",
+  "status": "draft",
+  "title": {
+    "es": "Inicio"
+  },
+  "sections": [
+    {
+      "id": "380b65",
+      "type": "cabecera",
+      "data": {
+        "name": {
+          "es": "Nieve"
+        },
+        "menu": {
+          "es": [
+            "Inicio | /",
+            "Servicios | /servicios",
+            "Nosotros | /nosotros",
+            "Contacto | /contacto"
+          ]
+        },
+        "button_text": {
+          "es": "Contacto"
+        },
+        "button_url": "/contacto",
+        "sticky": true
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "5c1689",
+      "type": "hero",
+      "data": {
+        "badge": {
+          "es": "Gratis para empezar"
+        },
+        "title": {
+          "es": "Lanza tu idea esta semana"
+        },
+        "subtitle": {
+          "es": "Una plataforma para publicar, cobrar y crecer sin escribir una línea de código. Miles de creadores ya la usan."
+        },
+        "buttons": {
+          "es": [
+            "Empezar | /contacto | primary",
+            "Saber más | /nosotros | outline"
+          ]
+        },
+        "image": "cms/assets/img/demo/foto-6.jpg",
+        "layout": "right"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "444d61",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": "Qué hacemos"
+        },
+        "subtitle": {
+          "es": "Tres formas de ayudarte"
+        },
+        "items": {
+          "es": [
+            "Publica | Páginas y tiendas listas en minutos. | ti-rocket",
+            "Cobra | Pagos, suscripciones y facturas integradas. | ti-credit-card",
+            "Crece | Estadísticas y correo para tu audiencia. | ti-chart-line"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "8498ba",
+      "type": "columnas",
+      "data": {
+        "title": {
+          "es": "Todo lo que necesitas, sin la complicación"
+        },
+        "body": {
+          "es": "<p>Elegimos las funciones que de verdad importan y las hacemos fáciles. Lo demás sobra.</p>"
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "side": "left",
+        "button_text": {
+          "es": "Conócenos"
+        },
+        "button_url": "/nosotros"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "7f6743",
+      "type": "planes",
+      "data": {
+        "title": {
+          "es": "Planes"
+        },
+        "subtitle": {
+          "es": "Empieza gratis y crece cuando lo necesites"
+        },
+        "items": {
+          "es": [
+            "Gratis | $0 | al mes | 1 proyecto; 3 personas; soporte por correo | Empezar | /contacto | no",
+            "Equipo | $290 | al mes | Proyectos ilimitados; 15 personas; automatizaciones; soporte prioritario | Probar 14 días | /contacto | sí",
+            "Empresa | A medida | | Todo lo de Equipo; SSO; contrato y factura | Hablar con ventas | /contacto | no"
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "1c6ebd",
+      "type": "testimonios",
+      "data": {
+        "title": {
+          "es": "Lo que dicen"
+        },
+        "items": {
+          "es": [
+            "Pasé de idea a primera venta en dos días. | Camila Ortiz | Creadora",
+            "El soporte responde en minutos. | Luis Herrera | Diseñador"
+          ]
+        }
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "78d2ad",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Crea tu cuenta gratis"
+        },
+        "text": {
+          "es": "Únete a 12 000 creadores que ya venden con Nieve."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "d97760",
+      "type": "pie",
+      "data": {
+        "name": {
+          "es": "Nieve"
+        },
+        "text": {
+          "es": "Una plataforma para publicar, cobrar y crecer sin escribir una línea de código.."
+        },
+        "columns": {
+          "es": [
+            "Sitio | Inicio > / | Servicios > /servicios | Nosotros > /nosotros | Contacto > /contacto"
+          ]
+        },
+        "contact": {
+          "es": [
+            "hola@ejemplo.com",
+            "55 1234 5678"
+          ]
+        },
+        "social": [
+          "Instagram | #",
+          "LinkedIn | #"
+        ],
+        "copy": {
+          "es": "© {year} Nieve. Todos los derechos reservados"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 1,
+  "parent": "",
+  "path": "inicio",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

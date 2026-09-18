@@ -1,0 +1,16 @@
+/* Base: minimalista tipográfico */
+:root { --lz-primary: #222; --lz-accent: #1e73be; --lz-text: #3a3a3a; --lz-muted: #767676; --lz-light: #f7f8f9; --lz-line: #e5e5e5; --lz-radius: 3px; --cms-radius: 3px; --cms-radius-lg: 3px; --lz-max: 1100px; --lz-space: clamp(2.5rem, 6vw, 4.5rem); }
+h1, h2, h3 { letter-spacing: 0; font-weight: 700; }
+h1 { font-size: clamp(2rem, 4vw, 2.9rem); }
+.lz-btn { border-radius: 3px; padding: .7rem 1.3rem; font-weight: 600; } .lz-btn:hover { transform: none; box-shadow: none; filter: brightness(.92); }
+.lz-header { background: #fff; backdrop-filter: none; border-bottom: 1px solid var(--lz-line); }
+.lz-brand { font-weight: 700; font-size: 1.15rem; }
+.lz-nav a { font-size: .95rem; }
+.lz-hero { background: #fff; border-bottom: 1px solid var(--lz-line); }
+.lz-hero-media img { border-radius: 3px; box-shadow: none; border: 1px solid var(--lz-line); }
+.lz-card { border-radius: 3px; box-shadow: none; }
+.lz-card-icon { background: var(--lz-light); border-radius: 3px; }
+.lz-cta { background: var(--lz-light); } .lz-cta :is(h2, p) { color: var(--lz-primary); } .lz-cta .lz-lead { color: var(--lz-muted); } .lz-cta .lz-btn-outline { color: var(--lz-primary); }
+.lz-quote { background: transparent; border-left: 3px solid var(--lz-accent); border-radius: 0; padding-left: 1.25rem; }
+.lz-pagehead { background: #fff; border-bottom: 1px solid var(--lz-line); }
+.lz-footer { background: var(--lz-light); color: var(--lz-text); } .lz-footer :is(h4, strong) { color: var(--lz-primary); } .lz-footer a { color: var(--lz-text); } .lz-footer a:hover { color: var(--lz-accent); } .lz-footer .lz-copy { border-color: var(--lz-line); }

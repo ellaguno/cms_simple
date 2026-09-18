@@ -1,0 +1,8 @@
+{
+  "label": "Casiopea",
+  "desc": "Institucional sobrio, al estilo del tema predeterminado de Joomla: azul marino y ámbar, esquinas rectas, cabecera con sombra, tarjetas con borde superior de color y pie en dos tonos. Para instituciones, asociaciones y despachos.",
+  "version": "1.0.0",
+  "author": "cms_simple",
+  "license": "MIT",
+  "parent": "lienzo"
+}

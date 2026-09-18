@@ -1,0 +1,95 @@
+{
+  "slug": "servicios",
+  "status": "draft",
+  "title": {
+    "es": "Servicios"
+  },
+  "sections": [
+    {
+      "id": "d4ff3d",
+      "type": "encabezado",
+      "data": {
+        "title": {
+          "es": "Servicios"
+        },
+        "text": {
+          "es": "Lo que hacemos, explicado sin rodeos."
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "527f44",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": ""
+        },
+        "subtitle": {
+          "es": ""
+        },
+        "items": {
+          "es": [
+            "Reportajes | Investigaciones largas con fotografía propia.",
+            "Entrevistas | Conversaciones sin prisa con quienes hacen cosas.",
+            "Ensayos | Ideas con argumentos, no con titulares."
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "d00579",
+      "type": "faq",
+      "data": {
+        "title": {
+          "es": "Preguntas frecuentes"
+        },
+        "items": {
+          "es": [
+            "¿Cómo empezamos? | Con una llamada de 30 minutos para entender qué necesitas.",
+            "¿Cuánto tarda? | Depende del alcance; lo acordamos por escrito antes de empezar.",
+            "¿Trabajan fuera de la ciudad? | Sí, la mayoría de nuestros proyectos son a distancia."
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "58e99b",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Recibe la revista en casa"
+        },
+        "text": {
+          "es": "Suscripción anual, cuatro números impresos y acceso al archivo."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 2,
+  "parent": "",
+  "path": "servicios",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

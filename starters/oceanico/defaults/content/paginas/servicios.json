@@ -1,0 +1,95 @@
+{
+  "slug": "servicios",
+  "status": "draft",
+  "title": {
+    "es": "Servicios"
+  },
+  "sections": [
+    {
+      "id": "50c51c",
+      "type": "encabezado",
+      "data": {
+        "title": {
+          "es": "Servicios"
+        },
+        "text": {
+          "es": "Lo que hacemos, explicado sin rodeos."
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "591ced",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": ""
+        },
+        "subtitle": {
+          "es": ""
+        },
+        "items": {
+          "es": [
+            "Buceo | Reguladores, chalecos, computadoras y trajes. | ti-droplet",
+            "Kayak y paddle | Tablas, remos y accesorios para lago y mar. | ti-sailboat",
+            "Snorkel | Sets completos para toda la familia. | ti-eye"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "69316c",
+      "type": "faq",
+      "data": {
+        "title": {
+          "es": "Preguntas frecuentes"
+        },
+        "items": {
+          "es": [
+            "¿Cómo empezamos? | Con una llamada de 30 minutos para entender qué necesitas.",
+            "¿Cuánto tarda? | Depende del alcance; lo acordamos por escrito antes de empezar.",
+            "¿Trabajan fuera de la ciudad? | Sí, la mayoría de nuestros proyectos son a distancia."
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "66a0fe",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Ofertas de temporada"
+        },
+        "text": {
+          "es": "Hasta 30 % de descuento en equipo seleccionado hasta fin de mes."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 2,
+  "parent": "",
+  "path": "servicios",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

@@ -1,0 +1,8 @@
+{
+  "label": "Hélice",
+  "desc": "Agencia en modo oscuro: fondo azul noche, acento lima, tipografía geométrica grande y tarjetas translúcidas. Para agencias digitales, estudios y portafolios que quieren impacto.",
+  "version": "1.0.0",
+  "author": "cms_simple",
+  "license": "MIT",
+  "parent": "lienzo"
+}

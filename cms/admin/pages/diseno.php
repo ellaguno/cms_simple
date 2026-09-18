@@ -34,8 +34,18 @@ if (admin_is_post() && admin_post('action') === 'theme') {
         unset($S['style']);   // las variaciones son de cada tema
         // los colores y tipografías que copió una variación del tema anterior se retiran: si no, taparían la piel del nuevo
         foreach (array_merge(cms_style_setting_keys(CMS_SITE), cms_style_setting_keys($themes[$k]['dir'])) as $sk) unset($S[$sk]);
-        if (cms_json_write(CMS_DATA . '/settings.json', $S)) admin_flash('Tema activado: ' . $themes[$k]['label'] . '. Los colores y tipografías vuelven a los del tema; ajústalos en Diseño o en Ajustes.');
-        else admin_flash('No se pudo guardar en data/settings.json.', 'err');
+        if (cms_json_write(CMS_DATA . '/settings.json', $S)) {
+            admin_flash('Tema activado: ' . $themes[$k]['label'] . '. Los colores y tipografías vuelven a los del tema; ajústalos en Diseño o en Ajustes.');
+            // contenido inicial del tema (defaults/content/<tipo>/<slug>.json): solo lo que no exista ya
+            $seeded = 0;
+            foreach (glob($themes[$k]['dir'] . '/defaults/content/*/*.json') ?: [] as $src) {
+                $ty = basename(dirname($src)); $dst = CMS_DATA . '/content/' . $ty . '/' . basename($src);
+                if (!preg_match('/^[a-z0-9_-]+$/i', $ty) || is_file($dst)) continue;
+                if (!is_dir(dirname($dst))) @mkdir(dirname($dst), 0755, true);
+                if (@copy($src, $dst)) $seeded++;
+            }
+            if ($seeded) { cms_index_flush(); admin_flash($seeded . ' página(s) de muestra del tema añadidas como borrador; edítalas o bórralas desde Contenido.'); }
+        } else admin_flash('No se pudo guardar en data/settings.json.', 'err');
     }
     admin_redirect(admin_url('diseno'));
 }
@@ -141,7 +151,7 @@ admin_header('Diseño', 'diseno');
 <?php else: ?>      <div class="ad-theme-noshot" aria-hidden="true"><?= cms_e(mb_strtoupper(mb_substr($t['label'], 0, 2))) ?></div>
 <?php endif; ?>
       <div class="ad-theme-body">
-        <div class="ad-style-head"><strong><?= cms_e($t['label']) ?></strong><?php if ($on): ?><span class="ad-pill on">En uso</span><?php endif; ?><?php if (!empty($t['private'])): ?><span class="ad-pill warn" title="Licencia por sitio o tema de un cliente: no se publica ni se comparte">Privado</span><?php endif; ?></div>
+        <div class="ad-style-head"><strong><?= cms_e($t['label']) ?></strong><?php if ($on): ?><span class="ad-pill on">En uso</span><?php endif; ?><?php if (!empty($t['private'])): ?><span class="ad-pill warn" title="Licencia por sitio o tema de un cliente: no se publica ni se comparte">Privado</span><?php endif; ?><?php if (!empty($t['parent'])): $pp = isset($themes[$t['parent']]) || (isset($themes['site']) && strtolower((string) $themes['site']['tkey']) === strtolower($t['parent'])); ?><span class="ad-pill<?= $pp ? '' : ' warn' ?>" title="Tema hijo: toma del padre lo que no trae"><?= $pp ? 'sobre ' . cms_e($t['parent']) : 'falta el tema padre ' . cms_e($t['parent']) ?></span><?php endif; ?></div>
         <p class="ad-help"><?= cms_e($t['desc'] ?: 'Sin descripción.') ?><?= $t['version'] !== '' ? ' v' . cms_e($t['version']) : '' ?><?= $t['styles'] ? ' · ' . (int) $t['styles'] . ' variaciones' : '' ?><?= !empty($t['license']) ? ' · ' . cms_e((string) $t['license']) : '' ?></p>
 <?php if (!$on && $w && !$w['unknown'] && ($w['types'] || $w['blocks'])): ?>
         <p class="ad-help ad-theme-warn">Ojo: este tema no trae <?= $w['types'] ? 'los tipos <code>' . cms_e(implode(', ', $w['types'])) . '</code>' : '' ?><?= $w['types'] && $w['blocks'] ? ' ni ' : '' ?><?= $w['blocks'] ? 'los bloques <code>' . cms_e(implode(', ', array_slice($w['blocks'], 0, 6))) . '</code>' : '' ?> que usa tu contenido.</p>

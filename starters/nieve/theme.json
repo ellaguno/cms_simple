@@ -1,0 +1,8 @@
+{
+  "label": "Nieve",
+  "desc": "Startup con energía: hero en degradado a todo el ancho con texto blanco, botones píldora, etiquetas en mayúsculas, cifras y tarjetas coloridas. Para lanzamientos, apps y agencias jóvenes.",
+  "version": "1.0.0",
+  "author": "cms_simple",
+  "license": "MIT",
+  "parent": "lienzo"
+}

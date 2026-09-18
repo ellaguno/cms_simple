@@ -230,7 +230,13 @@ function cms_block_preview(array $def): string
     if (!empty($def['preview'])) return preg_match('#^(https?:)?//#', (string) $def['preview']) ? (string) $def['preview'] : CMS_BASE . '/' . ltrim((string) $def['preview'], '/');
     $key = (string) ($def['key'] ?? '');
     if (isset($def['pack']) && ($p = cms_packs()[$def['pack']] ?? null)) { $dir = $p['dir'] . '/assets/previews'; $url = $p['url'] . '/assets/previews'; $name = substr($key, strlen($def['pack']) + 1); }
-    else { $dir = CMS_SITE . '/assets/previews'; $url = CMS_BASE . '/site/assets/previews'; $name = $key; }
+    else {
+        $name = $key;
+        foreach (array_filter([[CMS_SITE, CMS_SITE_BASE], [CMS_SITE_PARENT, CMS_SITE_PARENT_BASE]], fn($x) => $x[0] !== '') as [$d, $u]) {
+            foreach (['gif', 'webp', 'png', 'jpg'] as $ext) if (is_file($d . '/assets/previews/' . $name . '.' . $ext)) return $u . '/assets/previews/' . $name . '.' . $ext . '?v=' . filemtime($d . '/assets/previews/' . $name . '.' . $ext);
+        }
+        return '';
+    }
     foreach (['gif', 'webp', 'png', 'jpg'] as $ext) if (is_file($dir . '/' . $name . '.' . $ext)) return $url . '/' . $name . '.' . $ext . '?v=' . filemtime($dir . '/' . $name . '.' . $ext);
     return '';
 }

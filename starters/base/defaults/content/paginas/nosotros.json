@@ -1,0 +1,64 @@
+{
+  "slug": "nosotros",
+  "status": "draft",
+  "title": {
+    "es": "Nosotros"
+  },
+  "sections": [
+    {
+      "id": "18b722",
+      "type": "encabezado",
+      "data": {
+        "title": {
+          "es": "Nosotros"
+        },
+        "text": {
+          "es": "Sobre este sitio"
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "57722f",
+      "type": "texto",
+      "data": {
+        "body": {
+          "es": "<p>Este es un sitio hecho con calma. Publicamos cuando hay algo que decir y guardamos lo demás para nosotros.</p><p>Si quieres escribirnos, el correo está abajo.</p>"
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "03fcf3",
+      "type": "equipo",
+      "data": {
+        "title": {
+          "es": "El equipo"
+        },
+        "text": {
+          "es": ""
+        },
+        "items": {
+          "es": [
+            "Ana López | Dirección | cms/assets/img/demo/persona-1.jpg | Lidera el equipo desde 2015.",
+            "Marco Díaz | Proyectos | cms/assets/img/demo/persona-2.jpg | Convierte ideas en calendarios que se cumplen.",
+            "Lucía Fernández | Diseño | cms/assets/img/demo/persona-3.jpg | Ojo para lo que importa."
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 3,
+  "parent": "",
+  "path": "nosotros",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

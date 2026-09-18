@@ -21,8 +21,11 @@ function cms_blocks(): array
     static $b = null;
     if ($b === null) {
         $b = [];
-        $file = CMS_SITE . '/blocks.php';
-        if (is_file($file)) foreach ((array) require $file as $k => $d) $b[$k] = (array) $d + ['key' => $k, 'label' => ucfirst($k), 'fields' => [], 'file' => CMS_SITE . '/blocks/' . preg_replace('/[^a-z0-9_-]/i', '', (string) $k) . '.php'];
+        foreach (array_filter([CMS_SITE_PARENT, CMS_SITE]) as $dir) {   // tema padre (si lo hay) y encima el activo
+            $file = $dir . '/blocks.php';
+            if (!is_file($file)) continue;
+            foreach ((array) require $file as $k => $d) $b[$k] = (array) $d + ['key' => $k, 'label' => ucfirst($k), 'fields' => [], 'file' => cms_theme_file('blocks/' . preg_replace('/[^a-z0-9_-]/i', '', (string) $k) . '.php')];
+        }
         $b += cms_pack_blocks();
         foreach ((array) cms_config('block_exclude', []) as $k) unset($b[$k]);
     }

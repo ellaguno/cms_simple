@@ -1,0 +1,64 @@
+{
+  "slug": "nosotros",
+  "status": "draft",
+  "title": {
+    "es": "Nosotros"
+  },
+  "sections": [
+    {
+      "id": "15fe1a",
+      "type": "encabezado",
+      "data": {
+        "title": {
+          "es": "Nosotros"
+        },
+        "text": {
+          "es": "Por qué elegirnos"
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "cd67af",
+      "type": "texto",
+      "data": {
+        "body": {
+          "es": "<p>Trabajamos con empresas medianas de todo el país. Entendemos primero, proponemos después y medimos siempre.</p><ul><li>Equipo con más de 15 años de experiencia</li><li>Resultados medibles desde el primer trimestre</li><li>Un solo interlocutor para todo el proyecto</li></ul>"
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "9ba9be",
+      "type": "equipo",
+      "data": {
+        "title": {
+          "es": "El equipo"
+        },
+        "text": {
+          "es": ""
+        },
+        "items": {
+          "es": [
+            "Ana López | Dirección | cms/assets/img/demo/persona-1.jpg | Lidera el equipo desde 2015.",
+            "Marco Díaz | Proyectos | cms/assets/img/demo/persona-2.jpg | Convierte ideas en calendarios que se cumplen.",
+            "Lucía Fernández | Diseño | cms/assets/img/demo/persona-3.jpg | Ojo para lo que importa."
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 3,
+  "parent": "",
+  "path": "nosotros",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

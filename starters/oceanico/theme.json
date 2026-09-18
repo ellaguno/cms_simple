@@ -1,0 +1,8 @@
+{
+  "label": "Oceánico",
+  "desc": "Escaparate y tienda: cabecera oscura, acento cian, tarjetas con sombra que se elevan al pasar el ratón, llamado a la acción en degradado. Para productos, catálogos y negocios que venden.",
+  "version": "1.0.0",
+  "author": "cms_simple",
+  "license": "MIT",
+  "parent": "lienzo"
+}

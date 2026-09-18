@@ -1,0 +1,183 @@
+{
+  "slug": "inicio",
+  "status": "draft",
+  "title": {
+    "es": "Inicio"
+  },
+  "sections": [
+    {
+      "id": "bd8651",
+      "type": "cabecera",
+      "data": {
+        "name": {
+          "es": "Agencia Bloque"
+        },
+        "menu": {
+          "es": [
+            "Inicio | /",
+            "Servicios | /servicios",
+            "Nosotros | /nosotros",
+            "Contacto | /contacto"
+          ]
+        },
+        "button_text": {
+          "es": "Contacto"
+        },
+        "button_url": "/contacto",
+        "sticky": true
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "5fbdfb",
+      "type": "hero",
+      "data": {
+        "badge": {
+          "es": ""
+        },
+        "title": {
+          "es": "Bienvenido a nuestro estudio"
+        },
+        "subtitle": {
+          "es": "Es un placer conocerte. Hacemos marcas, sitios y campañas para negocios que quieren destacar."
+        },
+        "buttons": {
+          "es": [
+            "Empezar | /contacto | primary",
+            "Saber más | /nosotros | outline"
+          ]
+        },
+        "image": "cms/assets/img/demo/foto-5.jpg",
+        "layout": "below"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "b75bca",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": "Qué hacemos"
+        },
+        "subtitle": {
+          "es": "Tres formas de ayudarte"
+        },
+        "items": {
+          "es": [
+            "Comercio electrónico | Tiendas que venden, con pasarela y logística resueltas. | ti-shopping-cart",
+            "Diseño responsivo | Sitios que se ven bien en cualquier pantalla. | ti-device-mobile",
+            "Seguridad web | Protección, respaldos y monitoreo continuo. | ti-lock"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "fc3f0d",
+      "type": "columnas",
+      "data": {
+        "title": {
+          "es": "Nuestra historia"
+        },
+        "body": {
+          "es": "<p>Empezamos en 2011 con dos personas y un cliente. Hoy somos veinte y seguimos haciendo cada proyecto como si fuera el primero.</p>"
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "side": "left",
+        "button_text": {
+          "es": "Conócenos"
+        },
+        "button_url": "/nosotros"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "9df644",
+      "type": "testimonios",
+      "data": {
+        "title": {
+          "es": "Lo que dicen"
+        },
+        "items": {
+          "es": [
+            "Un equipo comprometido con el resultado. | Elena Prado | Directora, Café Alma",
+            "Nuestra tienda triplicó las ventas en línea. | Tomás Vidal | Mueblería Vidal"
+          ]
+        }
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "ecfa0d",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Cuéntanos tu proyecto"
+        },
+        "text": {
+          "es": "Respondemos en menos de 24 horas."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "8f1d6e",
+      "type": "pie",
+      "data": {
+        "name": {
+          "es": "Agencia Bloque"
+        },
+        "text": {
+          "es": "Es un placer conocerte. Hacemos marcas, sitios y campañas para negocios que."
+        },
+        "columns": {
+          "es": [
+            "Sitio | Inicio > / | Servicios > /servicios | Nosotros > /nosotros | Contacto > /contacto"
+          ]
+        },
+        "contact": {
+          "es": [
+            "hola@ejemplo.com",
+            "55 1234 5678"
+          ]
+        },
+        "social": [
+          "Instagram | #",
+          "LinkedIn | #"
+        ],
+        "copy": {
+          "es": "© {year} Agencia Bloque. Todos los derechos reservados"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 1,
+  "parent": "",
+  "path": "inicio",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

@@ -1,0 +1,183 @@
+{
+  "slug": "inicio",
+  "status": "draft",
+  "title": {
+    "es": "Inicio"
+  },
+  "sections": [
+    {
+      "id": "0bd9d9",
+      "type": "cabecera",
+      "data": {
+        "name": {
+          "es": "Revista Norte"
+        },
+        "menu": {
+          "es": [
+            "Inicio | /",
+            "Servicios | /servicios",
+            "Nosotros | /nosotros",
+            "Contacto | /contacto"
+          ]
+        },
+        "button_text": {
+          "es": "Contacto"
+        },
+        "button_url": "/contacto",
+        "sticky": true
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "5b7fc9",
+      "type": "hero",
+      "data": {
+        "badge": {
+          "es": "Número 12 · Otoño"
+        },
+        "title": {
+          "es": "Historias que merecen tiempo"
+        },
+        "subtitle": {
+          "es": "Reportajes, entrevistas y ensayos sobre cultura, ciudad y diseño. Publicamos poco y lo cuidamos mucho."
+        },
+        "buttons": {
+          "es": [
+            "Empezar | /contacto | primary",
+            "Saber más | /nosotros | outline"
+          ]
+        },
+        "image": "cms/assets/img/demo/foto-4.jpg",
+        "layout": "left"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "ee0910",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": "Qué hacemos"
+        },
+        "subtitle": {
+          "es": "Tres formas de ayudarte"
+        },
+        "items": {
+          "es": [
+            "Reportajes | Investigaciones largas con fotografía propia.",
+            "Entrevistas | Conversaciones sin prisa con quienes hacen cosas.",
+            "Ensayos | Ideas con argumentos, no con titulares."
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "d6c8ce",
+      "type": "columnas",
+      "data": {
+        "title": {
+          "es": "Quiénes somos"
+        },
+        "body": {
+          "es": "<p>Somos una redacción pequeña con colaboradores en tres ciudades. Nos financian las suscripciones, no la publicidad.</p>"
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "side": "left",
+        "button_text": {
+          "es": "Conócenos"
+        },
+        "button_url": "/nosotros"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "6265c1",
+      "type": "testimonios",
+      "data": {
+        "title": {
+          "es": "Lo que dicen"
+        },
+        "items": {
+          "es": [
+            "La única revista que leo de principio a fin. | Carlos Peña | Suscriptor",
+            "Fotografía y textos a la altura. | Marta Gil | Editora invitada"
+          ]
+        }
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "be2939",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Recibe la revista en casa"
+        },
+        "text": {
+          "es": "Suscripción anual, cuatro números impresos y acceso al archivo."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "6c7587",
+      "type": "pie",
+      "data": {
+        "name": {
+          "es": "Revista Norte"
+        },
+        "text": {
+          "es": "Reportajes, entrevistas y ensayos sobre cultura, ciudad y diseño. Publicamos."
+        },
+        "columns": {
+          "es": [
+            "Sitio | Inicio > / | Servicios > /servicios | Nosotros > /nosotros | Contacto > /contacto"
+          ]
+        },
+        "contact": {
+          "es": [
+            "hola@ejemplo.com",
+            "55 1234 5678"
+          ]
+        },
+        "social": [
+          "Instagram | #",
+          "LinkedIn | #"
+        ],
+        "copy": {
+          "es": "© {year} Revista Norte. Todos los derechos reservados"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 1,
+  "parent": "",
+  "path": "inicio",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

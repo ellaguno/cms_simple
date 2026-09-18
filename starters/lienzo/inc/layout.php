@@ -15,11 +15,15 @@ function site_header(array $page): void
     $hasStyle = function_exists('cms_style') && cms_style() !== [];
     $font = trim((string) ($S['font_custom'] ?? '')) ?: trim((string) ($S['font'] ?? ''));
     $fontH = trim((string) ($S['font_heading_custom'] ?? '')) ?: trim((string) ($S['font_heading'] ?? ''));
-    if (!$hasStyle && $font === '') $font = 'Inter';
+    // tema hijo: tipografías propias por defecto (config 'theme_fonts' => [texto, títulos]) mientras la persona no elija otras
+    $tf = (array) cms_config('theme_fonts', []);
+    if (!$hasStyle && $font === '' && $fontH === '') { $font = (string) ($tf[0] ?? 'Inter'); $fontH = (string) ($tf[1] ?? ''); }
+    elseif (!$hasStyle && $font === '') $font = (string) ($tf[0] ?? 'Inter');
     $families = array_values(array_unique(array_filter([$font, $fontH])));
     $gf = $families ? implode('&', array_map(fn($f) => 'family=' . str_replace(' ', '+', $f) . ':wght@400;500;600;700;800', $families)) : '';
-    $primary = preg_match('/^#[0-9a-f]{3,8}$/i', (string) ($S['color_primary'] ?? '')) ? (string) $S['color_primary'] : ($hasStyle ? '' : '#111827');
-    $accent = preg_match('/^#[0-9a-f]{3,8}$/i', (string) ($S['color_accent'] ?? '')) ? (string) $S['color_accent'] : ($hasStyle ? '' : '#2563eb');
+    $child = defined('CMS_SITE_PARENT') && CMS_SITE_PARENT !== '';   // tema hijo: sus colores base los pone su CSS
+    $primary = preg_match('/^#[0-9a-f]{3,8}$/i', (string) ($S['color_primary'] ?? '')) ? (string) $S['color_primary'] : ($hasStyle || $child ? '' : '#111827');
+    $accent = preg_match('/^#[0-9a-f]{3,8}$/i', (string) ($S['color_accent'] ?? '')) ? (string) $S['color_accent'] : ($hasStyle || $child ? '' : '#2563eb');
     $vars = '';
     if ($font !== '') $vars .= '--lz-font:"' . cms_e($font) . '",system-ui,sans-serif;';
     if ($fontH !== '') $vars .= '--lz-font-heading:"' . cms_e($fontH) . '",system-ui,sans-serif;';
@@ -35,6 +39,8 @@ function site_header(array $page): void
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?<?= cms_e($gf) ?>&display=swap">
 <?php endif; ?><link rel="stylesheet" href="<?= cms_e($aos['css'][0]) ?>">
 <link rel="stylesheet" href="<?= cms_asset('css/lienzo.css') ?>?v=<?= CMS_VERSION ?>">
+<?php if (defined('CMS_SITE_PARENT') && CMS_SITE_PARENT !== '' && is_file(CMS_SITE . '/assets/css/tema.css')): // hoja del tema hijo ?><link rel="stylesheet" href="<?= cms_asset('css/tema.css') ?>?v=<?= cms_e((string) @filemtime(CMS_SITE . '/assets/css/tema.css')) ?>">
+<?php endif; ?>
 <?php if ($vars !== ''): ?><style>:root:root:root{<?= $vars ?>}</style>
 <?php endif; ?>
 </head>

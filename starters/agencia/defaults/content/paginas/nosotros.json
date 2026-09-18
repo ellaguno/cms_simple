@@ -1,0 +1,64 @@
+{
+  "slug": "nosotros",
+  "status": "draft",
+  "title": {
+    "es": "Nosotros"
+  },
+  "sections": [
+    {
+      "id": "fda44a",
+      "type": "encabezado",
+      "data": {
+        "title": {
+          "es": "Nosotros"
+        },
+        "text": {
+          "es": "Nuestra historia"
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "7d1bf8",
+      "type": "texto",
+      "data": {
+        "body": {
+          "es": "<p>Empezamos en 2011 con dos personas y un cliente. Hoy somos veinte y seguimos haciendo cada proyecto como si fuera el primero.</p>"
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "5e9725",
+      "type": "equipo",
+      "data": {
+        "title": {
+          "es": "El equipo"
+        },
+        "text": {
+          "es": ""
+        },
+        "items": {
+          "es": [
+            "Ana López | Dirección | cms/assets/img/demo/persona-1.jpg | Lidera el equipo desde 2015.",
+            "Marco Díaz | Proyectos | cms/assets/img/demo/persona-2.jpg | Convierte ideas en calendarios que se cumplen.",
+            "Lucía Fernández | Diseño | cms/assets/img/demo/persona-3.jpg | Ojo para lo que importa."
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 3,
+  "parent": "",
+  "path": "nosotros",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

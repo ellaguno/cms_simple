@@ -28,12 +28,12 @@ function cms_styles(): array
     static $out = null;
     if ($out !== null) return $out;
     $out = [];
-    foreach (glob(CMS_SITE . '/styles/*.json') ?: [] as $f) {
+    foreach (array_merge(CMS_SITE_PARENT !== '' ? (glob(CMS_SITE_PARENT . '/styles/*.json') ?: []) : [], glob(CMS_SITE . '/styles/*.json') ?: []) as $f) {
         $k = basename($f, '.json');
         if (!preg_match('/^[a-z0-9_-]+$/i', $k)) continue;
         $d = cms_json_read($f, null);
         if (!is_array($d)) continue;
-        $out[$k] = $d + ['key' => $k, 'label' => ucfirst($k), 'desc' => '', 'vars' => [], 'fonts' => [], 'settings' => []];
+        $out[$k] = $d + ['key' => $k, 'label' => ucfirst($k), 'desc' => '', 'vars' => [], 'fonts' => [], 'settings' => [], 'file' => $f];
     }
     uasort($out, fn($a, $b) => (int) ($b['default'] ?? false) <=> (int) ($a['default'] ?? false));
     return $out;
@@ -48,7 +48,8 @@ function cms_style_key(): string
     if ($over !== '' && isset($all[$over])) return $over;
     $k = (string) (cms_settings()['style'] ?? '');
     if ($k !== '' && isset($all[$k])) return $k;
-    foreach ($all as $key => $d) if (!empty($d['default'])) return (string) $key;
+    // la variación marcada por defecto solo si es del propio tema: la del padre no debe tapar el CSS de un tema hijo
+    foreach ($all as $key => $d) if (!empty($d['default']) && (CMS_SITE_PARENT === '' || strpos((string) ($d['file'] ?? ''), CMS_SITE . '/') === 0)) return (string) $key;
     return '';
 }
 
@@ -120,6 +121,8 @@ function cms_theme_info(string $dir, string $key): array
         'author' => (string) ($j['author'] ?? ''),
         'license' => (string) ($j['license'] ?? ''),
         'private' => !empty($j['private']),   // tema con licencia por sitio o de un cliente: no se redistribuye
+        'parent' => (string) ($j['parent'] ?? ''),   // tema hijo: toma del padre lo que no trae
+        'tkey' => (string) ($j['key'] ?? ''),         // clave declarada (site/ puede ser "lienzo" para los temas hijos)
         'dir' => $dir,
         'url' => CMS_BASE . '/' . ($key === 'site' ? 'site' : 'themes/' . $key),
         'screenshot' => $shot,

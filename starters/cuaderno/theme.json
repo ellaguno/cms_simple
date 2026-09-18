@@ -1,0 +1,8 @@
+{
+  "label": "Cuaderno",
+  "desc": "Cálido y de lectura: fondo papel, cuerpo en serif, títulos con filete de color a la izquierda, contenedor estrecho y tonos tierra. Al estilo de las plantillas editoriales de HTML5 UP. Para blogs personales, escritores y consultoras.",
+  "version": "1.0.0",
+  "author": "cms_simple",
+  "license": "MIT",
+  "parent": "lienzo"
+}

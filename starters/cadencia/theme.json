@@ -1,0 +1,8 @@
+{
+  "label": "Cadencia",
+  "desc": "Suave y redondeado, para productos digitales y SaaS: fondos lavanda muy claros, acento violeta, botones píldora, tarjetas con esquinas amplias y sombras difusas.",
+  "version": "1.0.0",
+  "author": "cms_simple",
+  "license": "MIT",
+  "parent": "lienzo"
+}

@@ -1,0 +1,182 @@
+{
+  "slug": "inicio",
+  "status": "draft",
+  "title": {
+    "es": "Inicio"
+  },
+  "sections": [
+    {
+      "id": "359def",
+      "type": "cabecera",
+      "data": {
+        "name": {
+          "es": "Instituto Casiopea"
+        },
+        "menu": {
+          "es": [
+            "Inicio | /",
+            "Servicios | /servicios",
+            "Nosotros | /nosotros",
+            "Contacto | /contacto"
+          ]
+        },
+        "button_text": {
+          "es": "Contacto"
+        },
+        "button_url": "/contacto",
+        "sticky": true
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "29e730",
+      "type": "hero",
+      "data": {
+        "badge": {
+          "es": "Inscripciones abiertas"
+        },
+        "title": {
+          "es": "Formación que abre puertas"
+        },
+        "subtitle": {
+          "es": "Programas técnicos y diplomados con reconocimiento oficial, docentes en activo y bolsa de trabajo."
+        },
+        "buttons": {
+          "es": [
+            "Empezar | /contacto | primary",
+            "Saber más | /nosotros | outline"
+          ]
+        },
+        "image": "cms/assets/img/demo/foto-2.jpg",
+        "layout": "right"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "dac099",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": "Qué hacemos"
+        },
+        "subtitle": {
+          "es": "Tres formas de ayudarte"
+        },
+        "items": {
+          "es": [
+            "Programas técnicos | Dos años, prácticas incluidas. | ti-certificate",
+            "Diplomados | Actualización profesional en fines de semana. | ti-book",
+            "Educación continua | Cursos cortos abiertos a todo público. | ti-users"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "74bf63",
+      "type": "columnas",
+      "data": {
+        "title": {
+          "es": "Una institución con historia"
+        },
+        "body": {
+          "es": "<p>Fundado en 1987, el Instituto ha formado a más de 20 000 egresados. Nuestros programas se actualizan cada año con la industria.</p>"
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "side": "left",
+        "button_text": {
+          "es": "Conócenos"
+        },
+        "button_url": "/nosotros"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "6d20cd",
+      "type": "testimonios",
+      "data": {
+        "title": {
+          "es": "Lo que dicen"
+        },
+        "items": {
+          "es": [
+            "Conseguí trabajo antes de terminar el programa. | Rodrigo Campos | Egresado 2024"
+          ]
+        }
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "d0029b",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Solicita informes"
+        },
+        "text": {
+          "es": "Te respondemos el mismo día hábil."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "d5d720",
+      "type": "pie",
+      "data": {
+        "name": {
+          "es": "Instituto Casiopea"
+        },
+        "text": {
+          "es": "Programas técnicos y diplomados con reconocimiento oficial, docentes en activo."
+        },
+        "columns": {
+          "es": [
+            "Sitio | Inicio > / | Servicios > /servicios | Nosotros > /nosotros | Contacto > /contacto"
+          ]
+        },
+        "contact": {
+          "es": [
+            "hola@ejemplo.com",
+            "55 1234 5678"
+          ]
+        },
+        "social": [
+          "Instagram | #",
+          "LinkedIn | #"
+        ],
+        "copy": {
+          "es": "© {year} Instituto Casiopea. Todos los derechos reservados"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 1,
+  "parent": "",
+  "path": "inicio",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

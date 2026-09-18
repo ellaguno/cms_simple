@@ -1,7 +1,7 @@
 {
   "name": "Catálogo de cms_simple",
   "desc": "Temas y paquetes de bloques listos para instalar desde Admin → Catálogo.",
-  "updated": "2026-09-15",
+  "updated": "2026-09-18",
   "items": [
     {
       "kind": "theme",
@@ -43,6 +43,216 @@
       "subdir": "starters/alldesign",
       "requires": {
         "cms": "1.30.0"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "cima",
+      "label": "Cima",
+      "desc": "Corporativo claro y directo, al estilo de los temas de empresa más usados en WordPress: barra superior con datos de contacto, cabecera blanca fija, hero con imagen a la derecha, tarjetas con sombra suave y pie oscuro. Para empresas, consultorías y servicios.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": [
+        "empresa",
+        "servicios",
+        "corporativo"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/cima/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/cima",
+      "requires": {
+        "cms": "1.35.0",
+        "theme": "lienzo"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "base",
+      "label": "Base",
+      "desc": "Minimalista y tipográfico, en la línea de los temas ligeros para blogs y sitios sencillos: cabecera fina con línea inferior, grises neutros, esquinas casi rectas, sin sombras. Todo el protagonismo lo tiene el contenido.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": [
+        "blog",
+        "minimalista",
+        "general"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/base/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/base",
+      "requires": {
+        "cms": "1.35.0",
+        "theme": "lienzo"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "revista",
+      "label": "Revista",
+      "desc": "Editorial: titulares grandes en serif, fondo hueso, líneas finas y mucho aire, al estilo del tema predeterminado más reciente de WordPress. Para medios, revistas, estudios y despachos que quieren que el texto mande.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": [
+        "editorial",
+        "revista",
+        "estudio"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/revista/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/revista",
+      "requires": {
+        "cms": "1.35.0",
+        "theme": "lienzo"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "oceanico",
+      "label": "Oceánico",
+      "desc": "Escaparate y tienda: cabecera oscura, acento cian, tarjetas con sombra que se elevan al pasar el ratón, llamado a la acción en degradado. Para productos, catálogos y negocios que venden.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": [
+        "tienda",
+        "productos",
+        "escaparate"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/oceanico/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/oceanico",
+      "requires": {
+        "cms": "1.35.0",
+        "theme": "lienzo"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "cadencia",
+      "label": "Cadencia",
+      "desc": "Suave y redondeado, para productos digitales y SaaS: fondos lavanda muy claros, acento violeta, botones píldora, tarjetas con esquinas amplias y sombras difusas.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": [
+        "saas",
+        "app",
+        "startup"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/cadencia/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/cadencia",
+      "requires": {
+        "cms": "1.35.0",
+        "theme": "lienzo"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "nieve",
+      "label": "Nieve",
+      "desc": "Startup con energía: hero en degradado a todo el ancho con texto blanco, botones píldora, etiquetas en mayúsculas, cifras y tarjetas coloridas. Para lanzamientos, apps y agencias jóvenes.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": [
+        "startup",
+        "landing",
+        "app"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/nieve/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/nieve",
+      "requires": {
+        "cms": "1.35.0",
+        "theme": "lienzo"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "casiopea",
+      "label": "Casiopea",
+      "desc": "Institucional sobrio, al estilo del tema predeterminado de Joomla: azul marino y ámbar, esquinas rectas, cabecera con sombra, tarjetas con borde superior de color y pie en dos tonos. Para instituciones, asociaciones y despachos.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": [
+        "institucional",
+        "corporativo",
+        "joomla"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/casiopea/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/casiopea",
+      "requires": {
+        "cms": "1.35.0",
+        "theme": "lienzo"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "helice",
+      "label": "Hélice",
+      "desc": "Agencia en modo oscuro: fondo azul noche, acento lima, tipografía geométrica grande y tarjetas translúcidas. Para agencias digitales, estudios y portafolios que quieren impacto.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": [
+        "agencia",
+        "oscuro",
+        "portafolio"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/helice/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/helice",
+      "requires": {
+        "cms": "1.35.0",
+        "theme": "lienzo"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "cuaderno",
+      "label": "Cuaderno",
+      "desc": "Cálido y de lectura: fondo papel, cuerpo en serif, títulos con filete de color a la izquierda, contenedor estrecho y tonos tierra. Al estilo de las plantillas editoriales de HTML5 UP. Para blogs personales, escritores y consultoras.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": [
+        "blog",
+        "personal",
+        "lectura"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/cuaderno/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/cuaderno",
+      "requires": {
+        "cms": "1.35.0",
+        "theme": "lienzo"
+      }
+    },
+    {
+      "kind": "theme",
+      "key": "agencia",
+      "label": "Agencia",
+      "desc": "Agencia clásica: acento amarillo sobre gris carbón, títulos en mayúsculas y negrita, secciones bien separadas, tarjetas centradas con icono redondo y pie oscuro. Al estilo de la plantilla Agency de Start Bootstrap.",
+      "version": "1.0.0",
+      "author": "cms_simple",
+      "license": "MIT",
+      "tags": [
+        "agencia",
+        "servicios",
+        "bootstrap"
+      ],
+      "screenshot": "https://raw.githubusercontent.com/ellaguno/cms_simple/main/starters/agencia/screenshot.jpg",
+      "url": "https://github.com/ellaguno/cms_simple/archive/refs/heads/main.zip",
+      "subdir": "starters/agencia",
+      "requires": {
+        "cms": "1.35.0",
+        "theme": "lienzo"
       }
     }
   ]

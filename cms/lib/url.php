@@ -69,7 +69,9 @@ function cms_menu_url(string $url, string $lang): string
 
 function cms_asset(string $path): string
 {
-    return CMS_SITE_BASE . '/assets/' . ltrim($path, '/');
+    $path = ltrim($path, '/');
+    if (CMS_SITE_PARENT !== '' && !is_file(CMS_SITE . '/assets/' . $path) && is_file(CMS_SITE_PARENT . '/assets/' . $path)) return CMS_SITE_PARENT_BASE . '/assets/' . $path;
+    return CMS_SITE_BASE . '/assets/' . $path;
 }
 
 /** Imagen guardada como nombre (site/assets/img), ruta uploads/… o site/assets/…, o URL absoluta. */
@@ -87,8 +89,8 @@ function cms_local_path(string $path): ?string
 {
     if ($path === '' || preg_match('#^(https?:)?//#i', $path)) return null;
     if (strpos($path, 'uploads/') === 0 || strpos($path, 'site/') === 0 || strpos($path, 'themes/') === 0 || strpos($path, 'cms/') === 0) return CMS_ROOT . '/' . $path;
-    if (strpos($path, 'assets/') === 0) return CMS_SITE . '/' . $path;
-    return CMS_SITE . '/assets/img/' . ltrim($path, '/');
+    if (strpos($path, 'assets/') === 0) return cms_theme_file($path);
+    return cms_theme_file('assets/img/' . ltrim($path, '/'));
 }
 
 /** Origen canónico (esquema + host): Ajustes → "URL canónica", si no config 'site_url', si no el de la petición. */

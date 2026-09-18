@@ -27,7 +27,7 @@ function cms_settings(bool $reload = false): array
     static $s = null;
     if ($s === null || $reload) {
         $s = cms_json_read(CMS_DATA . '/settings.json');
-        if (!$s && is_file(CMS_SITE . '/defaults/settings.json')) $s = cms_json_read(CMS_SITE . '/defaults/settings.json');
+        if (!$s && is_file(cms_theme_file('defaults/settings.json'))) $s = cms_json_read(cms_theme_file('defaults/settings.json'));
     }
     return $s;
 }
@@ -39,6 +39,7 @@ function cms_strings_all(bool $reload = false): array
     if ($t === null || $reload) {
         $t = cms_json_read(CMS_DATA . '/strings.json');
         if (is_file(CMS_SITE . '/defaults/strings.json')) $t += cms_json_read(CMS_SITE . '/defaults/strings.json');
+        if (CMS_SITE_PARENT !== '' && is_file(CMS_SITE_PARENT . '/defaults/strings.json')) $t += cms_json_read(CMS_SITE_PARENT . '/defaults/strings.json');
     }
     return $t;
 }
@@ -56,7 +57,7 @@ function cms_t(string $key, string $lang, $default = '')
 function cms_menu(string $lang): array
 {
     $m = cms_json_read(CMS_DATA . '/menu.json');
-    if (!$m && is_file(CMS_SITE . '/defaults/menu.json')) $m = cms_json_read(CMS_SITE . '/defaults/menu.json');
+    if (!$m && is_file(cms_theme_file('defaults/menu.json'))) $m = cms_json_read(cms_theme_file('defaults/menu.json'));
     return $m[$lang] ?? ($m[cms_default_lang()] ?? []);
 }
 

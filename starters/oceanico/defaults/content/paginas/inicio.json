@@ -1,0 +1,185 @@
+{
+  "slug": "inicio",
+  "status": "draft",
+  "title": {
+    "es": "Inicio"
+  },
+  "sections": [
+    {
+      "id": "ef02d2",
+      "type": "cabecera",
+      "data": {
+        "name": {
+          "es": "Oceánico"
+        },
+        "menu": {
+          "es": [
+            "Inicio | /",
+            "Servicios | /servicios",
+            "Nosotros | /nosotros",
+            "Contacto | /contacto"
+          ]
+        },
+        "button_text": {
+          "es": "Contacto"
+        },
+        "button_url": "/contacto",
+        "sticky": true
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "ac2d39",
+      "type": "hero",
+      "data": {
+        "badge": {
+          "es": "Envío gratis desde $999"
+        },
+        "title": {
+          "es": "Todo para tu próximo viaje al mar"
+        },
+        "subtitle": {
+          "es": "Equipo de buceo, kayak y snorkel de las mejores marcas, con envío a todo el país y asesoría de expertos."
+        },
+        "buttons": {
+          "es": [
+            "Empezar | /contacto | primary",
+            "Saber más | /nosotros | outline"
+          ]
+        },
+        "image": "cms/assets/img/demo/foto-5.jpg",
+        "layout": "right"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "84fcd4",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": "Qué hacemos"
+        },
+        "subtitle": {
+          "es": "Tres formas de ayudarte"
+        },
+        "items": {
+          "es": [
+            "Buceo | Reguladores, chalecos, computadoras y trajes. | ti-droplet",
+            "Kayak y paddle | Tablas, remos y accesorios para lago y mar. | ti-sailboat",
+            "Snorkel | Sets completos para toda la familia. | ti-eye"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "e43457",
+      "type": "columnas",
+      "data": {
+        "title": {
+          "es": "Compra con confianza"
+        },
+        "body": {
+          "es": "<p>Tienda física desde 2012 y en línea desde 2018. Garantía de un año en todo el equipo y devoluciones sin preguntas en 30 días.</p>"
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "side": "left",
+        "button_text": {
+          "es": "Conócenos"
+        },
+        "button_url": "/nosotros"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "cff2ca",
+      "type": "testimonios",
+      "data": {
+        "title": {
+          "es": "Lo que dicen"
+        },
+        "items": {
+          "es": [
+            "Me asesoraron por WhatsApp y el equipo llegó en dos días. | Diego Salas | Cliente",
+            "Precios justos y atención de verdad. | Paola Reyes | Instructora de buceo"
+          ]
+        }
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "9f2295",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Ofertas de temporada"
+        },
+        "text": {
+          "es": "Hasta 30 % de descuento en equipo seleccionado hasta fin de mes."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "51ed2f",
+      "type": "pie",
+      "data": {
+        "name": {
+          "es": "Oceánico"
+        },
+        "text": {
+          "es": "Equipo de buceo, kayak y snorkel de las mejores marcas, con envío a todo el."
+        },
+        "columns": {
+          "es": [
+            "Sitio | Inicio > / | Servicios > /servicios | Nosotros > /nosotros | Contacto > /contacto"
+          ]
+        },
+        "contact": {
+          "es": [
+            "hola@ejemplo.com",
+            "55 1234 5678"
+          ]
+        },
+        "social": [
+          "Instagram | #",
+          "LinkedIn | #"
+        ],
+        "copy": {
+          "es": "© {year} Oceánico. Todos los derechos reservados"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 1,
+  "parent": "",
+  "path": "inicio",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

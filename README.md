@@ -342,6 +342,25 @@ espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con 
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
 
+## Temas hijos y diez temas nuevos (1.35)
+
+Un tema puede declarar en `theme.json` `"parent": "lienzo"` y aportar solo lo que cambia: el núcleo toma del padre el
+layout, las plantillas, los bloques, los assets, los defaults y las variaciones de estilo, y el hijo pone encima su hoja
+`assets/css/tema.css`, sus tipografías por defecto (`'theme_fonts' => [texto, títulos]` en `config.php`, que arranca de
+`cms_parent_config()`), sus propios bloques o plantillas si los tiene, y **contenido de muestra** en
+`defaults/content/<tipo>/*.json`, que se añade como borrador al activar el tema en Diseño. El padre vive en
+`themes/<clave>` o es el `site/` clásico si su `theme.json` lleva `"key"`. El catálogo instala el padre solo cuando el
+hijo lo requiere (`"requires": {"theme": "lienzo"}`). Diseño marca cada hijo con "sobre lienzo" y avisa si falta el padre.
+
+Con eso llegan **diez temas** en `starters/` y en el catálogo, todos hijos del lienzo, de diseño propio (MIT) e
+inspirados en los temas abiertos más usados: **Cima** (empresa, al estilo Astra), **Base** (blog minimalista, al estilo
+GeneratePress), **Revista** (editorial serif, al estilo Twenty Twenty-Four), **Oceánico** (tienda y escaparate, al estilo
+OceanWP), **Cadencia** (SaaS suave, al estilo Kadence), **Nieve** (startup con degradado, al estilo Neve), **Casiopea**
+(institucional, al estilo del Cassiopeia de Joomla), **Hélice** (agencia en modo oscuro, al estilo Helix), **Cuaderno**
+(papel y serif, al estilo del Editorial de HTML5 UP) y **Agencia** (amarillo sobre carbón, al estilo del Agency de Start
+Bootstrap). Cada uno trae portada, servicios, nosotros y contacto de muestra y una captura. Ninguno copia código ni
+recursos de los originales: son hojas de estilo sobre los bloques del lienzo.
+
 ## Archivos y carpetas, HTML libre y tamaño de imagen (1.34)
 
 - **Archivos y carpetas** (Contenido → Archivos y carpetas): gestor de las carpetas propias de la raíz del sitio, fuera

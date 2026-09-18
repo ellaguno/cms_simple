@@ -1,0 +1,182 @@
+{
+  "slug": "inicio",
+  "status": "draft",
+  "title": {
+    "es": "Inicio"
+  },
+  "sections": [
+    {
+      "id": "4e549b",
+      "type": "cabecera",
+      "data": {
+        "name": {
+          "es": "Cuaderno de Elena"
+        },
+        "menu": {
+          "es": [
+            "Inicio | /",
+            "Servicios | /servicios",
+            "Nosotros | /nosotros",
+            "Contacto | /contacto"
+          ]
+        },
+        "button_text": {
+          "es": "Contacto"
+        },
+        "button_url": "/contacto",
+        "sticky": true
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "38467a",
+      "type": "hero",
+      "data": {
+        "badge": {
+          "es": ""
+        },
+        "title": {
+          "es": "Notas sobre escribir, leer y vivir despacio"
+        },
+        "subtitle": {
+          "es": "Un blog personal con ensayos, reseñas y apuntes de taller. Sin anuncios, sin prisa."
+        },
+        "buttons": {
+          "es": [
+            "Empezar | /contacto | primary",
+            "Saber más | /nosotros | outline"
+          ]
+        },
+        "image": "cms/assets/img/demo/foto-6.jpg",
+        "layout": "right"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "3df86e",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": "Qué hacemos"
+        },
+        "subtitle": {
+          "es": "Tres formas de ayudarte"
+        },
+        "items": {
+          "es": [
+            "Ensayos | Textos largos sobre lo que me ocupa la cabeza.",
+            "Reseñas | Libros que vale la pena leer (y algunos que no).",
+            "Taller | Ejercicios y apuntes para quien escribe."
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "3713a6",
+      "type": "columnas",
+      "data": {
+        "title": {
+          "es": "Sobre mí"
+        },
+        "body": {
+          "es": "<p>Escribo desde hace veinte años y doy talleres desde hace diez. Este cuaderno es donde pienso en voz alta.</p>"
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "side": "left",
+        "button_text": {
+          "es": "Conócenos"
+        },
+        "button_url": "/nosotros"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "c9049e",
+      "type": "testimonios",
+      "data": {
+        "title": {
+          "es": "Lo que dicen"
+        },
+        "items": {
+          "es": [
+            "Sus talleres me devolvieron las ganas de escribir. | Julián Ríos | Alumno"
+          ]
+        }
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "5f8757",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Recibe las notas por correo"
+        },
+        "text": {
+          "es": "Una carta cada quince días."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "4817ec",
+      "type": "pie",
+      "data": {
+        "name": {
+          "es": "Cuaderno de Elena"
+        },
+        "text": {
+          "es": "Un blog personal con ensayos, reseñas y apuntes de taller. Sin anuncios, sin."
+        },
+        "columns": {
+          "es": [
+            "Sitio | Inicio > / | Servicios > /servicios | Nosotros > /nosotros | Contacto > /contacto"
+          ]
+        },
+        "contact": {
+          "es": [
+            "hola@ejemplo.com",
+            "55 1234 5678"
+          ]
+        },
+        "social": [
+          "Instagram | #",
+          "LinkedIn | #"
+        ],
+        "copy": {
+          "es": "© {year} Cuaderno de Elena. Todos los derechos reservados"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 1,
+  "parent": "",
+  "path": "inicio",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

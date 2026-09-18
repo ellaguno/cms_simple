@@ -251,6 +251,14 @@ function cms_registry_install(array $it): array
     if (!class_exists('ZipArchive')) return [false, 'Este servidor no tiene la extensión Zip de PHP.'];
     if (!empty($it['too_old'])) return [false, 'Necesita cms_simple ' . (string) ($it['requires']['cms'] ?? '') . ' o superior.'];
     if (!empty($it['core'])) return [false, 'Ese paquete viene con el núcleo: se actualiza al actualizar cms/.'];
+    // tema hijo: su padre primero (si no está instalado y el catálogo lo trae)
+    $needTheme = (string) ($it['requires']['theme'] ?? '');
+    if ($needTheme !== '' && $it['kind'] === 'theme' && !isset(cms_themes()[$needTheme])) {
+        [$all] = cms_registry_items();
+        if (!isset($all['theme:' . $needTheme])) return [false, 'Necesita el tema "' . $needTheme . '" (padre) y el catálogo no lo trae.'];
+        [$ok, $msg] = cms_registry_install($all['theme:' . $needTheme]);
+        if (!$ok) return [false, 'No se pudo instalar el tema padre "' . $needTheme . '": ' . $msg];
+    }
     [$zipBody, $err] = cms_http_get($it['url'], 33554432, 40);
     if ($zipBody === null) return [false, 'No se pudo descargar: ' . $err];
     if ($it['sha256'] !== '' && hash('sha256', $zipBody) !== $it['sha256']) return [false, 'La descarga no coincide con la firma del catálogo.'];

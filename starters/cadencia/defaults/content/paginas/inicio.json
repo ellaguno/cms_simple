@@ -1,0 +1,206 @@
+{
+  "slug": "inicio",
+  "status": "draft",
+  "title": {
+    "es": "Inicio"
+  },
+  "sections": [
+    {
+      "id": "ea9470",
+      "type": "cabecera",
+      "data": {
+        "name": {
+          "es": "Cadencia"
+        },
+        "menu": {
+          "es": [
+            "Inicio | /",
+            "Servicios | /servicios",
+            "Nosotros | /nosotros",
+            "Contacto | /contacto"
+          ]
+        },
+        "button_text": {
+          "es": "Contacto"
+        },
+        "button_url": "/contacto",
+        "sticky": true
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "81ad94",
+      "type": "hero",
+      "data": {
+        "badge": {
+          "es": "Nuevo: integración con calendario"
+        },
+        "title": {
+          "es": "Organiza a tu equipo sin reuniones eternas"
+        },
+        "subtitle": {
+          "es": "Tareas, documentos y decisiones en un solo lugar. Cadencia es la herramienta para equipos que prefieren avanzar a explicar."
+        },
+        "buttons": {
+          "es": [
+            "Empezar | /contacto | primary",
+            "Saber más | /nosotros | outline"
+          ]
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "layout": "below"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "cb6753",
+      "type": "tarjetas",
+      "data": {
+        "title": {
+          "es": "Qué hacemos"
+        },
+        "subtitle": {
+          "es": "Tres formas de ayudarte"
+        },
+        "items": {
+          "es": [
+            "Tableros | Visualiza el trabajo por semana, persona o proyecto. | ti-layout-kanban",
+            "Documentos | Notas y especificaciones junto a las tareas. | ti-file-text",
+            "Automatizaciones | Reglas simples que ahorran horas. | ti-bolt"
+          ]
+        },
+        "columns": 3,
+        "variant": "card"
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "94e4c4",
+      "type": "columnas",
+      "data": {
+        "title": {
+          "es": "Hecho para equipos pequeños"
+        },
+        "body": {
+          "es": "<p>Cadencia nació en un estudio de diseño de ocho personas. Por eso es rápida, clara y no necesita un manual.</p>"
+        },
+        "image": "cms/assets/img/demo/foto-3.jpg",
+        "side": "left",
+        "button_text": {
+          "es": "Conócenos"
+        },
+        "button_url": "/nosotros"
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "079cf7",
+      "type": "planes",
+      "data": {
+        "title": {
+          "es": "Planes"
+        },
+        "subtitle": {
+          "es": "Empieza gratis y crece cuando lo necesites"
+        },
+        "items": {
+          "es": [
+            "Gratis | $0 | al mes | 1 proyecto; 3 personas; soporte por correo | Empezar | /contacto | no",
+            "Equipo | $290 | al mes | Proyectos ilimitados; 15 personas; automatizaciones; soporte prioritario | Probar 14 días | /contacto | sí",
+            "Empresa | A medida | | Todo lo de Equipo; SSO; contrato y factura | Hablar con ventas | /contacto | no"
+          ]
+        }
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "ec22f3",
+      "type": "testimonios",
+      "data": {
+        "title": {
+          "es": "Lo que dicen"
+        },
+        "items": {
+          "es": [
+            "Reemplazó tres herramientas y dos reuniones semanales. | Sofía Lara | Líder de producto",
+            "La adoptó todo el equipo en una semana. | Andrés Vega | Fundador, Kiwi Studio"
+          ]
+        }
+      },
+      "style": {
+        "bg": "light"
+      },
+      "hidden": false
+    },
+    {
+      "id": "3185c1",
+      "type": "cta",
+      "data": {
+        "title": {
+          "es": "Prueba Cadencia gratis 14 días"
+        },
+        "text": {
+          "es": "Sin tarjeta. Cancela cuando quieras."
+        },
+        "button_text": {
+          "es": "Escríbenos"
+        },
+        "button_url": "/contacto",
+        "button2_text": {
+          "es": ""
+        },
+        "button2_url": ""
+      },
+      "style": {},
+      "hidden": false
+    },
+    {
+      "id": "4acb29",
+      "type": "pie",
+      "data": {
+        "name": {
+          "es": "Cadencia"
+        },
+        "text": {
+          "es": "Tareas, documentos y decisiones en un solo lugar. Cadencia es la herramienta."
+        },
+        "columns": {
+          "es": [
+            "Sitio | Inicio > / | Servicios > /servicios | Nosotros > /nosotros | Contacto > /contacto"
+          ]
+        },
+        "contact": {
+          "es": [
+            "hola@ejemplo.com",
+            "55 1234 5678"
+          ]
+        },
+        "social": [
+          "Instagram | #",
+          "LinkedIn | #"
+        ],
+        "copy": {
+          "es": "© {year} Cadencia. Todos los derechos reservados"
+        }
+      },
+      "style": {},
+      "hidden": false
+    }
+  ],
+  "summary": {
+    "es": ""
+  },
+  "image": "",
+  "order": 1,
+  "parent": "",
+  "path": "inicio",
+  "created": "2026-09-18",
+  "updated": "2026-09-18"
+}

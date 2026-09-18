@@ -116,7 +116,7 @@ function cms_site_map(string $lang): array
     // carpetas fuera del CMS
     foreach (cms_static_dirs() as $dir) {
         $root['children'][] = ['kind' => 'static', 'label' => $dir . '/', 'url' => CMS_BASE . '/' . $dir . '/', 'route' => '', 'status' => 'published', 'noindex' => false,
-            'source' => 'carpeta estática (fuera del CMS)', 'updated' => date('Y-m-d', (int) @filemtime(CMS_ROOT . '/' . $dir)), 'edit' => '', 'children' => []];
+            'source' => 'carpeta estática (fuera del CMS)', 'updated' => date('Y-m-d', (int) @filemtime(CMS_ROOT . '/' . $dir)), 'edit' => cms_config('file_manager', true) !== false ? ADMIN_URL . '/?p=archivos&d=' . rawurlencode($dir) : '', 'children' => []];
     }
     // enlaces externos del menú
     foreach (cms_menu($lang) as $m) {

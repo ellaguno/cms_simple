@@ -68,3 +68,12 @@
 @media (max-width: 480px) { .es-footer-grid { grid-template-columns: 1fr; } }
 /* en el editor (vista sin cabecera del tema) y en la vista previa, la cabecera fija no tapa el marcador */
 .cms-bare .es-header.is-sticky, .cms-bare .es-header.is-transparent { position: static; }
+/* imagen genérica */
+.es-image { --es-max: var(--cms-max, 1180px); --es-gutter: var(--cms-gutter, 24px); }
+.es-figure { margin: 0 auto; max-width: 100%; text-align: center; }
+.es-figure img { width: 100%; height: auto; display: block; border-radius: var(--cms-radius-lg, 14px); }
+.es-figure-square img { border-radius: 0; }
+.es-figure-orig { max-width: none; } .es-figure-orig img { width: auto; max-width: 100%; display: inline-block; }
+.es-figure-left { text-align: left; } .es-figure-right { text-align: right; }
+.es-figure figcaption { margin-top: .6rem; font-size: .9rem; opacity: .7; }
+.es-html { display: block; }

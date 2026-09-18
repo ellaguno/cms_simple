@@ -310,6 +310,7 @@ function admin_section_card(string $name, string $idx, array $sec, array $bd): s
         . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-sec-down title="Bajar">↓</button>'
         . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-sec-last title="Mover al final">⤓</button>'
         . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-sec-dup title="Duplicar">⧉</button>'
+        . (cms_block('estructura/html') && $type !== 'estructura/html' ? '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-sec-html title="Convertir a HTML libre: el bloque se sustituye por su HTML tal como se ve, para retocarlo a mano">&lt;/&gt;</button>' : '')
         . '<label class="ad-sec-hide" title="Guardar la sección pero no mostrarla"><input type="hidden" name="' . cms_e($n . '[hidden]') . '" value="0"><input type="checkbox" name="' . cms_e($n . '[hidden]') . '" value="1"' . ($hidden ? ' checked' : '') . '> oculta</label>'
         . '<button type="button" class="ad-btn ad-btn-sm ad-btn-danger" data-sec-del title="Quitar">×</button>'
         . '</span></div>';

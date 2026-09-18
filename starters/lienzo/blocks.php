@@ -88,6 +88,8 @@ return [
             'image'   => ['type' => 'image', 'label' => 'Imagen', 'required' => true],
             'alt'     => ['type' => 'text', 'i18n' => true, 'label' => 'Texto alternativo'],
             'caption' => ['type' => 'text', 'i18n' => true, 'label' => 'Pie de imagen (opcional)'],
+            'size'    => ['type' => 'select', 'label' => 'Tamaño', 'half' => true, 'options' => ['' => 'Ancho del contenido', 'orig' => 'Tamaño original (sin agrandar)', 'xs' => 'Pequeña (320 px)', 's' => 'Mediana (480 px)', 'm' => 'Grande (720 px)', 'l' => 'Muy grande (960 px)']],
+            'align'   => ['type' => 'select', 'label' => 'Alineación', 'half' => true, 'options' => ['' => 'Centrada', 'left' => 'Izquierda', 'right' => 'Derecha']],
         ],
     ],
     'tarjetas' => [

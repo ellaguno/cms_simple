@@ -20,6 +20,26 @@ return [
             'transparent' => ['type' => 'checkbox', 'label' => 'Fondo', 'text' => 'Transparente sobre la primera sección de la página (toma color al hacer scroll)'],
         ],
     ],
+    'imagen' => [
+        'label' => 'Imagen', 'group' => 'Contenido', 'desc' => 'Una imagen con tamaño, alineación, pie y enlace. Sirve en cualquier tema.',
+        'wrap_class' => 'es-image', 'styles' => ['bg', 'pad', 'width', 'anchor', 'class', 'hide_mobile'],
+        'sample' => ['image' => 'cms/assets/img/demo/foto-2.jpg', 'caption' => 'Un pie de imagen opcional', 'size' => 'm'],
+        'fields' => [
+            'image'   => ['type' => 'image', 'label' => 'Imagen', 'required' => true],
+            'alt'     => ['type' => 'text', 'i18n' => true, 'label' => 'Texto alternativo (accesibilidad y SEO)'],
+            'caption' => ['type' => 'text', 'i18n' => true, 'label' => 'Pie de imagen (opcional)', 'half' => true],
+            'link'    => ['type' => 'text', 'label' => 'Enlace al hacer clic (opcional)', 'half' => true],
+            'size'    => ['type' => 'select', 'label' => 'Tamaño', 'half' => true, 'options' => ['' => 'Ancho del contenido', 'orig' => 'Tamaño original (sin agrandar)', 'xs' => 'Pequeña (320 px)', 's' => 'Mediana (480 px)', 'm' => 'Grande (720 px)', 'l' => 'Muy grande (960 px)']],
+            'align'   => ['type' => 'select', 'label' => 'Alineación', 'half' => true, 'options' => ['' => 'Centrada', 'left' => 'Izquierda', 'right' => 'Derecha']],
+            'radius'  => ['type' => 'checkbox', 'label' => 'Esquinas', 'text' => 'Redondeadas', 'default' => true],
+        ],
+    ],
+    'html' => [
+        'label' => 'HTML libre', 'group' => 'Contenido', 'desc' => 'Código HTML tal cual, sin contenedor: incrustados, mapas, o una sección convertida a HTML para retocarla a mano.',
+        'wrap_class' => 'es-html', 'styles' => ['anchor', 'class', 'hide_mobile'], 'animate' => 'none',
+        'sample' => ['code' => '<div style="padding:2rem;border:2px dashed #999;border-radius:12px;text-align:center">Tu HTML tal cual</div>'],
+        'fields' => ['code' => ['type' => 'code', 'label' => 'HTML', 'rows' => 14, 'i18n' => true, 'help' => 'Se imprime tal cual (con sus etiquetas <script> y <style> si las trae). Cualquier sección del constructor se puede convertir a este bloque con el botón </> de su tarjeta.']],
+    ],
     'pie' => [
         'label' => 'Pie de página', 'group' => 'Estructura', 'desc' => 'Logotipo o nombre, texto, columnas de enlaces, contacto, redes y derechos. Para Diseño → Cabeceras y pies.',
         'wrap_class' => 'es-footer', 'styles' => ['bg', 'text', 'pad', 'class'], 'animate' => 'none',

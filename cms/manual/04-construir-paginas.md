@@ -96,3 +96,13 @@ Si una sección necesita algo fuera de la paleta, la salida es el campo **Clases
 4. En el editor de cada página, en la barra lateral, elige **Cabecera** y **Pie de página**: la predeterminada, ninguna, o una por su nombre. **Ajustes → Cabeceras y pies del constructor** fija las predeterminadas para las páginas que no eligen.
 
 Si una página no elige nada y no hay predeterminada, el tema pone su cabecera y su pie de siempre. Los temas que no llaman a `cms_layout_header()` y `cms_layout_footer()` en su `inc/layout.php` siguen igual; la vista previa de la pieza lo avisa (capítulo 10 para programadores).
+
+## Tamaño de las imágenes y HTML a mano (1.34)
+
+En la pestaña **Estilo** de una sección, "Ancho del contenido" cambia el ancho del contenedor (estrecho, normal, ancho, todo el ancho), no el de la imagen: una imagen más estrecha que el contenedor se queda igual. El tamaño de la imagen se elige en el propio bloque de imagen, en **Tamaño** (ancho del contenido, tamaño original, 320, 480, 720 o 960 px) y **Alineación**.
+
+Cualquier sección se puede **convertir a HTML** con el botón `</>` de su tarjeta: se dibuja tal como se ve y se sustituye por un bloque **HTML libre** con ese código, que editas a mano. Es de ida: ya no tendrá campos ni pestaña de estilo (si guardas por error, restaura una versión anterior desde la columna derecha). El bloque HTML libre también sirve para pegar un incrustado o un mapa.
+
+## Archivos y carpetas
+
+**Contenido → Archivos y carpetas** gestiona carpetas propias en la raíz del sitio, fuera del CMS: una presentación, una landing hecha a mano, un micrositio. Cada carpeta responde en `/nombre/` con su `index.html`. Crea la carpeta, sube los archivos (o un zip con todo, que se descomprime con sus subcarpetas) y edita los de texto (HTML, CSS, JS…) con el editor de código, con respaldo en cada guardado. Se pueden renombrar y eliminar archivos y carpetas enteras. No se admiten archivos PHP ni tocar las carpetas del CMS.

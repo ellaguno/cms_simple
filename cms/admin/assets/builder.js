@@ -49,6 +49,25 @@
         card.remove(); renumber(); ping();
       });
       card.querySelector("[data-sec-dup]").addEventListener("click", function () { duplicate(card); });
+      var toHtml = card.querySelector("[data-sec-html]");
+      if (toHtml) toHtml.addEventListener("click", function () {
+        if (!window.confirm("¿Convertir esta sección a HTML libre? Se sustituye por su HTML tal como se ve ahora y se edita como código: ya no tendrá campos ni estilo propios. Puedes deshacer con Volver sin guardar.")) return;
+        var fd = new FormData(), dl = (window.CMS_ADMIN && CMS_ADMIN.defaultLang) || "es";
+        fd.append("_csrf", CMS_ADMIN.csrf); fd.append("lang", dl);
+        card.querySelectorAll("[name]").forEach(function (el) {
+          if (el.type === "checkbox" && !el.checked) return;
+          fd.append(el.name.replace(/^[^\[]+\[[^\]]*\]/, "sec[0]"), el.value);
+        });
+        toHtml.disabled = true;
+        fetch(CMS_ADMIN.base + "/admin/?p=render", { method: "POST", body: fd, credentials: "same-origin" }).then(function (r) { return r.text().then(function (t) { return { ok: r.ok, text: t }; }); }).then(function (res) {
+          toHtml.disabled = false;
+          if (!res.ok) { alert("No se pudo convertir: " + res.text); return; }
+          var values = {}; values["data]|[code][" + dl + "]"] = res.text.trim();
+          var anchor = card.querySelector('[name$="[style][anchor]"]'); if (anchor && anchor.value) values["style]|[anchor]"] = anchor.value;
+          var nc = add("estructura/html", values, card);
+          if (nc) { card.remove(); renumber(); ping(); }
+        }).catch(function () { toHtml.disabled = false; alert("No se pudo convertir (sin conexión con el panel)."); });
+      });
       card.querySelector('.ad-sec-hide input[type="checkbox"]').addEventListener("change", function (e) { card.classList.toggle("ad-sec-hidden", e.target.checked); ping(); });
       card.addEventListener("input", function () { updateTitle(card); });
       // vista previa del efecto elegido en Estilo

@@ -1,6 +1,6 @@
 # cms_simple — URLs limpias y protección de carpetas
 Options -Indexes
-DirectoryIndex index.php
+DirectoryIndex index.php index.html
 AddDefaultCharset UTF-8
 
 <IfModule mod_rewrite.c>

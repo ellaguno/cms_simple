@@ -23,6 +23,7 @@ function admin_nav(): array
         $groups[$gk]['items']['content:' . $k] = $entry;
     }
     $content['media'] = ['Medios', admin_url('media')];
+    if (cms_config('file_manager', true) !== false) $content['archivos'] = ['Archivos y carpetas', admin_url('archivos')];
     $content['map'] = ['Mapa del sitio', admin_url('map')];
     // páginas propias de los paquetes activos: 'admin' => ['label' => …, 'file' => …, 'group' => contenido|diseno|ajustes|sistema]
     // (por defecto en Contenido: Audio, Redacción IA… producen contenido; sus ajustes ya están en Ajustes)
@@ -69,7 +70,7 @@ function admin_header(string $title, string $active = ''): void
 <link rel="icon" href="<?= !empty($S['favicon']) ? cms_e(cms_img($S['favicon'])) : 'data:,' ?>">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
-<?php if ($active === 'code'): ?>
+<?php if ($active === 'code' || $active === 'archivos'): ?>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
 <?php endif; ?>
@@ -113,7 +114,7 @@ function admin_header(string $title, string $active = ''): void
 function admin_footer(): void
 {
     $assets = CMS_BASE . '/cms/admin/assets';
-    $code = ($_GET['p'] ?? '') === 'code';
+    $code = in_array($_GET['p'] ?? '', ['code', 'archivos'], true);
     ?>
   </main>
 </div>

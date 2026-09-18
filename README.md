@@ -342,6 +342,24 @@ espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con 
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
 
+## Archivos y carpetas, HTML libre y tamaño de imagen (1.34)
+
+- **Archivos y carpetas** (Contenido → Archivos y carpetas): gestor de las carpetas propias de la raíz del sitio, fuera
+  del CMS, para subir una presentación, una landing hecha a mano o cualquier conjunto de HTML, CSS, JS e imágenes con
+  subcarpetas, que responde en `/nombre/`. Crea carpetas y subcarpetas, sube archivos sueltos o un **zip que se
+  descomprime respetando sus carpetas**, renombra, elimina (archivos o carpetas enteras) y **edita los archivos de texto**
+  con el editor de código (CodeMirror, Ctrl+S, respaldos en `data/backups/`). Nunca toca `cms/`, `site/`, `themes/`,
+  `packs/`, `data/`, `uploads/` ni `admin/`; solo admite una lista cerrada de extensiones (nada de PHP) y deja en cada
+  carpeta raíz un `.htaccess` que apaga PHP. El Mapa del sitio enlaza cada carpeta estática con el gestor. Se desactiva
+  con `'file_manager' => false`.
+- **Convertir una sección a HTML**: botón `</>` en la tarjeta de cualquier sección del constructor. La sección se dibuja
+  tal como se ve y se sustituye por el bloque **HTML libre** (`estructura/html`, nuevo) con ese marcado, para retocarlo a
+  mano como código. El mismo bloque sirve para insertar HTML tal cual (incrustados, mapas). Endpoint `?p=render`.
+- **Imagen con tamaño real**: el selector "Ancho del contenido" de la pestaña Estilo cambia el contenedor de la sección,
+  no la imagen (por eso una imagen importada, más estrecha que el contenedor, no cambiaba). Los bloques de imagen del
+  lienzo y del tema Iurefficient ganan **Tamaño** (ancho del contenido, tamaño original, 320, 480, 720 o 960 px) y
+  **Alineación**; el paquete estructura trae además un bloque **Imagen** genérico con lo mismo, para cualquier tema.
+
 ## Cabeceras y pies con nombre, hechos con el constructor (1.33)
 
 **Diseño → Cabeceras y pies**: una colección interna donde cada elemento es una cabecera o un pie de página armado

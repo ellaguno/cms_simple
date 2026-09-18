@@ -6,5 +6,10 @@ if ($path !== '/' && (is_file($file) || (is_dir($file) && is_file(rtrim($file, '
     if (is_dir($file)) { $_SERVER['SCRIPT_NAME'] = rtrim($path, '/') . '/index.php'; require rtrim($file, '/') . '/index.php'; return true; }
     return false;
 }
+// carpetas propias con index.html (Archivos y carpetas): como hace Apache con DirectoryIndex
+if ($path !== '/' && is_dir($file) && is_file(rtrim($file, '/') . '/index.html')) {
+    if (substr($path, -1) !== '/') { header('Location: ' . $path . '/', true, 301); return true; }
+    header('Content-Type: text/html; charset=utf-8'); readfile(rtrim($file, '/') . '/index.html'); return true;
+}
 $_SERVER['SCRIPT_NAME'] = '/index.php';
 require __DIR__ . '/index.php';

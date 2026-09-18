@@ -104,6 +104,8 @@ p { margin: 0 0 1em; }
 .lz-cols-media img { border-radius: var(--lz-radius); box-shadow: 0 20px 40px rgba(0,0,0,.1); width: 100%; }
 @media (max-width: 768px) { .lz-cols { grid-template-columns: 1fr; } .lz-cols-left .lz-cols-text { order: 0; } }
 .lz-figure { margin: 0 auto; max-width: 1000px; text-align: center; } .lz-figure img { border-radius: var(--lz-radius); width: 100%; } .lz-figure figcaption { color: var(--lz-muted); font-size: .9rem; margin-top: .6rem; }
+.lz-figure-orig { max-width: none; } .lz-figure-orig img { width: auto; max-width: 100%; display: inline-block; }
+.lz-figure-left { text-align: left; } .lz-figure-right { text-align: right; }
 .lz-cards { display: grid; gap: 1.5rem; grid-template-columns: repeat(3, 1fr); }
 .lz-cards-2 { grid-template-columns: repeat(2, 1fr); } .lz-cards-4 { grid-template-columns: repeat(4, 1fr); }
 .lz-card { background: #fff; border: 1px solid var(--lz-line); border-radius: var(--lz-radius); padding: 1.75rem; }

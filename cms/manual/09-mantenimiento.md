@@ -81,6 +81,12 @@ desde catálogos de confianza. En Ajustes puedes añadir los tuyos.
 Desactivar un paquete no borra nada: los bloques que aporta dejan de estar disponibles y las secciones que los usen
 dejan de dibujarse, pero vuelven en cuanto lo actives otra vez.
 
+**Temas privados.** Un tema hecho para un cliente, o que usa una plantilla comprada con licencia por sitio (ThemeForest y
+similares), no va al catálogo público. Tienes dos caminos: instalarlo desde Diseño → "Instalar un tema (.zip)" (el zip lo
+obtienes con "Descargar el tema en uso" en el sitio original), o publicar un **catálogo propio** en tu servidor, en una
+carpeta con una dirección que no se adivine, con el JSON y los zips, y añadir esa dirección en Catálogo → Catálogos propios.
+Los temas marcados `"private": true` en su `theme.json` y en el catálogo llevan el distintivo **Privado** en el panel.
+
 ## Actualizar el CMS con un botón
 
 En **Actualizar** ves la versión que tienes y la publicada. Pulsa **Buscar actualizaciones** (esa consulta sale a

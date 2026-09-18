@@ -64,6 +64,7 @@ function catalogo_card(array $it): void
           <strong><?= cms_e($it['label']) ?></strong>
           <?php if ($it['update']): ?><span class="ad-pill warn">v<?= cms_e($it['version']) ?> disponible</span>
           <?php elseif ($it['installed']): ?><span class="ad-pill on">Instalado</span><?php endif; ?>
+          <?php if ($it['private']): ?><span class="ad-pill warn" title="Licencia por sitio o tema de un cliente: no se publica ni se comparte">Privado</span><?php endif; ?>
         </div>
         <p class="ad-help"><?= cms_e($it['desc']) ?></p>
         <p class="ad-help"><?= $it['version'] !== '' ? 'v' . cms_e($it['version']) : '' ?><?= $it['author'] !== '' ? ' · ' . cms_e($it['author']) : '' ?><?= $it['license'] !== '' ? ' · ' . cms_e($it['license']) : '' ?><?= $it['tags'] ? ' · ' . cms_e(implode(', ', array_slice($it['tags'], 0, 4))) : '' ?></p>
@@ -90,7 +91,7 @@ function catalogo_card(array $it): void
   <summary><strong>Catálogos propios</strong> <span class="ad-help">(se suman al oficial; una dirección https por línea)</span></summary>
   <form method="post" class="ad-form">
     <?= admin_csrf_field() ?><input type="hidden" name="action" value="registries">
-    <div class="ad-field"><textarea name="registries" rows="2" placeholder="https://ejemplo.com/catalogo.json"><?= cms_e((string) (cms_settings()['registries'] ?? '')) ?></textarea><p class="ad-help">Un catálogo es un archivo JSON con los temas y paquetes que se pueden instalar. Sirve para probar un paquete propio antes de publicarlo.</p></div>
+    <div class="ad-field"><textarea name="registries" rows="2" placeholder="https://ejemplo.com/catalogo.json"><?= cms_e((string) (cms_settings()['registries'] ?? '')) ?></textarea><p class="ad-help">Un catálogo es un archivo JSON con los temas y paquetes que se pueden instalar. Sirve para probar un paquete propio antes de publicarlo y para los <strong>temas privados</strong> (con licencia por sitio o de un cliente): súbelos con su catálogo a una carpeta de tu propio servidor, con una dirección que no se adivine, y añade aquí esa dirección. También puedes instalarlos sin catálogo desde Diseño → "Instalar un tema (.zip)".</p></div>
     <button class="ad-btn ad-btn-sm" type="submit">Guardar catálogos</button>
   </form>
 </details>

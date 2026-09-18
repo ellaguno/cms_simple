@@ -141,8 +141,8 @@ admin_header('Diseño', 'diseno');
 <?php else: ?>      <div class="ad-theme-noshot" aria-hidden="true"><?= cms_e(mb_strtoupper(mb_substr($t['label'], 0, 2))) ?></div>
 <?php endif; ?>
       <div class="ad-theme-body">
-        <div class="ad-style-head"><strong><?= cms_e($t['label']) ?></strong><?php if ($on): ?><span class="ad-pill on">En uso</span><?php endif; ?></div>
-        <p class="ad-help"><?= cms_e($t['desc'] ?: 'Sin descripción.') ?><?= $t['version'] !== '' ? ' v' . cms_e($t['version']) : '' ?><?= $t['styles'] ? ' · ' . (int) $t['styles'] . ' variaciones' : '' ?></p>
+        <div class="ad-style-head"><strong><?= cms_e($t['label']) ?></strong><?php if ($on): ?><span class="ad-pill on">En uso</span><?php endif; ?><?php if (!empty($t['private'])): ?><span class="ad-pill warn" title="Licencia por sitio o tema de un cliente: no se publica ni se comparte">Privado</span><?php endif; ?></div>
+        <p class="ad-help"><?= cms_e($t['desc'] ?: 'Sin descripción.') ?><?= $t['version'] !== '' ? ' v' . cms_e($t['version']) : '' ?><?= $t['styles'] ? ' · ' . (int) $t['styles'] . ' variaciones' : '' ?><?= !empty($t['license']) ? ' · ' . cms_e((string) $t['license']) : '' ?></p>
 <?php if (!$on && $w && !$w['unknown'] && ($w['types'] || $w['blocks'])): ?>
         <p class="ad-help ad-theme-warn">Ojo: este tema no trae <?= $w['types'] ? 'los tipos <code>' . cms_e(implode(', ', $w['types'])) . '</code>' : '' ?><?= $w['types'] && $w['blocks'] ? ' ni ' : '' ?><?= $w['blocks'] ? 'los bloques <code>' . cms_e(implode(', ', array_slice($w['blocks'], 0, 6))) . '</code>' : '' ?> que usa tu contenido.</p>
 <?php endif; ?>

@@ -367,6 +367,11 @@ sitio; los borradores se ven en las vistas previas.
   aparece en el sitio, el sitemap, el mapa ni el menú; sus vistas previas responden en `/_layout/<slug>?preview=…`.
 - Se desactiva con `'layouts' => false` en `site/config.php`.
 
+**Temas privados (1.33.1).** Los temas de clientes o con plantillas de licencia por sitio no van al catálogo público de este
+repositorio: se instalan desde Diseño → "Instalar un tema (.zip)" o desde un **catálogo propio** (un JSON con sus zips en una
+carpeta de tu servidor con dirección no adivinable, añadida en Catálogo → Catálogos propios). `"private": true` y `"license"`
+en `theme.json` y en el catálogo se muestran en el panel con el distintivo **Privado**.
+
 ## Medios con buscador y renombrar, borrar páginas, botón + en el mapa e importador más robusto (1.32)
 
 - **Medios**: buscador por nombre de archivo o carpeta (sin distinguir mayúsculas ni acentos, combinable con los

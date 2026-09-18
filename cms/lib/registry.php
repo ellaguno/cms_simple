@@ -11,6 +11,7 @@
  *         "url": "https://…/algo.zip",   ← el zip a descargar
  *         "subdir": "starters/lienzo",   ← (opcional) carpeta dentro del zip que contiene el tema o el paquete
  *         "sha256": "…",                 ← (opcional) para comprobar la descarga
+ *         "private": true,               ← (opcional) licencia por sitio o tema de un cliente: no se redistribuye
  *         "requires": { "cms": "1.20.0" } }
  *     ]
  *   }
@@ -202,6 +203,7 @@ function cms_registry_clean(array $it, string $from): ?array
         'version' => (string) ($it['version'] ?? ''),
         'author' => (string) ($it['author'] ?? ''),
         'license' => (string) ($it['license'] ?? ''),
+        'private' => !empty($it['private']),
         'screenshot' => preg_match('#^https://#i', $shot) ? $shot : '',
         'subdir' => trim((string) ($it['subdir'] ?? ''), '/'),
         'sha256' => preg_match('/^[a-f0-9]{64}$/i', (string) ($it['sha256'] ?? '')) ? strtolower((string) $it['sha256']) : '',

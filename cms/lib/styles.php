@@ -118,6 +118,8 @@ function cms_theme_info(string $dir, string $key): array
         'desc' => (string) ($j['desc'] ?? ''),
         'version' => (string) ($j['version'] ?? ''),
         'author' => (string) ($j['author'] ?? ''),
+        'license' => (string) ($j['license'] ?? ''),
+        'private' => !empty($j['private']),   // tema con licencia por sitio o de un cliente: no se redistribuye
         'dir' => $dir,
         'url' => CMS_BASE . '/' . ($key === 'site' ? 'site' : 'themes/' . $key),
         'screenshot' => $shot,

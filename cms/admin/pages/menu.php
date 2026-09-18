@@ -29,6 +29,7 @@ $routes = [];
 foreach (cms_langs() as $l) {
     $routes[$l] = ['/' => 'Inicio'];
     foreach (cms_config('types') as $k => $d) {
+        if (!empty($d['internal'])) continue;
         $d += ['key' => $k];
         if (empty($d['no_list'])) $routes[$l]['/' . cms_segment($d, $l)] = $d['label'] ?? $k;
         foreach (cms_items($k) as $it) $routes[$l]['/' . cms_segment($d, $l) . '/' . $it['slug']] = ($d['label_singular'] ?? $k) . ': ' . (cms_f($it, $d['title_field'] ?? 'title', $l) ?: $it['slug']);

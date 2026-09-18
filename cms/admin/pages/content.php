@@ -129,8 +129,8 @@ admin_header($def['label'] ?? $type, 'content:' . $type);
   <tbody>
 <?php foreach ($items as $it): $pub = ($it['status'] ?? '') === 'published'; $live = cms_item_is_live($it); ?>
     <tr>
-      <td><a href="<?= admin_url('edit', ['type' => $type, 'slug' => $it['slug']]) ?>"><strong><?= cms_e(cms_f($it, $titleField, $dl) ?: $it['slug']) ?></strong></a><small class="ad-help"><?= cms_e(preg_replace('#^https?://[^/]+#', '', cms_url('item:' . $type, $dl, $it['slug']))) ?></small></td>
-<?php foreach ($cols as $c): $v = cms_f($it, $c, $dl); ?>
+      <td><a href="<?= admin_url('edit', ['type' => $type, 'slug' => $it['slug']]) ?>"><strong><?= cms_e(cms_f($it, $titleField, $dl) ?: $it['slug']) ?></strong></a><?php if (empty($def['internal'])): ?><small class="ad-help"><?= cms_e(preg_replace('#^https?://[^/]+#', '', cms_url('item:' . $type, $dl, $it['slug']))) ?></small><?php endif; ?></td>
+<?php foreach ($cols as $c): $v = cms_f($it, $c, $dl); if (is_scalar($v) && isset($def['fields'][$c]['options'][(string) $v])) $v = $def['fields'][$c]['options'][(string) $v]; ?>
       <td><?= cms_e(is_array($v) ? implode(', ', $v) : (string) $v) ?></td>
 <?php endforeach; ?>
       <td><span class="ad-pill <?= $live ? 'on' : ($pub ? 'warn' : '') ?>"><?= $live ? 'Publicado' . (!empty($it['unpublish_at']) ? ' hasta ' . cms_e($it['unpublish_at']) : '') : (cms_item_is_expired($it) ? 'Caducado ' . cms_e($it['unpublish_at']) : ($pub ? 'Programado ' . cms_e($it['publish_at'] ?? '') : 'Borrador')) ?></span></td>
@@ -138,7 +138,9 @@ admin_header($def['label'] ?? $type, 'content:' . $type);
       <td><?= $missing ? '<span class="ad-help">falta ' . implode(', ', $missing) . '</span>' : '✓' ?></td>
 <?php endif; ?>
       <td class="ad-row-actions">
-        <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e(cms_item_url($type, $it, $dl)) ?>" target="_blank" rel="noopener"><?= $live ? 'Ver' : 'Vista previa' ?></a>
+<?php if (!empty($def['internal'])): ?>        <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e(cms_url('item:' . $type, $dl, $it['slug']) . '?preview=' . cms_preview_token($type, $it['slug'])) ?>" target="_blank" rel="noopener">Vista previa</a>
+<?php else: ?>        <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e(cms_item_url($type, $it, $dl)) ?>" target="_blank" rel="noopener"><?= $live ? 'Ver' : 'Vista previa' ?></a>
+<?php endif; ?>
         <a class="ad-btn ad-btn-sm" href="<?= admin_url('edit', ['type' => $type, 'slug' => $it['slug']]) ?>">Editar</a>
         <form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="duplicate"><input type="hidden" name="slug" value="<?= cms_e($it['slug']) ?>"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit" title="Crear una copia como borrador">Duplicar</button></form>
         <form method="post" class="ad-inline" data-confirm="¿Eliminar este elemento? No se puede deshacer.">

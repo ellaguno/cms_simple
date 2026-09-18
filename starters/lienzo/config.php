@@ -38,6 +38,7 @@ return [
 
     // Paquetes de bloques y efectos compartidos (cms/packs): galería 3D, carrusel, lightbox, marquesina, cifras…
     'packs' => ['visual', 'motion', 'media', 'marketing', 'contenido', 'agencia'],
+    'block_exclude' => ['estructura/cabecera', 'estructura/pie'],   // el lienzo trae sus propios bloques cabecera y pie (mismos campos)
     'sections' => [
         'palette' => ['white' => 'Blanco', 'light' => 'Gris claro', 'dark' => 'Oscuro', 'primary' => 'Color principal', 'accent' => 'Color de acento'],
         'classes' => ['container' => 'lz-container', 'header' => 'lz-head', 'title' => '', 'subtitle' => '', 'btn' => 'lz-btn'],

@@ -67,6 +67,11 @@ function cms_type(string $type): ?array
     $types = cms_config('types');
     if (!isset($types[$type])) return null;
     $def = $types[$type] + ['key' => $type];
+    // cabecera y pie por página (1.33): selectores en la barra lateral de los tipos con constructor
+    if (empty($def['internal']) && function_exists('cms_layouts_enabled') && cms_layouts_enabled() && (bool) array_filter((array) ($def['fields'] ?? []), fn($f) => ($f['type'] ?? '') === 'sections')) {
+        $def['fields']['layout_header'] = ['type' => 'select', 'label' => 'Cabecera', 'sidebar' => true, 'options' => cms_layout_options('header'), 'help' => 'Se crean en Diseño → Cabeceras y pies.'];
+        $def['fields']['layout_footer'] = ['type' => 'select', 'label' => 'Pie de página', 'sidebar' => true, 'options' => cms_layout_options('footer')];
+    }
     // categorías (1.30): el campo declarado en 'categories' se edita con un selector del registro (cms/lib/categories.php)
     if (($cf = cms_categories_field($type)) !== null) {
         $def['categories'] = ['field' => $cf];

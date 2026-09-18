@@ -342,6 +342,31 @@ espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con 
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
 
+## Cabeceras y pies con nombre, hechos con el constructor (1.33)
+
+**Diseño → Cabeceras y pies**: una colección interna donde cada elemento es una cabecera o un pie de página armado
+con bloques, con nombre ("Cabecera principal", "Pie de la tienda", "Cabecera abogados"…), estado y vista previa en
+vivo como cualquier página. Cada página del constructor elige los suyos en la barra lateral de su editor (campos
+**Cabecera** y **Pie de página**, que el núcleo añade a todo tipo con un campo `sections`: predeterminada, ninguna o una
+por nombre) y **Ajustes → Cabeceras y pies del constructor** fija los predeterminados. Solo lo publicado se usa en el
+sitio; los borradores se ven en las vistas previas.
+
+- El tema los dibuja con una línea en cada sitio: `$h = cms_layout_header($page); if ($h !== '') echo $h; else { …la
+  cabecera de siempre… }` en `site_header()` y lo mismo con `cms_layout_footer($page)` en `site_footer()`. Si no elige
+  nada, devuelven `''` y el tema pone los suyos, así que un tema sin adaptar sigue igual. La vista previa de una pieza
+  avisa cuando el tema aún no llama a esas funciones y la dibuja de todos modos. Los temas lienzo, alldesign y el de
+  katapolt ya las llaman.
+- **Paquete `estructura`** (activo de serie donde hay constructor; se apaga en Catálogo): bloques neutros **Cabecera del
+  sitio** (logotipo o nombre, menú con desplegables escribiendo `- Texto | URL` bajo una entrada, `@menu` para poner el
+  menú de Diseño → Menú, uno o dos botones, barra superior, conmutador de idioma, fija al hacer scroll o transparente
+  sobre la primera sección) y **Pie de página** (columnas de enlaces, `@menu`, contacto con `@ajustes` para tomar correo,
+  teléfono y WhatsApp de Ajustes, redes con `@ajustes`, línea de derechos con `{year}` y enlaces legales). Toman color
+  y tipografía del tema por variables `--cms-*` y admiten los fondos del vocabulario de secciones (`bg` claro u oscuro).
+  El lienzo excluye estos dos bloques porque trae los suyos con los mismos campos.
+- Los recursos (CSS y JS de paquetes) de la cabecera y el pie elegidos se cargan con los de la página. La colección no
+  aparece en el sitio, el sitemap, el mapa ni el menú; sus vistas previas responden en `/_layout/<slug>?preview=…`.
+- Se desactiva con `'layouts' => false` en `site/config.php`.
+
 ## Medios con buscador y renombrar, borrar páginas, botón + en el mapa e importador más robusto (1.32)
 
 - **Medios**: buscador por nombre de archivo o carpeta (sin distinguir mayúsculas ni acentos, combinable con los

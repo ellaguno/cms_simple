@@ -61,7 +61,7 @@ admin_header('Audio: texto a voz', 'pack:audio');
     </ul>
   </section>
 </div>
-<?php foreach (cms_config('types') as $k => $def): if (!au_type_ok($k)) continue; $all = cms_items($k, false); if (!$all) continue;
+<?php foreach (cms_config('types') as $k => $def): if (!au_type_ok($k) || !empty($def['internal'])) continue; $all = cms_items($k, false); if (!$all) continue;
     $with = 0; foreach ($all as $it) if (au_path($it, cms_default_lang()) !== '') $with++; ?>
 <section class="ad-box">
   <h2><?= cms_e($def['label'] ?? $k) ?> <small class="ad-help"><?= $with ?> de <?= count($all) ?> con audio<?= $multi ? ' en ' . strtoupper(cms_default_lang()) : '' ?></small></h2>

@@ -101,6 +101,7 @@ function cms_site_map(string $lang): array
     }
     // tipos de contenido
     foreach (cms_config('types') as $k => $d) {
+        if (!empty($d['internal'])) continue;   // cabeceras y pies: no responden en el sitio
         $d += ['key' => $k];
         $children = cms_map_type_children($k, $d, $lang);
         $all = cms_items($k, false);

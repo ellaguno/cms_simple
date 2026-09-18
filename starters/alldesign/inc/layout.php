@@ -41,6 +41,7 @@ function site_header(array $page): void
 <body class="ad<?= $bare ? ' cms-bare' : '' ?>">
 <?php if ($bare): echo '<main class="ad-main">'; return; endif; ?>
 <a class="ad-skip" href="#contenido">Ir al contenido</a>
+<?php $coreHdr = function_exists('cms_layout_header') ? cms_layout_header($page) : ''; if ($coreHdr !== ''): echo $coreHdr; else: // cabecera con nombre (Diseño → Cabeceras y pies) o la del tema ?>
 <header class="ad-header" id="top">
   <div class="ad-topbar">
     <div class="ad-container ad-topbar-in">
@@ -78,6 +79,7 @@ function site_header(array $page): void
     </div>
   </div>
 </header>
+<?php endif; ?>
 <main class="ad-main" id="contenido">
 <?php
 }
@@ -93,7 +95,8 @@ function site_footer(array $page): void
     $logoLight = cms_img($S['logo_light'] ?? 'logo-blanco.png');
     $children = ad_portfolio_children();
     $tel = cms_tel_href();
-    ?>
+    $coreFtr = function_exists('cms_layout_footer') ? cms_layout_footer($page) : '';
+    if ($coreFtr !== ''): echo $coreFtr; else: // pie con nombre (Diseño → Cabeceras y pies) o el del tema ?>
 <footer class="ad-footer">
   <div class="ad-container">
     <div class="ad-footer-top">
@@ -136,7 +139,7 @@ function site_footer(array $page): void
     </div>
   </div>
 </footer>
-<?php endif; ?>
+<?php endif; endif; ?>
 <script defer src="<?= cms_asset('js/alldesign.js') ?>?v=<?= CMS_VERSION ?>"></script>
 </body>
 </html>

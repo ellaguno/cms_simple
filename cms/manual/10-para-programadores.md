@@ -80,3 +80,19 @@ Ojo con `cms_current()['item']` al dibujar el sitio: llega resuelto al idioma de
 Para interfaz no hay API: el manifiesto `pack.php` declara `'settings' => ['Grupo' => [campo => def]]` (un grupo en Ajustes), `'item_fields' => ['*' => [campo => def]]` o `[tipo => …]` (campos en la barra lateral del editor), con la misma sintaxis de campos de `config.php`, y `'admin' => ['label' => 'Audio', 'file' => 'admin.php']` para una página propia en el panel (en el grupo Contenido, o en el que indique `'group' => 'diseno'|'ajustes'|'sistema'`): responde en `admin/?p=pack:<nombre>`, con `$pack` (el manifiesto) y los helpers del panel (`admin_header()`, `admin_is_post()`, `admin_csrf_check()`, `admin_flash()`, `admin_redirect()`), y aparece en el menú lateral. Para hablar con una API, `cms_http_post($url, $body, $headers)` (JSON o cuerpo crudo, respuesta de texto o binaria, excepción legible).
 
 Ejemplos completos: `cms/packs/enlaces` (solo código, un grupo de ajustes, una casilla por elemento y dos ganchos), `cms/packs/audio` (página propia, botones en el editor, bloque, `item.save`) y `cms/packs/redaccion` (página propia, historial en `data/`, tarea de `cron`).
+
+## Cabeceras y pies del constructor en el tema (1.33)
+
+Para que el tema use las piezas de Diseño → Cabeceras y pies, en `site/inc/layout.php` envuelve la cabecera y el pie propios:
+
+```php
+// en site_header(), donde va la cabecera
+$h = cms_layout_header($page);
+if ($h !== '') echo $h; else { ?> …tu <header> de siempre… <?php }
+
+// en site_footer(), donde va el pie
+$f = cms_layout_footer($page);
+if ($f !== '') echo $f; else { ?> …tu <footer> de siempre… <?php }
+```
+
+Devuelven `''` cuando la página no tiene cabecera o pie elegidos ni hay predeterminados, así que el tema conserva los suyos. `cms_layout('header'|'footer', $page)` devuelve el elemento elegido (o `null`) por si la plantilla necesita saberlo, por ejemplo para no pintar sus propios bloques de cabecera. Los bloques de la pieza se dibujan con `cms_sections_render()` como los de cualquier página, con `$ctx['item']` = la pieza; sus recursos de paquete ya van en `cms_head()`. La colección interna es `layouts` (`'internal' => true`): no responde en el sitio, no sale en el sitemap ni en el mapa, y sus vistas previas van por `/_layout/<slug>?preview=token`. `'layouts' => false` en `config.php` la quita; `'block_exclude' => ['estructura/cabecera', 'estructura/pie']` esconde los bloques genéricos si el tema trae los suyos.

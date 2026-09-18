@@ -102,18 +102,20 @@ $titleInputName = !empty($fields[$titleField]['i18n']) ? $titleField . '[' . $dl
     <div class="ad-builder-preview"><iframe name="cms-preview" class="ad-preview-frame" title="Vista previa" data-preview-frame src="about:blank"></iframe></div>
 <?php endif; ?>
     <aside class="ad-sidebar">
-      <?php admin_seo_fields($item); ?>
+<?php $internal = !empty($def['internal']); if (!$internal) admin_seo_fields($item); ?>
       <div class="ad-field"><label>Estado</label>
-        <select name="status"><option value="draft"<?= $item['status'] !== 'published' ? ' selected' : '' ?>>Borrador</option><option value="published"<?= $item['status'] === 'published' ? ' selected' : '' ?>>Publicado</option></select></div>
+        <select name="status"><option value="draft"<?= $item['status'] !== 'published' ? ' selected' : '' ?>>Borrador</option><option value="published"<?= $item['status'] === 'published' ? ' selected' : '' ?>>Publicado</option></select><?php if ($internal): ?><p class="ad-help">Solo lo publicado se usa en el sitio; un borrador se ve en las vistas previas.</p><?php endif; ?></div>
+<?php if (!$internal): ?>
       <div class="ad-field"><label>Publicar a partir de <small class="ad-help">(vacío = de inmediato)</small></label><input type="date" name="publish_at" value="<?= cms_e($item['publish_at'] ?? '') ?>" min="<?= date('Y-m-d', time() + 86400) ?>"></div>
       <div class="ad-field"><label>Retirar a partir de <small class="ad-help">(vacío = nunca)</small></label><input type="date" name="unpublish_at" value="<?= cms_e($item['unpublish_at'] ?? '') ?>"><p class="ad-help">Desde ese día deja de verse en el sitio, el sitemap y los listados, pero sigue publicado: quita o cambia la fecha para que vuelva.</p></div>
-      <div class="ad-field"><label>URL (slug)</label><input type="text" name="slug" value="<?= cms_e($item['slug']) ?>" data-slug placeholder="se genera del título"><p class="ad-help"><?php if ($tree): $pp = ($item['parent'] ?? '') !== '' ? (cms_items($type, false)[$item['parent']]['path'] ?? $item['parent']) . '/' : ''; $sg = cms_segment($def, $dl); ?>/<?= $sg !== '' ? cms_e($sg) . '/' : '' ?><span data-parent-path><?= cms_e($pp) ?></span><?php else: ?>/<?= cms_e(cms_segment($def, $dl)) ?>/<?php endif; ?><span data-slug-preview><?= cms_e($item['slug']) ?></span></p></div>
+<?php endif; ?>
+      <div class="ad-field"><label><?= $internal ? 'Clave (slug)' : 'URL (slug)' ?></label><input type="text" name="slug" value="<?= cms_e($item['slug']) ?>" data-slug placeholder="se genera del título"><p class="ad-help"><?php if ($tree): $pp = ($item['parent'] ?? '') !== '' ? (cms_items($type, false)[$item['parent']]['path'] ?? $item['parent']) . '/' : ''; $sg = cms_segment($def, $dl); ?>/<?= $sg !== '' ? cms_e($sg) . '/' : '' ?><span data-parent-path><?= cms_e($pp) ?></span><?php else: ?>/<?= cms_e(cms_segment($def, $dl)) ?>/<?php endif; ?><span data-slug-preview><?= cms_e($item['slug']) ?></span></p></div>
 <?php foreach ($side as $name => $fd) admin_field($name, $fd, $item[$name] ?? ''); ?>
 <?php if (!$is_new) cms_do('admin.item.sidebar', $type, $item); ?>
       <div class="ad-field ad-sticky-save">
         <button class="ad-btn" type="submit">Guardar</button>
         <a class="ad-btn ad-btn-light" href="<?= admin_url('content', ['type' => $type]) ?>">Volver</a>
-<?php if (!$is_new): foreach (cms_active_langs() as $l): ?>        <a class="ad-btn ad-btn-light" href="<?= cms_e(cms_item_url($type, $item, $l)) ?>" target="_blank" rel="noopener"><?= cms_item_is_live($item) ? 'Ver' : 'Vista previa' ?> <?= strtoupper($l) ?></a>
+<?php if (!$is_new): foreach (cms_active_langs() as $l): ?>        <a class="ad-btn ad-btn-light" href="<?= cms_e($internal ? cms_url('item:' . $type, $l, $item['slug']) . '?preview=' . cms_preview_token($type, $item['slug']) : cms_item_url($type, $item, $l)) ?>" target="_blank" rel="noopener"><?= !$internal && cms_item_is_live($item) ? 'Ver' : 'Vista previa' ?> <?= strtoupper($l) ?></a>
 <?php endforeach; endif; ?>
       </div>
 <?php if (!$is_new): ?>      <p class="ad-help">Creado: <?= cms_e($item['created'] ?? '—') ?> · Actualizado: <?= cms_e($item['updated'] ?? '—') ?></p>

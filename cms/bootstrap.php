@@ -12,7 +12,7 @@
  */
 declare(strict_types=1);
 
-const CMS_VERSION = '1.32.0';
+const CMS_VERSION = '1.33.0';
 
 define('CMS_DIR', __DIR__);
 define('CMS_ROOT', dirname(__DIR__));
@@ -77,9 +77,28 @@ function cms_config(?string $key = null, $default = null)
             'code_editor' => true,
         ], $user);
         if (!in_array($cfg['default_lang'], $cfg['langs'], true)) array_unshift($cfg['langs'], $cfg['default_lang']);
+        // cabeceras y pies del constructor (1.33): colección interna en todo sitio con bloques; 'layouts' => false la quita
+        $builder = is_file(CMS_SITE . '/blocks.php') || (bool) array_filter($cfg['types'], fn($d) => (bool) array_filter((array) ($d['fields'] ?? []), fn($f) => ($f['type'] ?? '') === 'sections'));
+        if (($cfg['layouts'] ?? true) !== false && $builder && !isset($cfg['types']['layouts'])) $cfg['types']['layouts'] = cms_layouts_type_def();
     }
     if ($key === null) return $cfg;
     return array_key_exists($key, $cfg) ? $cfg[$key] : $default;
+}
+
+/** Definición de la colección interna "Cabeceras y pies" (Diseño → Cabeceras y pies; ver lib/layouts.php). */
+function cms_layouts_type_def(): array
+{
+    return [
+        'label' => 'Cabeceras y pies', 'label_singular' => 'Cabecera o pie', 'internal' => true, 'no_list' => true, 'noindex' => true,
+        'routes' => ['es' => '_layout'], 'template_single' => '_layout', 'title_field' => 'title',
+        'sort' => ['field' => 'title', 'dir' => 'asc'], 'list' => ['kind'],
+        'help' => 'Cabeceras y pies hechos con bloques (paquete "estructura" o los del tema). Cada página elige los suyos en la barra lateral de su editor; los predeterminados se fijan en Ajustes → Cabecera y pie. El tema los dibuja con cms_layout_header() y cms_layout_footer().',
+        'fields' => [
+            'title'    => ['type' => 'text', 'label' => 'Nombre', 'required' => true, 'placeholder' => 'Cabecera principal, Pie de la tienda…'],
+            'kind'     => ['type' => 'select', 'label' => 'Qué es', 'sidebar' => true, 'options' => ['header' => 'Cabecera', 'footer' => 'Pie de página']],
+            'sections' => ['type' => 'sections', 'label' => 'Bloques', 'help' => 'Una cabecera suele ser un solo bloque "Cabecera del sitio" (logotipo, menú y botón); un pie, un bloque "Pie de página". Puedes añadir más: una barra de aviso, una cinta de logotipos, un llamado a la acción antes del pie…'],
+        ],
+    ];
 }
 
 function cms_langs(): array { return cms_config('langs'); }
@@ -105,6 +124,7 @@ require_once CMS_DIR . '/lib/seo.php';
 require_once CMS_DIR . '/lib/categories.php';
 require_once CMS_DIR . '/lib/map.php';
 require_once CMS_DIR . '/lib/sections.php';
+require_once CMS_DIR . '/lib/layouts.php';
 require_once CMS_DIR . '/lib/packs.php';
 require_once CMS_DIR . '/lib/styles.php';
 require_once CMS_DIR . '/lib/registry.php';

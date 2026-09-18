@@ -129,7 +129,7 @@ function cms_sitemap(): void
 {
     header('Content-Type: application/xml; charset=utf-8');
     $langs = cms_active_langs();
-    $types = cms_config('types');
+    $types = array_filter(cms_config('types'), fn($d) => empty($d['internal']));
     $pages = cms_config('pages');
     $latest = '';
     $all = [];

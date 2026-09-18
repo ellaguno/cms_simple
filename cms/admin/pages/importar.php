@@ -9,7 +9,7 @@ require_once CMS_DIR . '/lib/import.php';
 
 if (cms_config('importer', true) === false) { admin_flash('El importador está desactivado en la configuración del sitio.', 'err'); admin_redirect(admin_url()); }
 
-$targets = array_filter(cms_config('types'), fn($d) => (bool) array_filter((array) ($d['fields'] ?? []), fn($f) => ($f['type'] ?? '') === 'sections'));
+$targets = array_filter(cms_config('types'), fn($d) => empty($d['internal']) && (bool) array_filter((array) ($d['fields'] ?? []), fn($f) => ($f['type'] ?? '') === 'sections'));
 $S = cms_settings();
 $provider = (string) ($S['import_provider'] ?? 'openrouter');
 if (!isset(cms_import_providers()[$provider])) $provider = 'openrouter';

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 $S = cms_settings();
-$types = cms_config('types');
+$types = array_filter(cms_config('types'), fn($d) => empty($d['internal']));
 $writable = is_writable(CMS_DATA) && is_writable(CMS_UPLOADS);
 if (admin_is_post() && admin_post('action') === 'reindex') {
     admin_csrf_check();

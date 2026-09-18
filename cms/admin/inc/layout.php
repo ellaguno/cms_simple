@@ -12,8 +12,10 @@ function admin_nav(): array
     $nav = ['dashboard' => ['Inicio', admin_url('dashboard')]];
     // Contenido: las colecciones sin grupo propio, Medios y Mapa del sitio; las colecciones con 'group' conservan su grupo
     $content = []; $groups = [];
+    $internal = [];
     foreach (cms_config('types') as $k => $def) {
         $entry = [$def['label'] ?? $k, admin_url('content', ['type' => $k])];
+        if (!empty($def['internal'])) { $internal['content:' . $k] = $entry; continue; }   // cabeceras y pies: en Diseño
         $g = trim((string) ($def['group'] ?? ''));
         if ($g === '' || cms_slugify($g) === 'contenido') { $content['content:' . $k] = $entry; continue; }   // "Contenido" es el grupo por defecto
         $gk = 'group:' . cms_slugify($g);
@@ -34,6 +36,7 @@ function admin_nav(): array
     $nav += $groups;
     // Diseño: temas y variaciones, menú, textos, código del tema e importar (solo si el tema tiene constructor)
     $design = ['diseno' => ['Diseño', admin_url('diseno')], 'menu' => ['Menú', admin_url('menu')], 'strings' => ['Textos del sitio', admin_url('strings')]];
+    $design += $internal;
     $design['categorias'] = ['Categorías', admin_url('categorias')];
     if (cms_config('code_editor', true) !== false) $design['code'] = ['Código del tema', admin_url('code')];
     if (cms_config('importer', true) !== false && cms_builder_type() !== null) $design['importar'] = ['Importar diseño', admin_url('importar')];

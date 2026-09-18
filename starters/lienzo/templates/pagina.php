@@ -1,6 +1,8 @@
 <?php /** Página del constructor. Variables: $lang, $S, $t, $page, $item, $def */ declare(strict_types=1);
 $sections = array_values(array_filter((array) ($item['sections'] ?? []), fn($x) => is_array($x) && empty($x['hidden'])));
 [$sharedHdr, $sharedFtr] = lz_shared();
+// cabecera o pie con nombre del núcleo (1.33): la página deja de mostrar sus propios bloques cabecera/pie
+if (function_exists('cms_layout')) { $sharedHdr = cms_layout('header', $page) ?: $sharedHdr; $sharedFtr = cms_layout('footer', $page) ?: $sharedFtr; }
 if ($sharedHdr || $sharedFtr) $sections = array_values(array_filter($sections, fn($x) => !in_array($x['type'] ?? '', ['cabecera', 'pie'], true)));
 if (!$sections) { echo '<main class="lz-empty"><h1>', cms_e($item['title'] ?? ''), '</h1><p>Esta página todavía no tiene secciones.</p></main>'; return; }
 $ctx = ['lang' => $lang, 'S' => $S, 't' => $t, 'page' => $page, 'item' => $item];

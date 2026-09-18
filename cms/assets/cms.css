@@ -6,3 +6,9 @@
 .cms-header p { color: var(--cms-muted, #6b7280); font-size: 1.05rem; margin: 0; }
 .cms-btn { display: inline-flex; align-items: center; gap: .5rem; padding: .8rem 1.5rem; border-radius: var(--cms-radius, .75rem); background: var(--cms-accent, #4f46e5); color: #fff; font-weight: 600; text-decoration: none; transition: transform .2s, box-shadow .2s; }
 .cms-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.12); }
+
+/* 1.33: vista previa de una cabecera o pie del constructor */
+.cms-layout-placeholder { min-height: 42vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; background: repeating-linear-gradient(-45deg, #f6f6f8 0 14px, #fafafa 0 28px); color: #666; font: 15px/1.5 system-ui, sans-serif; }
+.cms-layout-placeholder p { margin: 0 0 .4em; }
+.cms-layout-warn { background: #fff4d6; color: #7a5200; padding: 10px 16px; font: 13px/1.5 system-ui, sans-serif; }
+.cms-layout-warn code { background: rgba(0,0,0,.06); padding: 1px 4px; border-radius: 3px; }

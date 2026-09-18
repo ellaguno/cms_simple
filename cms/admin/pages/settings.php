@@ -13,7 +13,7 @@ $langNames = ['es' => 'Español', 'en' => 'English', 'fr' => 'Français', 'pt' =
 
 // pestañas: clave => ['label' => …, 'sections' => [título => campos]]; las del núcleo dibujan su propio HTML (sections vacío)
 $tabs = ['general' => ['label' => 'General', 'sections' => []], 'contacto' => ['label' => 'Contacto y redes', 'sections' => []], 'marca' => ['label' => 'Marca y SEO', 'sections' => []]];
-$themeSections = (array) cms_config('settings');
+$themeSections = (array) cms_config('settings') + cms_layouts_settings();
 if ($themeSections) {
     $tabs['tema'] = ['label' => count($themeSections) === 1 ? (string) array_key_first($themeSections) : 'Tema', 'sections' => $themeSections];
 }

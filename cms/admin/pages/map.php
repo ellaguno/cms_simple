@@ -47,7 +47,7 @@ if (admin_is_post()) {
 
 $map = cms_site_map($lang);
 $menuUrls = array_column(cms_menu($lang), 'url');
-$treeTypes = array_keys(array_filter(cms_config('types'), fn($d) => !empty($d['tree'])));
+$treeTypes = array_keys(array_filter(cms_config('types'), fn($d) => !empty($d['tree']) && empty($d['internal'])));
 $counts = cms_map_counts($map);
 $icons = ['home' => '⌂', 'page' => '▭', 'type' => '▤', 'category' => '▥', 'item' => '·', 'static' => '▣', 'external' => '↗'];
 $statusLabel = ['published' => 'publicado', 'draft' => 'borrador', 'scheduled' => 'programado', 'expired' => 'caducado'];

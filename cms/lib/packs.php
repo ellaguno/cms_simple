@@ -111,6 +111,8 @@ function cms_packs_enabled(): array
     }
     $S = cms_settings();
     foreach ((array) ($S['packs_on'] ?? []) as $name) if (is_string($name) && !isset($out[$name])) $out[$name] = [];
+    // estructura (1.33): cabecera y pie genéricos para Diseño → Cabeceras y pies; activo de serie donde hay constructor (se apaga en Catálogo)
+    if (!isset($out['estructura']) && function_exists('cms_layouts_enabled') && cms_layouts_enabled()) $out['estructura'] = [];
     foreach ((array) ($S['packs_off'] ?? []) as $name) if (is_string($name)) unset($out[$name]);
     return $out;
 }

@@ -85,3 +85,14 @@ Hay dos niveles, y conviene tenerlos claros porque una página no tiene colores 
 - **Cada sección.** En la pestaña **Estilo** de la sección se elige el fondo entre la paleta del sitio (blanco, gris claro, oscuro, color principal, degradado), el color del texto (automático, oscuro o claro), una imagen de fondo con su oscurecido, el espacio vertical, el ancho, la alineación y la animación. No hay un selector de color libre a propósito: así todas las páginas quedan en la misma familia de colores y un cambio en Ajustes las actualiza todas.
 
 Si una sección necesita algo fuera de la paleta, la salida es el campo **Clases CSS adicionales** de Estilo con una regla en la hoja del tema, o el bloque HTML. El importador de diseños propone la paleta y las tipografías que ve en el PDF para que las lleves a Ajustes → Diseño.
+
+## Cabeceras y pies con nombre (1.33)
+
+**Diseño → Cabeceras y pies** guarda cabeceras y pies de página hechos con bloques, cada uno con su nombre. Sirve para tener varios en el mismo sitio (la cabecera de la marca principal y la de una línea de negocio, un pie corto para las páginas de campaña) y cambiarlos desde el panel sin tocar el tema.
+
+1. Crea una pieza: nombre, si es cabecera o pie, y sus bloques. Lo normal es un solo bloque **Cabecera del sitio** (logotipo, menú, botón) o **Pie de página** (columnas, contacto, redes, derechos); puedes añadir más, por ejemplo una banda de aviso antes del menú o un llamado a la acción antes del pie. La vista previa la muestra puesta en una página de muestra del tema.
+2. En el menú del bloque de cabecera, `@menu` pone el menú de Diseño → Menú; una línea que empieza con `- ` cuelga de la entrada anterior y forma un desplegable. En el pie, `@ajustes` en contacto y redes toma lo de Ajustes, y `{year}` en la línea de derechos pone el año.
+3. Publica la pieza. Los borradores solo se ven en las vistas previas.
+4. En el editor de cada página, en la barra lateral, elige **Cabecera** y **Pie de página**: la predeterminada, ninguna, o una por su nombre. **Ajustes → Cabeceras y pies del constructor** fija las predeterminadas para las páginas que no eligen.
+
+Si una página no elige nada y no hay predeterminada, el tema pone su cabecera y su pie de siempre. Los temas que no llaman a `cms_layout_header()` y `cms_layout_footer()` en su `inc/layout.php` siguen igual; la vista previa de la pieza lo avisa (capítulo 10 para programadores).

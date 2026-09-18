@@ -92,6 +92,7 @@ if ($seg === []) {
 } else {
     // tipos de contenido
     foreach (cms_config('types') as $k => $d) {
+        if (!empty($d['internal'])) continue;
         $d += ['key' => $k];
         if ($seg[0] !== cms_segment($d, $lang)) continue;
         if (count($seg) === 1 && empty($d['no_list'])) {
@@ -156,10 +157,20 @@ if ($seg === []) {
     }
 }
 
+// vista previa de una cabecera o pie del constructor (/_layout/<slug>?preview=token): la página de muestra con la pieza puesta
+if ($template === null && count($seg) === 2 && $seg[0] === '_layout' && cms_layouts_enabled()) {
+    $lit = cms_item(CMS_LAYOUTS, $seg[1], false);
+    if ($lit && hash_equals(cms_preview_token(CMS_LAYOUTS, (string) $lit['slug']), (string) ($_GET['preview'] ?? ''))) {
+        $template = '_layout'; $type = CMS_LAYOUTS; $def = cms_type($type); $item = $lit;
+        $page += ['title' => (string) ($lit['title'] ?? '') . ' · ' . $site, 'desc' => '', 'alt' => $alt('home'), 'noindex' => true, 'preview' => true, 'layout_preview' => $lit];
+        $page['route'] = 'layout';
+    }
+}
+
 // tipos en árbol: /ruta/completa (raíz) o /segmento/ruta/completa
 if ($template === null && $seg !== []) {
     foreach (cms_config('types') as $k => $d) {
-        if (empty($d['tree'])) continue;
+        if (empty($d['tree']) || !empty($d['internal'])) continue;
         $d += ['key' => $k];
         $tseg = cms_segment($d, $lang);
         $rel = $path;
@@ -186,6 +197,13 @@ if ($template === null && $seg !== []) {
     }
 }
 
+if ($template === '_layout') {
+    $page['canonical'] = cms_abs_url(cms_url('home', $lang));
+    $page['sections'] = (array) ($item['sections'] ?? []);
+    $GLOBALS['cms_current'] = ['type' => $type, 'item' => $item, 'page' => $page, 'lang' => $lang];
+    cms_layout_preview_page($page);
+    exit;
+}
 if ($template === null || !is_file(CMS_SITE . '/templates/' . $template . '.php')) {
     http_response_code(404);
     $template = '404';
@@ -194,6 +212,9 @@ if ($template === null || !is_file(CMS_SITE . '/templates/' . $template . '.php'
 $page['canonical'] = cms_abs_url($page['alt'][$lang] ?? cms_url('home', $lang));
 if (is_array($item ?? null) && is_array($item['sections'] ?? null)) $page['sections'] = $item['sections'];
 $GLOBALS['cms_current'] = ['type' => $type, 'item' => is_array($item ?? null) ? $item : null, 'page' => $page, 'lang' => $lang];   // cms_current(), para los ganchos
+// los bloques de la cabecera y el pie elegidos cuentan para los recursos (CSS/JS de paquetes) de la página
+foreach (['header', 'footer'] as $lk) if (($lit = cms_layout($lk, $page)) !== null) $page['sections'] = array_merge((array) ($page['sections'] ?? []), (array) ($lit['sections'] ?? []));
+$GLOBALS['cms_current']['page'] = $page;
 
 site_header($page);
 require CMS_SITE . '/templates/' . $template . '.php';

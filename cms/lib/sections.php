@@ -292,7 +292,7 @@ function cms_block_header(string $title, string $subtitle = '', string $extraCla
 /** Tipo de contenido que usa el constructor (el primero con un campo 'sections'), o null. */
 function cms_builder_type(): ?string
 {
-    foreach (cms_config('types') as $k => $d) foreach ((array) ($d['fields'] ?? []) as $fd) if (($fd['type'] ?? '') === 'sections') return (string) $k;
+    foreach (cms_config('types') as $k => $d) { if (!empty($d['internal'])) continue; foreach ((array) ($d['fields'] ?? []) as $fd) if (($fd['type'] ?? '') === 'sections') return (string) $k; }
     return null;
 }
 

@@ -460,3 +460,5 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-fm-rename { display: none; gap: 6px; align-items: center; margin-top: 6px; width: 100%; } .ad-fm-rename.on { display: flex; }
 .ad-fm-rename input[type=text] { flex: 1 1 120px; min-width: 0; font-size: 12px; padding: 5px 7px; }
 .ad-row-actions { flex-wrap: wrap; }
+.ad-theme-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+.ad-theme img { cursor: zoom-in; }

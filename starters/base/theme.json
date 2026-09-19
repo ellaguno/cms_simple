@@ -1,8 +1,11 @@
 {
   "label": "Base",
   "desc": "Minimalista y tipográfico, en la línea de los temas ligeros para blogs y sitios sencillos: cabecera fina con línea inferior, grises neutros, esquinas casi rectas, sin sombras. Todo el protagonismo lo tiene el contenido.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "cms_simple",
+  "author_url": "https://github.com/ellaguno/cms_simple",
   "license": "MIT",
-  "parent": "lienzo"
+  "parent": "lienzo",
+  "inspired": "GeneratePress",
+  "inspired_url": "https://generatepress.com"
 }

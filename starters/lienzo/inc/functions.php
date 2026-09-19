@@ -15,7 +15,14 @@ function lz_inline(string $s): string
     return preg_replace('/\s+on[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $s) ?? '';
 }
 
-function lz_href(string $url): string { $url = trim($url); return $url === '' ? '#' : $url; }
+function lz_href(string $url): string
+{
+    $url = trim($url);
+    if ($url === '') return '#';
+    // vista previa de un tema (Diseño → Vista previa): los enlaces internos conservan la firma para seguir viendo ese tema
+    if ($url[0] === '/' && strpos($url, '?') === false && function_exists('cms_theme_preview') && cms_theme_preview() !== '') return CMS_BASE . $url . '?' . cms_theme_preview_qs();
+    return $url;
+}
 
 /** Botón con estilo primary | secondary | outline. */
 function lz_btn(string $text, string $url, string $style = 'primary'): string

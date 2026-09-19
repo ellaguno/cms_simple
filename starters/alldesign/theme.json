@@ -2,5 +2,6 @@
   "label": "All Design",
   "desc": "El diseño de alldesign.mx (hecho originalmente con Adobe Muse): cabecera clara con menú en mayúsculas, portadas a todo el ancho con pestaña curva, cuerpo gris oscuro, etiquetas espaciadas, círculo verde, tarjetas de noticias, galerías con visor, equipo y barras de habilidades.",
   "version": "1.0.0",
-  "author": "All Design / SesoLibre"
+  "author": "All Design / SesoLibre",
+  "author_url": "https://github.com/ellaguno/cms_simple"
 }

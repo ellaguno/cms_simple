@@ -89,8 +89,9 @@ Los temas marcados `"private": true` en su `theme.json` y en el catálogo llevan
 
 **Temas hijos.** Varios temas del catálogo (Cima, Base, Revista, Oceánico, Cadencia, Nieve, Casiopea, Hélice, Cuaderno,
 Agencia) son hijos del lienzo: cambian el aspecto pero usan sus mismos bloques, así que el contenido que armes con uno
-sirve con cualquier otro. Al instalarlos el catálogo instala también el lienzo si falta, y al activarlos en Diseño se
-añaden cuatro páginas de muestra como borrador (portada, servicios, nosotros y contacto) que puedes editar o borrar.
+sirve con cualquier otro. Al instalarlos el catálogo instala también el lienzo si falta. Antes de activar uno, **Vista previa** en su tarjeta
+enseña el sitio con ese tema y sus páginas de muestra sin cambiar nada; ya activo, "Cargar páginas de muestra" añade
+como borrador la portada, servicios, nosotros y contacto de ejemplo, y "Quitar páginas de muestra" las retira.
 
 ## Actualizar el CMS con un botón
 

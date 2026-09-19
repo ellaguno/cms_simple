@@ -56,7 +56,7 @@ function catalogo_card(array $it): void
     $id = $it['kind'] . ':' . $it['key'];
     ?>
     <article class="ad-theme<?= $it['installed'] ? ' is-on' : '' ?>">
-<?php if ($it['screenshot'] !== ''): ?>      <img src="<?= cms_e($it['screenshot']) ?>" alt="" loading="lazy" referrerpolicy="no-referrer">
+<?php if ($it['screenshot'] !== ''): ?>      <a href="<?= cms_e($it['screenshot']) ?>" target="_blank" rel="noopener" title="Ver la captura grande"><img src="<?= cms_e($it['screenshot']) ?>" alt="" loading="lazy" referrerpolicy="no-referrer"></a>
 <?php else: ?>      <div class="ad-theme-noshot" aria-hidden="true"><?= cms_e(mb_strtoupper(mb_substr($it['label'], 0, 2))) ?></div>
 <?php endif; ?>
       <div class="ad-theme-body">
@@ -67,7 +67,9 @@ function catalogo_card(array $it): void
           <?php if ($it['private']): ?><span class="ad-pill warn" title="Licencia por sitio o tema de un cliente: no se publica ni se comparte">Privado</span><?php endif; ?>
         </div>
         <p class="ad-help"><?= cms_e($it['desc']) ?></p>
-        <p class="ad-help"><?= $it['version'] !== '' ? 'v' . cms_e($it['version']) : '' ?><?= $it['author'] !== '' ? ' · ' . cms_e($it['author']) : '' ?><?= $it['license'] !== '' ? ' · ' . cms_e($it['license']) : '' ?><?= $it['tags'] ? ' · ' . cms_e(implode(', ', array_slice($it['tags'], 0, 4))) : '' ?></p>
+        <p class="ad-help"><?= $it['version'] !== '' ? 'v' . cms_e($it['version']) : '' ?><?= $it['author'] !== '' ? ' · por ' . ($it['author_url'] !== '' ? '<a href="' . cms_e($it['author_url']) . '" target="_blank" rel="noopener">' . cms_e($it['author']) . ' ↗</a>' : cms_e($it['author'])) : '' ?><?= $it['inspired'] !== '' ? ' · inspirado en ' . ($it['inspired_url'] !== '' ? '<a href="' . cms_e($it['inspired_url']) . '" target="_blank" rel="noopener">' . cms_e($it['inspired']) . ' ↗</a>' : cms_e($it['inspired'])) : '' ?><?= $it['demo'] !== '' ? ' · <a href="' . cms_e($it['demo']) . '" target="_blank" rel="noopener">demo ↗</a>' : '' ?><?= $it['license'] !== '' ? ' · ' . cms_e($it['license']) : '' ?><?= $it['tags'] ? ' · ' . cms_e(implode(', ', array_slice($it['tags'], 0, 4))) : '' ?></p>
+<?php if ($it['installed'] && $it['kind'] === 'theme'): ?>        <p><a class="ad-btn ad-btn-sm ad-btn-light" href="<?= admin_url('diseno', ['vista' => $it['key']]) ?>" target="_blank" rel="noopener">Vista previa ↗</a></p>
+<?php endif; ?>
 <?php if ($it['too_old']): ?>
         <p class="ad-help ad-theme-warn">Necesita cms_simple <?= cms_e((string) ($it['requires']['cms'] ?? '')) ?> o superior; tienes <?= CMS_VERSION ?>.</p>
 <?php elseif ($it['core']): ?>

@@ -12,7 +12,7 @@
  */
 declare(strict_types=1);
 
-const CMS_VERSION = '1.35.0';
+const CMS_VERSION = '1.36.0';
 
 define('CMS_DIR', __DIR__);
 define('CMS_ROOT', dirname(__DIR__));
@@ -25,10 +25,37 @@ define('CMS_THEMES', CMS_ROOT . '/themes');
  * (queda en data/settings.json → 'theme'); si no hay ninguno, se usa site/ como toda la vida.
  * Se resuelve aquí, antes que nada, porque CMS_SITE es una constante que usa todo el núcleo.
  */
+/** Firma de la vista previa de un tema (válida esta hora y la anterior); la emite Diseño → Vista previa. */
+function cms_theme_preview_token(string $key, int $shift = 0): string
+{
+    $f = CMS_DATA . '/.secret';
+    $secret = is_file($f) ? trim((string) file_get_contents($f)) : '';
+    if ($secret === '') { $secret = bin2hex(random_bytes(24)); @mkdir(CMS_DATA, 0755, true); @file_put_contents($f, $secret); }
+    return substr(hash_hmac('sha256', 'theme-preview/' . $key . '/' . date('YmdH', time() - $shift * 3600), $secret), 0, 24);
+}
+/** Clave del tema en vista previa (solo con firma válida), o ''. */
+function cms_theme_preview(): string
+{
+    static $k = null;
+    if ($k !== null) return $k;
+    $k = '';
+    $key = (string) ($_GET['cmstheme'] ?? ''); $tok = (string) ($_GET['cmstoken'] ?? '');
+    if ($key !== '' && preg_match('/^[a-z0-9_-]+$/i', $key) && $tok !== '' && (hash_equals(cms_theme_preview_token($key), $tok) || hash_equals(cms_theme_preview_token($key, 1), $tok))) $k = $key;
+    return $k;
+}
+/** Parámetros que mantienen la vista previa del tema al navegar ('' si no hay vista previa). */
+function cms_theme_preview_qs(): string
+{
+    $k = cms_theme_preview();
+    return $k === '' ? '' : 'cmstheme=' . rawurlencode($k) . '&cmstoken=' . rawurlencode((string) $_GET['cmstoken']);
+}
+
 function cms_active_theme_dir(): string
 {
     $legacy = CMS_ROOT . '/site';
     $ok = fn(string $d) => is_dir($d) && (is_file($d . '/config.php') || is_file($d . '/theme.json'));
+    $pv = cms_theme_preview();
+    if ($pv !== '') { $d = $pv === 'site' ? $legacy : CMS_THEMES . '/' . $pv; if ($ok($d)) return $d; }
     $s = @file_get_contents(CMS_DATA . '/settings.json');
     $k = '';
     if (is_string($s) && $s !== '') { $j = json_decode($s, true); if (is_array($j)) $k = (string) ($j['theme'] ?? ''); }

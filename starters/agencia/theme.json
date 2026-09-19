@@ -1,8 +1,11 @@
 {
   "label": "Agencia",
   "desc": "Agencia clásica: acento amarillo sobre gris carbón, títulos en mayúsculas y negrita, secciones bien separadas, tarjetas centradas con icono redondo y pie oscuro. Al estilo de la plantilla Agency de Start Bootstrap.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "cms_simple",
+  "author_url": "https://github.com/ellaguno/cms_simple",
   "license": "MIT",
-  "parent": "lienzo"
+  "parent": "lienzo",
+  "inspired": "Agency (Start Bootstrap)",
+  "inspired_url": "https://startbootstrap.com/theme/agency"
 }

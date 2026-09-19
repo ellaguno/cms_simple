@@ -36,19 +36,38 @@ if (admin_is_post() && admin_post('action') === 'theme') {
         foreach (array_merge(cms_style_setting_keys(CMS_SITE), cms_style_setting_keys($themes[$k]['dir'])) as $sk) unset($S[$sk]);
         if (cms_json_write(CMS_DATA . '/settings.json', $S)) {
             admin_flash('Tema activado: ' . $themes[$k]['label'] . '. Los colores y tipografías vuelven a los del tema; ajústalos en Diseño o en Ajustes.');
-            // contenido inicial del tema (defaults/content/<tipo>/<slug>.json): solo lo que no exista ya
-            $seeded = 0;
-            foreach (glob($themes[$k]['dir'] . '/defaults/content/*/*.json') ?: [] as $src) {
-                $ty = basename(dirname($src)); $dst = CMS_DATA . '/content/' . $ty . '/' . basename($src);
-                if (!preg_match('/^[a-z0-9_-]+$/i', $ty) || is_file($dst)) continue;
-                if (!is_dir(dirname($dst))) @mkdir(dirname($dst), 0755, true);
-                if (@copy($src, $dst)) $seeded++;
-            }
-            if ($seeded) { cms_index_flush(); admin_flash($seeded . ' página(s) de muestra del tema añadidas como borrador; edítalas o bórralas desde Contenido.'); }
+            if (!empty($themes[$k]['samples'])) admin_flash('Este tema trae ' . (int) $themes[$k]['samples'] . ' página(s) de muestra: cárgalas con el botón de su tarjeta si las quieres como punto de partida.');
         } else admin_flash('No se pudo guardar en data/settings.json.', 'err');
     }
     admin_redirect(admin_url('diseno'));
 }
+
+// páginas de muestra del tema activo (defaults/content/<tipo>/<slug>.json): se cargan como borrador marcadas con "sample", y se quitan por esa marca
+if (admin_is_post() && in_array(admin_post('action'), ['samples_load', 'samples_remove'], true)) {
+    admin_csrf_check();
+    $n = 0;
+    if (admin_post('action') === 'samples_load') {
+        foreach (glob(CMS_SITE . '/defaults/content/*/*.json') ?: [] as $src) {
+            $ty = basename(dirname($src)); $it = cms_json_read($src, null);
+            if (!preg_match('/^[a-z0-9_-]+$/i', $ty) || !is_array($it) || empty($it['slug']) || !cms_type($ty) || cms_item($ty, (string) $it['slug'], false)) continue;
+            $it['status'] = 'draft'; $it['sample'] = $themeKey; $it['created'] = $it['updated'] = date('Y-m-d');
+            if (cms_item_save($ty, $it)) $n++;
+        }
+        admin_flash($n ? $n . ' página(s) de muestra cargadas como borrador (Contenido → colección correspondiente). Edítalas, publícalas o quítalas con el botón de la tarjeta.' : 'No se cargó nada: las páginas de muestra ya existen o el tema no las trae.', $n ? 'ok' : 'err');
+    } else {
+        foreach (cms_config('types') as $ty => $d) foreach (cms_items($ty, false, true) as $it) if ((string) ($it['sample'] ?? '') === $themeKey && cms_item_delete($ty, (string) $it['slug'])) $n++;
+        if ($n) foreach (array_keys(array_filter(cms_config('types'), fn($d) => !empty($d['tree']))) as $ty) cms_tree_rebuild($ty);
+        admin_flash($n ? $n . ' página(s) de muestra eliminadas.' : 'No hay páginas de muestra de este tema (las que ya editaste y guardaste sin la marca se conservan).');
+    }
+    admin_redirect(admin_url('diseno'));
+}
+if (isset($_GET['vista'])) {   // vista previa de un tema instalado sin activarlo: el sitio con ese tema y sus páginas de muestra
+    $k = (string) $_GET['vista'];
+    if (!isset($themes[$k])) { admin_flash('Ese tema no está instalado.', 'err'); admin_redirect(admin_url('diseno')); }
+    header('Location: ' . CMS_BASE . '/?cmstheme=' . rawurlencode($k) . '&cmstoken=' . rawurlencode(cms_theme_preview_token($k)));
+    exit;
+}
+if (isset($_GET['activar']) && isset($themes[(string) $_GET['activar']])) admin_flash('Para activar «' . $themes[(string) $_GET['activar']]['label'] . '» pulsa Activar en su tarjeta.');
 
 if (admin_is_post() && admin_post('action') === 'install') {
     admin_csrf_check();
@@ -147,21 +166,28 @@ admin_header('Diseño', 'diseno');
   <div class="ad-themes">
 <?php foreach ($themes as $k => $t): $on = $k === $themeKey; $w = $on ? null : cms_theme_warnings($t['dir']); ?>
     <article class="ad-theme<?= $on ? ' is-on' : '' ?>">
-<?php if ($t['screenshot'] !== ''): ?>      <img src="<?= cms_e($t['url'] . '/' . $t['screenshot']) ?>" alt="">
+<?php if ($t['screenshot'] !== ''): ?>      <a href="<?= cms_e($t['dir_url'] . '/' . $t['screenshot']) ?>" target="_blank" rel="noopener" title="Ver la captura grande"><img src="<?= cms_e($t['dir_url'] . '/' . $t['screenshot']) ?>" alt=""></a>
 <?php else: ?>      <div class="ad-theme-noshot" aria-hidden="true"><?= cms_e(mb_strtoupper(mb_substr($t['label'], 0, 2))) ?></div>
 <?php endif; ?>
       <div class="ad-theme-body">
         <div class="ad-style-head"><strong><?= cms_e($t['label']) ?></strong><?php if ($on): ?><span class="ad-pill on">En uso</span><?php endif; ?><?php if (!empty($t['private'])): ?><span class="ad-pill warn" title="Licencia por sitio o tema de un cliente: no se publica ni se comparte">Privado</span><?php endif; ?><?php if (!empty($t['parent'])): $pp = isset($themes[$t['parent']]) || (isset($themes['site']) && strtolower((string) $themes['site']['tkey']) === strtolower($t['parent'])); ?><span class="ad-pill<?= $pp ? '' : ' warn' ?>" title="Tema hijo: toma del padre lo que no trae"><?= $pp ? 'sobre ' . cms_e($t['parent']) : 'falta el tema padre ' . cms_e($t['parent']) ?></span><?php endif; ?></div>
-        <p class="ad-help"><?= cms_e($t['desc'] ?: 'Sin descripción.') ?><?= $t['version'] !== '' ? ' v' . cms_e($t['version']) : '' ?><?= $t['styles'] ? ' · ' . (int) $t['styles'] . ' variaciones' : '' ?><?= !empty($t['license']) ? ' · ' . cms_e((string) $t['license']) : '' ?></p>
+        <p class="ad-help"><?= cms_e($t['desc'] ?: 'Sin descripción.') ?></p>
+        <p class="ad-help"><?= $t['version'] !== '' ? 'v' . cms_e($t['version']) : '' ?><?= $t['author'] !== '' ? ' · por ' . ($t['author_url'] !== '' ? '<a href="' . cms_e($t['author_url']) . '" target="_blank" rel="noopener">' . cms_e($t['author']) . ' ↗</a>' : cms_e($t['author'])) : '' ?><?= $t['inspired'] !== '' ? ' · inspirado en ' . ($t['inspired_url'] !== '' ? '<a href="' . cms_e($t['inspired_url']) . '" target="_blank" rel="noopener">' . cms_e($t['inspired']) . ' ↗</a>' : cms_e($t['inspired'])) : '' ?><?= $t['url'] !== '' ? ' · <a href="' . cms_e($t['url']) . '" target="_blank" rel="noopener">demo ↗</a>' : '' ?><?= $t['styles'] ? ' · ' . (int) $t['styles'] . ' variaciones' : '' ?><?= !empty($t['license']) ? ' · ' . cms_e((string) $t['license']) : '' ?><?= !empty($t['samples']) ? ' · ' . (int) $t['samples'] . ' páginas de muestra' : '' ?></p>
 <?php if (!$on && $w && !$w['unknown'] && ($w['types'] || $w['blocks'])): ?>
         <p class="ad-help ad-theme-warn">Ojo: este tema no trae <?= $w['types'] ? 'los tipos <code>' . cms_e(implode(', ', $w['types'])) . '</code>' : '' ?><?= $w['types'] && $w['blocks'] ? ' ni ' : '' ?><?= $w['blocks'] ? 'los bloques <code>' . cms_e(implode(', ', array_slice($w['blocks'], 0, 6))) . '</code>' : '' ?> que usa tu contenido.</p>
 <?php endif; ?>
+        <div class="ad-theme-actions">
 <?php if (!$on): ?>
-        <form method="post" data-confirm="¿Activar el tema <?= cms_e($t['label']) ?>? El contenido no se borra, pero el sitio cambiará de aspecto y de bloques.">
-          <?= admin_csrf_field() ?><input type="hidden" name="action" value="theme"><input type="hidden" name="theme" value="<?= cms_e($k) ?>">
-          <button class="ad-btn ad-btn-sm" type="submit">Activar</button>
-        </form>
-<?php endif; ?>
+          <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= admin_url('diseno', ['vista' => $k]) ?>" target="_blank" rel="noopener" title="Ver el sitio con este tema y sus páginas de muestra, sin activarlo ni guardar nada">Vista previa ↗</a>
+          <form method="post" class="ad-inline" data-confirm="¿Activar el tema <?= cms_e($t['label']) ?>? El contenido no se borra, pero el sitio cambiará de aspecto y de bloques.">
+            <?= admin_csrf_field() ?><input type="hidden" name="action" value="theme"><input type="hidden" name="theme" value="<?= cms_e($k) ?>">
+            <button class="ad-btn ad-btn-sm" type="submit">Activar</button>
+          </form>
+<?php elseif (!empty($t['samples'])): $loaded = 0; foreach (cms_config('types') as $ty => $d) foreach (cms_items($ty, false) as $it) if ((string) ($it['sample'] ?? '') === $k) $loaded++; ?>
+<?php if (!$loaded): ?>          <form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="samples_load"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit" title="Añade sus páginas de muestra como borrador, para partir de ellas">Cargar <?= (int) $t['samples'] ?> páginas de muestra</button></form>
+<?php else: ?>          <form method="post" class="ad-inline" data-confirm="¿Quitar las <?= $loaded ?> páginas de muestra de este tema? Las que hayas editado y guardado también se borran si conservan la marca de muestra."><?= admin_csrf_field() ?><input type="hidden" name="action" value="samples_remove"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit">Quitar <?= $loaded ?> páginas de muestra</button></form>
+<?php endif; endif; ?>
+        </div>
       </div>
     </article>
 <?php endforeach; ?>

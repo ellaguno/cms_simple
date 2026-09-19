@@ -25,6 +25,11 @@ function cms_segment(array $def, string $lang): string
  */
 function cms_url(string $route, string $lang, ?string $slug = null): string
 {
+    $u = cms_url_plain($route, $lang, $slug);
+    return cms_theme_preview() !== '' && strpos($u, '?') === false ? $u . '?' . cms_theme_preview_qs() : $u;
+}
+function cms_url_plain(string $route, string $lang, ?string $slug = null): string
+{
     $base = CMS_BASE . cms_lang_prefix($lang);
     if ($route === 'home') return $base . '/';
     [$kind, $key] = array_pad(explode(':', $route, 2), 2, '');
@@ -64,7 +69,8 @@ function cms_is_home_item(string $type, string $slug): bool
 function cms_menu_url(string $url, string $lang): string
 {
     if ($url === '' || preg_match('#^(https?:)?//|^mailto:|^tel:|^\##i', $url)) return $url;
-    return CMS_BASE . cms_lang_prefix($lang) . '/' . ltrim($url, '/');
+    $u = CMS_BASE . cms_lang_prefix($lang) . '/' . ltrim($url, '/');
+    return cms_theme_preview() !== '' && strpos($u, '?') === false ? $u . '?' . cms_theme_preview_qs() : $u;
 }
 
 function cms_asset(string $path): string

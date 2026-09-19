@@ -123,8 +123,12 @@ function cms_theme_info(string $dir, string $key): array
         'private' => !empty($j['private']),   // tema con licencia por sitio o de un cliente: no se redistribuye
         'parent' => (string) ($j['parent'] ?? ''),   // tema hijo: toma del padre lo que no trae
         'tkey' => (string) ($j['key'] ?? ''),         // clave declarada (site/ puede ser "lienzo" para los temas hijos)
+        'author_url' => preg_match('#^https?://#i', (string) ($j['author_url'] ?? '')) ? (string) $j['author_url'] : '',
+        'url' => preg_match('#^https?://#i', (string) ($j['url'] ?? '')) ? (string) $j['url'] : '',   // página o demo del tema
+        'inspired' => (string) ($j['inspired'] ?? ''), 'inspired_url' => preg_match('#^https?://#i', (string) ($j['inspired_url'] ?? '')) ? (string) $j['inspired_url'] : '',
+        'samples' => count(glob($dir . '/defaults/content/*/*.json') ?: []),   // páginas de muestra (opcionales)
         'dir' => $dir,
-        'url' => CMS_BASE . '/' . ($key === 'site' ? 'site' : 'themes/' . $key),
+        'dir_url' => CMS_BASE . '/' . ($key === 'site' ? 'site' : 'themes/' . $key),
         'screenshot' => $shot,
         'styles' => count(glob($dir . '/styles/*.json') ?: []),
     ];

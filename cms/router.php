@@ -39,6 +39,15 @@ foreach (cms_langs() as $l) {
 }
 if (!in_array($lang, cms_active_langs(), true)) { header('Location: ' . cms_url('home', cms_default_lang()), true, 302); exit; }
 $GLOBALS['cms_render_lang'] = $lang;   // los campos bilingües del contenido llegan resueltos a este idioma (cms_localize)
+if (cms_theme_preview() !== '') {   // vista previa de un tema: sus páginas de muestra existen solo en memoria, publicadas
+    header('X-Robots-Tag: noindex'); header('Cache-Control: no-store');
+    foreach (glob(CMS_SITE . '/defaults/content/*/*.json') ?: [] as $sf) {
+        $ty = basename(dirname($sf)); $it = cms_json_read($sf, null);
+        if (!is_array($it) || empty($it['slug']) || !cms_type($ty)) continue;
+        $it['status'] = 'published'; unset($it['publish_at'], $it['unpublish_at']);
+        $GLOBALS['cms_item_override'][$ty][$it['slug']] = $it;
+    }
+}
 cms_items_flush();
 
 $S = cms_settings();

@@ -72,6 +72,13 @@ function cms_head(array $page): void
     $og = cms_abs_url(cms_img(!empty($page['og_image']) ? (string) $page['og_image'] : (string) ($S['og_image'] ?? ($S['logo'] ?? ''))));
     echo '<meta charset="utf-8">' . "\n";
     echo '<meta name="viewport" content="width=device-width, initial-scale=1">' . "\n";
+    if (($pv = cms_theme_preview()) !== '') {   // vista previa de un tema instalado sin activarlo: barra arriba con Activar y Cerrar
+        $ti = cms_themes()[$pv] ?? ['label' => $pv];
+        $bar = '<div class="cms-theme-preview-bar"><span>Vista previa del tema <strong>' . cms_e((string) $ti['label']) . '</strong>' . (glob(CMS_SITE . '/defaults/content/*/*.json') ? ' con sus páginas de muestra' : '') . '. Nada está guardado.</span><a href="' . cms_e(CMS_BASE . '/admin/?p=diseno&activar=' . rawurlencode($pv)) . '">Activar este tema</a><a href="' . cms_e(CMS_BASE . '/') . '">Cerrar</a></div>';
+        echo '<meta name="robots" content="noindex, nofollow">' . "\n";
+        echo '<style>.cms-theme-preview-bar{position:fixed;left:0;right:0;bottom:0;z-index:99999;display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;background:#111;color:#fff;font:14px/1.4 system-ui,sans-serif;padding:10px 16px;box-shadow:0 -6px 20px rgba(0,0,0,.25)}.cms-theme-preview-bar a{color:#fff;background:#2563eb;padding:6px 12px;border-radius:6px;text-decoration:none;font-weight:600}.cms-theme-preview-bar a:last-child{background:#444}</style>' . "\n";
+        echo '<script>document.addEventListener("DOMContentLoaded",function(){var d=document.createElement("div");d.innerHTML=' . json_encode($bar) . ';document.body.appendChild(d.firstChild);});</script>' . "\n";
+    }
     echo cms_style_head();
     echo '<title>' . cms_e($title) . '</title>' . "\n";
     echo '<meta name="description" content="' . cms_e($desc) . '">' . "\n";

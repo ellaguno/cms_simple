@@ -1,8 +1,11 @@
 {
   "label": "Cima",
   "desc": "Corporativo claro y directo, al estilo de los temas de empresa más usados en WordPress: barra superior con datos de contacto, cabecera blanca fija, hero con imagen a la derecha, tarjetas con sombra suave y pie oscuro. Para empresas, consultorías y servicios.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "cms_simple",
+  "author_url": "https://github.com/ellaguno/cms_simple",
   "license": "MIT",
-  "parent": "lienzo"
+  "parent": "lienzo",
+  "inspired": "Astra",
+  "inspired_url": "https://wpastra.com"
 }

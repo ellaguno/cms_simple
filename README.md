@@ -342,6 +342,19 @@ espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con 
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
 
+## Vista previa de temas, páginas de muestra opcionales y créditos (1.36)
+
+- **Vista previa sin activar**: en Diseño, cada tema instalado tiene "Vista previa ↗", que abre el sitio dibujado con ese
+  tema y con sus páginas de muestra en memoria (nada se guarda; el sitio público sigue igual). La URL lleva una firma de
+  una hora (`?cmstheme=clave&cmstoken=…`), los enlaces internos la conservan, la página va con `noindex` y una barra abajo
+  ofrece "Activar este tema" o "Cerrar". El catálogo también la enlaza en los temas ya instalados, y la captura de cada
+  tarjeta se abre en grande al pulsarla.
+- **Páginas de muestra opcionales**: activar un tema ya no añade contenido. El tema activo muestra "Cargar N páginas de
+  muestra", que las añade como borrador marcadas con `"sample": "<tema>"`, y después "Quitar N páginas de muestra", que
+  borra solo las que conservan la marca.
+- **Créditos**: `theme.json` y el catálogo admiten `author_url`, `inspired`, `inspired_url` y `url` (demo); Diseño y
+  Catálogo muestran "por Autor ↗ · inspirado en X ↗ · demo ↗". Los diez temas de 1.35 enlazan al tema que los inspiró.
+
 ## Temas hijos y diez temas nuevos (1.35)
 
 Un tema puede declarar en `theme.json` `"parent": "lienzo"` y aportar solo lo que cambia: el núcleo toma del padre el

@@ -28,6 +28,11 @@ function cms_settings(bool $reload = false): array
     if ($s === null || $reload) {
         $s = cms_json_read(CMS_DATA . '/settings.json');
         if (!$s && is_file(cms_theme_file('defaults/settings.json'))) $s = cms_json_read(cms_theme_file('defaults/settings.json'));
+        if (cms_theme_preview() !== '') {   // vista previa del tema: su nombre y logotipo de muestra, sin la variación ni los colores guardados para otro tema
+            $d = is_file(CMS_SITE . '/defaults/settings.json') ? (array) cms_json_read(CMS_SITE . '/defaults/settings.json', []) : [];
+            foreach (['site_name', 'logo', 'favicon'] as $k) if (!empty($d[$k])) $s[$k] = $d[$k];
+            unset($s['style'], $s['color_primary'], $s['color_accent'], $s['font'], $s['font_custom'], $s['font_heading'], $s['font_heading_custom']);
+        }
     }
     return $s;
 }
@@ -57,7 +62,7 @@ function cms_t(string $key, string $lang, $default = '')
 function cms_menu(string $lang): array
 {
     $m = cms_json_read(CMS_DATA . '/menu.json');
-    if (!$m && is_file(cms_theme_file('defaults/menu.json'))) $m = cms_json_read(cms_theme_file('defaults/menu.json'));
+    if ((!$m || cms_theme_preview() !== '') && is_file(cms_theme_file('defaults/menu.json'))) $m = cms_json_read(cms_theme_file('defaults/menu.json')) ?: $m;
     return $m[$lang] ?? ($m[cms_default_lang()] ?? []);
 }
 

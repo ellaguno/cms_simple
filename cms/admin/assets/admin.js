@@ -642,16 +642,17 @@
     hex.addEventListener("input", function () { if (/^#[0-9a-f]{6}$/i.test(hex.value)) { pick.value = hex.value; pick.classList.remove("is-empty"); } });
     clear.addEventListener("click", function () { hex.value = ""; pick.classList.add("is-empty"); hex.dispatchEvent(new Event("input", { bubbles: true })); });
   });
-  /* blindaje contra mod_security: los campos con etiquetas (<script>, <?php…) viajan en base64 (=?b64?=) y auth.php los
-     decodifica; si no, el firewall del hosting corta el POST con "Not Acceptable". Va en document (burbuja) para correr
-     después de que Quill, CodeMirror y el constructor hayan volcado su contenido al campo. */
+  /* blindaje contra mod_security: los campos con etiquetas (<script>, <?php…) viajan codificados (=?rb64?= = base64 con
+     la cadena invertida) y auth.php los decodifica; si no, el firewall del hosting corta el POST con "Not Acceptable".
+     Se invierte el base64 para que un firewall que lo decodifique obtenga bytes revueltos, no las etiquetas. Va en
+     document (burbuja) para correr después de que Quill, CodeMirror y el constructor hayan volcado su contenido. */
   document.addEventListener("submit", function (e) {
     var f = e.target; if (e.defaultPrevented || !f || f.hasAttribute("data-no-armor")) return;
     var undo = [];
     f.querySelectorAll("textarea, input[type=hidden]").forEach(function (el) {
       if (el.disabled || !el.name || el.value.indexOf("<") === -1) return;
       var v = el.value;
-      try { el.value = "=?b64?=" + btoa(unescape(encodeURIComponent(v))); undo.push([el, v]); } catch (err) {}
+      try { el.value = "=?rb64?=" + btoa(unescape(encodeURIComponent(v))).split("").reverse().join(""); undo.push([el, v]); } catch (err) {}
     });
     if (undo.length) setTimeout(function () { undo.forEach(function (u) { u[0].value = u[1]; }); }, 0);   // el envío ya tomó los valores
   });

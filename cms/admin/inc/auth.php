@@ -20,14 +20,20 @@ if (!empty($_SESSION['user']) && isset($_SESSION['last']) && time() - (int) $_SE
 $_SESSION['last'] = time();
 
 /**
- * Blindaje contra firewalls del hosting (mod_security): el panel manda en base64 (prefijo =?b64?=) los campos con
- * HTML o código (<script>, <?php…), que de otro modo el firewall rechaza con "Not Acceptable" antes de llegar aquí.
+ * Blindaje contra firewalls del hosting (mod_security): el panel manda codificados los campos con HTML o código
+ * (<script>, <?php…), que de otro modo el firewall rechaza con "Not Acceptable" antes de llegar aquí.
+ *   =?rb64?=  base64 con la cadena invertida: si el firewall decodifica el base64, obtiene bytes revueltos, no las
+ *             etiquetas, así que tampoco lo corta. Es la que emite el panel.
+ *   =?b64?=   base64 normal (compatibilidad con instalaciones anteriores).
  * Aquí se decodifican, así que el resto del panel no se entera.
  */
 function admin_unarmor(&$v): void
 {
     if (is_array($v)) { foreach ($v as &$x) admin_unarmor($x); unset($x); }
-    elseif (is_string($v) && strncmp($v, '=?b64?=', 7) === 0) { $d = base64_decode(substr($v, 7), true); if ($d !== false) $v = $d; }
+    elseif (is_string($v)) {
+        if (strncmp($v, '=?rb64?=', 8) === 0) { $d = base64_decode(strrev(substr($v, 8)), true); if ($d !== false) $v = $d; }
+        elseif (strncmp($v, '=?b64?=', 7) === 0) { $d = base64_decode(substr($v, 7), true); if ($d !== false) $v = $d; }
+    }
 }
 admin_unarmor($_POST);
 

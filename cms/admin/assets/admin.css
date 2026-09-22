@@ -121,7 +121,18 @@ code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 12px; 
 .ad-editor .ql-editor { min-height: 320px; line-height: 1.6; }
 .ad-editor .ql-editor h2 { font-size: 26px; font-weight: 500; margin: 22px 0 10px; }
 .ad-editor .ql-editor h3 { font-size: 20px; font-weight: 500; margin: 18px 0 8px; }
-.ad-editor .ql-editor img { max-width: 100%; border-radius: 10px; }
+.ad-editor { position: relative; }
+.ad-editor .ql-editor img { max-width: 100%; border-radius: 10px; cursor: pointer; }
+.ad-editor .ql-editor img.ad-img-on { outline: 3px solid #2563eb; outline-offset: 2px; }
+.ad-editor .ql-editor img.cms-img-left { float: left; margin: .3em 1.5em 1em 0; }
+.ad-editor .ql-editor img.cms-img-right { float: right; margin: .3em 0 1em 1.5em; }
+.ad-editor .ql-editor img.cms-img-center { display: block; margin: 1em auto; }
+.ad-imgbar { position: absolute; z-index: 6; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; max-width: calc(100% - 16px); background: #111; color: #fff; padding: 6px 8px; border-radius: 10px; font-size: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.ad-imgbar span { opacity: .6; margin: 0 2px 0 8px; } .ad-imgbar span:first-child { margin-left: 0; }
+.ad-imgbar button { background: transparent; border: 1px solid rgba(255,255,255,.3); color: #fff; border-radius: 6px; padding: 3px 8px; font: inherit; cursor: pointer; }
+.ad-imgbar button:hover { border-color: #fff; } .ad-imgbar button.on { background: #fff; color: #000; border-color: #fff; }
+.ad-imgbar input { width: 150px; margin-left: 8px; padding: 3px 8px; border: 1px solid rgba(255,255,255,.3); border-radius: 6px; background: #222; color: #fff; font: inherit; }
+.ad-imgbar [data-imgdel] { margin-left: 4px; border-color: transparent; opacity: .8; }
 .ad-editor .ql-editor video { max-width: 100%; border-radius: 10px; }
 .ad-editor .ql-editor a { color: #000; text-decoration: underline; }
 .ad-editor .ql-editor.ql-blank::before { color: #999; font-style: normal; }

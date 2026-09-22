@@ -52,14 +52,14 @@ Campos que importan y por qué:
 - **Alineación.**
 - **Enlace.** Selecciona el texto y pega la dirección.
 - **Video.** Pega la URL de YouTube o Vimeo; se inserta a todo el ancho. Para quitarlo, haz clic sobre él y pulsa Supr.
-- **Subir imagen** y **Biblioteca**, para imágenes, PDF o videos ya subidos.
+- **Subir imagen** y **Biblioteca**, para imágenes, PDF o videos ya subidos. Al hacer clic sobre una imagen ya insertada aparece su barra: **Tamaño** (25, 50, 75 o 100 % del ancho del texto, u original), **Posición** (izquierda o derecha con el texto alrededor, centrada, o normal), el **texto alternativo** y ✕ para quitarla. En pantallas pequeñas las imágenes flotadas se muestran centradas, sin texto alrededor.
 - **Quitar formato**, cuando pegas texto de Word y llega con estilos raros.
 - **HTML.** Abre el código de lo que estás escribiendo, con colores y números de línea. Lo que edites ahí se guarda tal cual. Es la salida para tablas, incrustados o cualquier cosa que el editor visual no entiende. Al volver al modo visual, el editor reinterpreta el código y puede simplificar lo que no reconoce.
 
 ## Imágenes
 
 - Súbelas ya recortadas; el sistema las convierte a WebP y ajusta el tamaño máximo, pero no las recorta.
-- Pon un **texto alternativo** cuando la imagen aporta información. Los buscadores lo leen, y las personas con lector de pantalla también.
+- Pon un **texto alternativo** cuando la imagen aporta información (clic sobre la imagen → campo "Texto alternativo"). Los buscadores lo leen, y las personas con lector de pantalla también.
 - Nombra los archivos con palabras, `panel-de-casos.png` en lugar de `IMG_2041.png`. El nombre cuenta para las búsquedas de imágenes.
 
 ## Medios

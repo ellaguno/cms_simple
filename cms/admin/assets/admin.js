@@ -175,6 +175,32 @@
     VideoEmbed.className = "video-embed";
     Quill.register(VideoEmbed, true);
 
+    /* Imagen con tamaño (width en %, inline) y posición (clase cms-img-left/right/center; el núcleo imprime el CSS
+       público en cms_head()). Se manejan con la barra que aparece al hacer clic sobre la imagen. */
+    var QImage = Quill.import("formats/image");
+    var IMG_POS = ["left", "right", "center"];
+    class CmsImage extends QImage {
+      static formats(n) {
+        var f = super.formats(n) || {};
+        IMG_POS.forEach(function (p) { if (n.classList.contains("cms-img-" + p)) f.imgpos = p; });
+        var w = (n.style.width || "").match(/^(\d{1,3})%$/);
+        if (w) f.imgsize = w[1];
+        return f;
+      }
+      format(name, value) {
+        if (name === "imgpos") {
+          IMG_POS.forEach(function (p) { this.domNode.classList.remove("cms-img-" + p); }, this);
+          if (value && IMG_POS.indexOf(value) > -1) this.domNode.classList.add("cms-img-" + value);
+          if (!this.domNode.classList.length) this.domNode.removeAttribute("class");
+        } else if (name === "imgsize") {
+          var n = parseInt(value, 10);
+          if (n > 0 && n <= 100) this.domNode.style.width = n + "%"; else this.domNode.style.removeProperty("width");
+          if (!this.domNode.getAttribute("style")) this.domNode.removeAttribute("style");
+        } else super.format(name, value);
+      }
+    }
+    Quill.register(CmsImage, true);
+
     /* Línea horizontal */
     class Divider extends BlockEmbed {}
     Divider.blotName = "divider";
@@ -286,6 +312,52 @@
       // iframes pegados desde el portapapeles → video
       quill.clipboard.addMatcher("IFRAME", function (node) { return new Delta().insert({ video: node.getAttribute("src") }); });
 
+      /* barra de imagen: tamaño, posición, texto alternativo, quitar */
+      var imgBar = document.createElement("div"), curImg = null;
+      imgBar.className = "ad-imgbar"; imgBar.hidden = true;
+      imgBar.innerHTML = '<span>Tamaño</span>' + [["25", "25 %"], ["50", "50 %"], ["75", "75 %"], ["100", "100 %"], ["", "Original"]].map(function (o) { return '<button type="button" data-imgsize="' + o[0] + '">' + o[1] + '</button>'; }).join("")
+        + '<span>Posición</span>' + [["left", "◧ Izquierda", "A la izquierda, con el texto alrededor"], ["center", "Centrada", "Centrada, en su propia línea"], ["right", "Derecha ◨", "A la derecha, con el texto alrededor"], ["", "Normal", "Como texto, sin flotar"]].map(function (o) { return '<button type="button" data-imgpos="' + o[0] + '" title="' + o[2] + '">' + o[1] + '</button>'; }).join("")
+        + '<input type="text" data-imgalt placeholder="Texto alternativo (alt)"><button type="button" data-imgdel title="Quitar la imagen">✕</button>';
+      wrap.appendChild(imgBar);
+      function imgIndex() { var b = curImg && Quill.find(curImg); return b && b.scroll === quill.scroll ? quill.getIndex(b) : -1; }
+      function imgBarShow(img) {
+        curImg = img; imgBar.hidden = false;
+        var f = CmsImage.formats(img);
+        imgBar.querySelectorAll("[data-imgsize]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-imgsize") === (f.imgsize || "")); });
+        imgBar.querySelectorAll("[data-imgpos]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-imgpos") === (f.imgpos || "")); });
+        if (document.activeElement !== imgBar.querySelector("[data-imgalt]")) imgBar.querySelector("[data-imgalt]").value = img.getAttribute("alt") || "";
+        quill.root.querySelectorAll("img.ad-img-on").forEach(function (i) { if (i !== img) i.classList.remove("ad-img-on"); });
+        img.classList.add("ad-img-on");
+        var r = img.getBoundingClientRect(), w = wrap.getBoundingClientRect();
+        imgBar.style.left = Math.max(0, Math.min(r.left - w.left, w.width - imgBar.offsetWidth - 8)) + "px";
+        var above = r.top - w.top - imgBar.offsetHeight - 6;   // encima de la imagen; si no cabe, debajo
+        imgBar.style.top = (above >= 0 ? above : r.bottom - w.top + 6) + "px";
+      }
+      function imgBarHide() { if (curImg) curImg.classList.remove("ad-img-on"); curImg = null; imgBar.hidden = true; }
+      quill.root.addEventListener("click", function (e) {
+        var img = e.target.closest("img");
+        if (!img) { imgBarHide(); return; }
+        var b = Quill.find(img); if (!b) return;
+        quill.setSelection(quill.getIndex(b), 1, "user");
+        imgBarShow(img);
+      });
+      quill.on("selection-change", function (r) { if (curImg && r && !(r.length === 1 && r.index === imgIndex())) imgBarHide(); });
+      quill.on("text-change", function () { if (curImg && !curImg.isConnected) imgBarHide(); });
+      imgBar.addEventListener("mousedown", function (e) { if (e.target.tagName !== "INPUT") e.preventDefault(); });
+      imgBar.addEventListener("click", function (e) {
+        var b = e.target.closest("button"), i = imgIndex(); if (!b || i < 0) return;
+        if (b.hasAttribute("data-imgsize")) quill.formatText(i, 1, "imgsize", b.getAttribute("data-imgsize"), "user");
+        else if (b.hasAttribute("data-imgpos")) {
+          var pos = b.getAttribute("data-imgpos");
+          quill.formatText(i, 1, "imgpos", pos, "user");
+          if ((pos === "left" || pos === "right") && !CmsImage.formats(curImg).imgsize) quill.formatText(i, 1, "imgsize", "50", "user");   // flotada sin tamaño = a la mitad
+        } else if (b.hasAttribute("data-imgdel")) { quill.deleteText(i, 1, "user"); imgBarHide(); return; }
+        var img = curImg; quill.setSelection(i, 1, "silent");
+        setTimeout(function () { if (img.isConnected) imgBarShow(img); }, 30);
+      });
+      imgBar.querySelector("[data-imgalt]").addEventListener("input", function () { var i = imgIndex(); if (i >= 0) quill.formatText(i, 1, "alt", this.value.trim(), "user"); });
+      imgBar.querySelector("[data-imgalt]").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); this.blur(); } });
+
       var tb = wrap.querySelector(".ql-toolbar");
       tb.querySelector(".ql-upload").textContent = "Subir imagen";
       tb.querySelector(".ql-library").textContent = "Biblioteca";
@@ -297,7 +369,10 @@
       // sincronizar con el textarea oculto (en modo HTML manda el código tal cual se escribió)
       var visualHtml = function () {
         var empty = quill.getLength() <= 1 && !quill.root.querySelector("img,video,iframe,hr");
-        return empty ? "" : quill.root.innerHTML;
+        if (empty) return "";
+        var c = quill.root.cloneNode(true);   // sin la marca de imagen seleccionada
+        c.querySelectorAll("img.ad-img-on").forEach(function (i) { i.classList.remove("ad-img-on"); if (!i.classList.length) i.removeAttribute("class"); });
+        return c.innerHTML;
       };
       var sync = function () {
         if (mode === "html") { if (cm) cm.save(); ta.value = src.value.trim(); }
@@ -311,6 +386,7 @@
       function toggleMode() {
         var btn = tb.querySelector(".ql-html");
         if (mode === "visual") {
+          imgBarHide();
           src.value = prettyHtml(visualHtml());
           mode = "html";
           wrap.classList.add("ad-editor-html");
@@ -437,10 +513,13 @@
   if (form) {
     var src = form.querySelector('[name="' + form.getAttribute("data-slug-source") + '"]'), slug = form.querySelector("[data-slug]"), prev = form.querySelector("[data-slug-preview]");
     var touched = !!(slug && slug.value);
-    var slugify = function (s) { return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); };
+    var slugify = function (s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); };
+    // al teclear en el slug se conserva el guion final (si no, no se puede escribir "mi-articulo"); se remata al salir del campo
+    var soft = function (s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/-{2,}/g, "-").replace(/^-+/, ""); };
     if (src && slug) {
       src.addEventListener("input", function () { if (!touched) { slug.value = slugify(src.value); if (prev) prev.textContent = slug.value; } });
-      slug.addEventListener("input", function () { touched = slug.value !== ""; slug.value = slugify(slug.value); if (prev) prev.textContent = slug.value; });
+      slug.addEventListener("input", function () { touched = slug.value !== ""; var v = soft(slug.value); if (v !== slug.value) slug.value = v; if (prev) prev.textContent = slugify(v); });
+      slug.addEventListener("change", function () { slug.value = slugify(slug.value); if (prev) prev.textContent = slug.value; });
     }
   }
 

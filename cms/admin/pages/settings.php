@@ -46,6 +46,7 @@ if (admin_is_post()) {
     $S['author_name'] = admin_post('author_name');
     $S['country'] = admin_post('country');
     $S['google_verification'] = admin_post('google_verification');
+    $S['head_code'] = admin_post('head_code');
     $S['site_url'] = rtrim(trim(admin_post('site_url')), '/');
     foreach (['logo', 'favicon', 'og_image'] as $k) $S[$k] = admin_post($k);
     $S['languages'] = [];
@@ -118,6 +119,8 @@ admin_header('Ajustes', 'settings');
       <?php admin_field('favicon', ['type' => 'image', 'label' => 'Favicon (PNG cuadrado)'], $S['favicon'] ?? ''); ?>
       <?php admin_field('og_image', ['type' => 'image', 'label' => 'Imagen al compartir en redes (páginas sin imagen propia; ideal 1200×630)'], $S['og_image'] ?? ''); ?>
       <div class="ad-field"><label>Código de verificación de Google Search Console</label><input type="text" name="google_verification" value="<?= cms_e($S['google_verification'] ?? '') ?>"></div>
+      <div class="ad-field"><label>Código en el &lt;head&gt; (Google Analytics, Tag Manager, píxeles, verificaciones)</label><textarea name="head_code" rows="6" class="ad-code" spellcheck="false" placeholder="Pega aquí el fragmento completo, con sus etiquetas <script>"><?= cms_e($S['head_code'] ?? '') ?></textarea>
+        <p class="ad-help">Se imprime tal cual dentro del &lt;head&gt; de todas las páginas públicas (no en las vistas previas del panel). Pega aquí el fragmento que te da Google Analytics o Tag Manager.</p></div>
       <p class="ad-help">Los títulos y descripciones por página se editan en cada elemento; los de portada y listados, en <a href="<?= admin_url('strings') ?>">Textos del sitio → SEO</a>.</p>
     </section>
   </div>

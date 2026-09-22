@@ -21,6 +21,7 @@ En **Ajustes** llena, en este orden:
 - **Redes sociales.** Solo las que existen; las vacías no se muestran.
 - **Logotipo, favicon e imagen para redes.** La imagen para redes es la que sale cuando alguien comparte un enlace en WhatsApp o LinkedIn; ideal 1200 por 630 píxeles.
 - **URL canónica**, en la sección SEO: `https://tudominio.com` sin barra final. Evita que el sitio exista "dos veces" con y sin `www`.
+- **Código en el &lt;head&gt;**, en Marca y SEO: el fragmento de Google Analytics o Tag Manager, si lo usas. Se imprime en todas las páginas públicas.
 - Las secciones propias del sitio, como imágenes de la portada o enlaces de demos, si el tema las define.
 
 ## Paso 3. Textos fijos

@@ -102,6 +102,8 @@ function cms_head(array $page): void
     if (!empty($S['google_verification'])) echo '<meta name="google-site-verification" content="' . cms_e($S['google_verification']) . '">' . "\n";
     echo '<link rel="icon" href="' . (!empty($S['favicon']) ? cms_e(cms_img($S['favicon'])) : 'data:,') . '">' . "\n";
     echo '<meta name="generator" content="cms_simple ' . CMS_VERSION . '">' . "\n";
+    // imágenes del editor visual con posición (barra de imagen del panel); el ancho va inline. El tema puede afinarlo.
+    echo '<style id="cms-content">.cms-img-left{float:left;margin:.3em 1.5em 1em 0}.cms-img-right{float:right;margin:.3em 0 1em 1.5em}.cms-img-center{display:block;margin:1em auto}@media(max-width:640px){.cms-img-left,.cms-img-right{float:none;display:block;margin:1em auto}}</style>' . "\n";
     echo cms_assets_head($page);
     if (!empty($page['preview'])) {
         echo '<script>document.addEventListener("DOMContentLoaded",function(){var b=document.createElement("div");b.textContent="Vista previa · este contenido aún no es público";'
@@ -111,6 +113,8 @@ function cms_head(array $page): void
         echo '<script type="application/ld+json">' . json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
     }
     echo cms_cookie_bar((string) ($page['lang'] ?? cms_default_lang()));
+    // Ajustes → Marca y SEO → "Código en el <head>": analítica, píxeles, verificaciones. Tal cual, solo en el sitio público.
+    if (($hc = trim((string) ($S['head_code'] ?? ''))) !== '' && empty($_GET['cmsbare']) && empty($page['preview']) && cms_theme_preview() === '') echo $hc . "\n";
     cms_do('head', $page);
 }
 

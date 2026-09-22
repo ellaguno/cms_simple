@@ -19,6 +19,18 @@ if (!empty($_SESSION['user']) && isset($_SESSION['last']) && time() - (int) $_SE
 }
 $_SESSION['last'] = time();
 
+/**
+ * Blindaje contra firewalls del hosting (mod_security): el panel manda en base64 (prefijo =?b64?=) los campos con
+ * HTML o código (<script>, <?php…), que de otro modo el firewall rechaza con "Not Acceptable" antes de llegar aquí.
+ * Aquí se decodifican, así que el resto del panel no se entera.
+ */
+function admin_unarmor(&$v): void
+{
+    if (is_array($v)) { foreach ($v as &$x) admin_unarmor($x); unset($x); }
+    elseif (is_string($v) && strncmp($v, '=?b64?=', 7) === 0) { $d = base64_decode(substr($v, 7), true); if ($d !== false) $v = $d; }
+}
+admin_unarmor($_POST);
+
 function admin_url(string $page = 'dashboard', array $params = []): string
 {
     $q = array_merge(['p' => $page], $params);

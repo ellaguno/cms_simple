@@ -43,7 +43,8 @@ function cms_update_check(bool $force = false): array
     $url = cms_update_url();
     if ($url === '') return [null, 'No hay una dirección de actualizaciones configurada.'];
     if (!is_dir(dirname($file))) @mkdir(dirname($file), 0775, true);
-    [$body, $err] = cms_http_get($url, 262144, 15);
+    // raw.githubusercontent.com cachea 5 minutos: al forzar, un parámetro único evita leer una versión vieja
+    [$body, $err] = cms_http_get($url . (strpos($url, '?') === false ? '?' : '&') . '_=' . time(), 262144, 15);
     if ($body === null) {
         $j = is_file($file) ? cms_json_read($file, null) : null;
         return [is_array($j) ? cms_update_info($j) : null, $err];
@@ -153,7 +154,10 @@ function cms_update_apply(array $info): array
         if (!is_file($new . '/' . $must)) { cms_rmdir($new); return $done(false, 'El paquete descargado está incompleto (falta ' . $must . ').'); }
     }
     $got = cms_update_dir_version($new);
-    if ($got === '' || version_compare($got, $info['version'], '!=')) { cms_rmdir($new); return $done(false, 'El paquete dice ser la versión ' . ($got ?: '¿?') . ' y se esperaba la ' . $info['version'] . '.'); }
+    // si el JSON de versión venía de una caché vieja, el zip puede ser más nuevo que lo anunciado: se acepta si es más nuevo que esta instalación
+    if ($got === '' || (version_compare($got, $info['version'], '!=') && !version_compare($got, $info['version'], '>'))) { cms_rmdir($new); return $done(false, 'El paquete dice ser la versión ' . ($got ?: '¿?') . ' y se esperaba la ' . $info['version'] . '.'); }
+    if (!version_compare($got, CMS_VERSION, '>')) { cms_rmdir($new); return $done(false, 'El paquete descargado es la versión ' . $got . ', no más nueva que la instalada (' . CMS_VERSION . ').'); }
+    $info['version'] = $got;
     if (!is_dir($new . '/packs') || !is_dir($new . '/lib')) { cms_rmdir($new); return $done(false, 'El paquete descargado no tiene la estructura esperada.'); }
 
     // cambio de carpetas: rápido y reversible

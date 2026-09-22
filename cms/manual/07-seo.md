@@ -50,7 +50,8 @@ El sistema ya carga lo pesado bajo demanda. Lo que puedes estropear: imágenes e
 
 - **Google Search Console**: registra el dominio con el método de DNS, envía el sitemap y pide la indexación de las páginas nuevas con "Inspección de URL". Revisa "Páginas" y "Mejoras" cada semana.
 - **Bing Webmaster Tools**: casi nadie lo registra, y Bing alimenta a ChatGPT y Copilot. Importa el sitio desde Search Console en un clic.
-- **Google Analytics, Tag Manager o píxeles**: pega el fragmento que te dan en **Ajustes → Marca y SEO → Código en el &lt;head&gt;**. Sale en todas las páginas públicas, no en las vistas previas del panel. No hace falta tocar archivos del tema; el panel envía el fragmento codificado para que el firewall del hosting no rechace el guardado.
+- **Google Analytics**: escribe solo el ID de medición (empieza con `G-`) en **Ajustes → Marca y SEO → Google Analytics — ID de medición**. El sitio arma el código por ti y lo pone en todas las páginas públicas. Como el panel no envía ninguna etiqueta, funciona aunque el alojamiento tenga un firewall que rechace los formularios con `<script>`.
+- **Tag Manager, píxeles u otras verificaciones**: pega el fragmento completo en **Ajustes → Marca y SEO → Código en el &lt;head&gt;**. Sale en todas las páginas públicas, no en las vistas previas. No hace falta tocar archivos del tema.
 
 ### 8. Cuando cambies una URL
 

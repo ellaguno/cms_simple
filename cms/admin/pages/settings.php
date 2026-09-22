@@ -46,6 +46,7 @@ if (admin_is_post()) {
     $S['author_name'] = admin_post('author_name');
     $S['country'] = admin_post('country');
     $S['google_verification'] = admin_post('google_verification');
+    $S['ga_id'] = strtoupper(preg_replace('/[^A-Za-z0-9-]/', '', admin_post('ga_id')));   // solo el ID (G-…, UA-…, GT-…); sin HTML, así ningún firewall lo rechaza
     $S['head_code'] = admin_post('head_code');
     $S['site_url'] = rtrim(trim(admin_post('site_url')), '/');
     foreach (['logo', 'favicon', 'og_image'] as $k) $S[$k] = admin_post($k);
@@ -119,8 +120,10 @@ admin_header('Ajustes', 'settings');
       <?php admin_field('favicon', ['type' => 'image', 'label' => 'Favicon (PNG cuadrado)'], $S['favicon'] ?? ''); ?>
       <?php admin_field('og_image', ['type' => 'image', 'label' => 'Imagen al compartir en redes (páginas sin imagen propia; ideal 1200×630)'], $S['og_image'] ?? ''); ?>
       <div class="ad-field"><label>Código de verificación de Google Search Console</label><input type="text" name="google_verification" value="<?= cms_e($S['google_verification'] ?? '') ?>"></div>
-      <div class="ad-field"><label>Código en el &lt;head&gt; (Google Analytics, Tag Manager, píxeles, verificaciones)</label><textarea name="head_code" rows="6" class="ad-code" spellcheck="false" placeholder="Pega aquí el fragmento completo, con sus etiquetas <script>"><?= cms_e($S['head_code'] ?? '') ?></textarea>
-        <p class="ad-help">Se imprime tal cual dentro del &lt;head&gt; de todas las páginas públicas (no en las vistas previas del panel). Pega aquí el fragmento que te da Google Analytics o Tag Manager.</p></div>
+      <div class="ad-field"><label>Google Analytics — ID de medición</label><input type="text" name="ga_id" value="<?= cms_e($S['ga_id'] ?? '') ?>" placeholder="G-XXXXXXXXXX" spellcheck="false">
+        <p class="ad-help">Escribe solo el identificador que te da Google Analytics (empieza con <code>G-</code>). El sitio genera el código de seguimiento por ti; no hace falta pegar el fragmento con <code>&lt;script&gt;</code>. Recomendado, porque algunos alojamientos rechazan los formularios que contienen etiquetas.</p></div>
+      <div class="ad-field"><label>Código en el &lt;head&gt; (Tag Manager, píxeles, otras verificaciones)</label><textarea name="head_code" rows="6" class="ad-code" spellcheck="false" placeholder="Pega aquí el fragmento completo, con sus etiquetas <script>"><?= cms_e($S['head_code'] ?? '') ?></textarea>
+        <p class="ad-help">Se imprime tal cual dentro del &lt;head&gt; de todas las páginas públicas (no en las vistas previas del panel). Para Google Analytics usa mejor el campo de arriba.</p></div>
       <p class="ad-help">Los títulos y descripciones por página se editan en cada elemento; los de portada y listados, en <a href="<?= admin_url('strings') ?>">Textos del sitio → SEO</a>.</p>
     </section>
   </div>

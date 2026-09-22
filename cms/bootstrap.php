@@ -12,7 +12,7 @@
  */
 declare(strict_types=1);
 
-const CMS_VERSION = '1.36.4';
+const CMS_VERSION = '1.36.5';
 
 define('CMS_DIR', __DIR__);
 define('CMS_ROOT', dirname(__DIR__));

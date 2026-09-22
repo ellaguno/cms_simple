@@ -113,8 +113,14 @@ function cms_head(array $page): void
         echo '<script type="application/ld+json">' . json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
     }
     echo cms_cookie_bar((string) ($page['lang'] ?? cms_default_lang()));
-    // Ajustes → Marca y SEO → "Código en el <head>": analítica, píxeles, verificaciones. Tal cual, solo en el sitio público.
-    if (($hc = trim((string) ($S['head_code'] ?? ''))) !== '' && empty($_GET['cmsbare']) && empty($page['preview']) && cms_theme_preview() === '') echo $hc . "\n";
+    $publicHead = empty($_GET['cmsbare']) && empty($page['preview']) && cms_theme_preview() === '';
+    // Ajustes → Marca y SEO → "Google Analytics — ID de medición": el núcleo arma el gtag, así el panel nunca envía <script>.
+    if ($publicHead && ($ga = preg_replace('/[^A-Z0-9-]/', '', strtoupper((string) ($S['ga_id'] ?? '')))) !== '') {
+        echo '<script async src="https://www.googletagmanager.com/gtag/js?id=' . cms_e($ga) . '"></script>' . "\n"
+            . '<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","' . cms_e($ga) . '");</script>' . "\n";
+    }
+    // Ajustes → Marca y SEO → "Código en el <head>": Tag Manager, píxeles, verificaciones. Tal cual, solo en el sitio público.
+    if ($publicHead && ($hc = trim((string) ($S['head_code'] ?? ''))) !== '') echo $hc . "\n";
     cms_do('head', $page);
 }
 

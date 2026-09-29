@@ -36,6 +36,7 @@ curl -X POST https://tu-sitio/admin/api/items/articulos \
 ```
 
 - Si mandas `slug` y ya existe, se **actualiza**; si no existe (o no lo mandas), se **crea** con ese slug o con el derivado del título. También vale ponerlo en la ruta: `POST /admin/api/items/articulos/novedades-v4-84`.
+- Para **cambiar la URL** de uno que ya existe, manda `slug` (el actual) y `new_slug` (el nuevo). El historial de versiones pasa al nuevo slug y, en colecciones en árbol, las páginas hijas lo siguen. La respuesta trae `renamed_from`. Si ya hay otro elemento con esa URL, responde 422.
 - Al actualizar, los campos que no mandas **conservan su valor**. En los bilingües solo cambian los idiomas que mandes; un texto suelto va al idioma principal.
 - `status` es `published` o `draft`; `publish_at` (AAAA-MM-DD, futura) lo programa y `unpublish_at` lo retira. Además: `seo_title`, `seo_desc` y, en colecciones en árbol, `parent`.
 - Etiquetas y listas pueden ir como arreglo o como texto (separadas por coma o por renglón). La categoría, por su nombre; si no existe, se crea.

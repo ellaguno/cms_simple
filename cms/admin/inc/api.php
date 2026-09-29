@@ -168,6 +168,7 @@ function api_form_control(array $fd, $v)
  * Crea o actualiza un elemento a partir de un arreglo (el JSON de la API o de la línea de comandos).
  * $in: 'slug' (si existe se actualiza; si no, se crea con ese slug o el derivado del título), 'status' (published|draft),
  * 'publish_at', 'unpublish_at', 'seo_title', 'seo_desc' y los campos del tipo. Los que no vengan conservan su valor.
+ * 'new_slug' (solo al actualizar) cambia la URL, como el campo slug del editor: el historial y las hijas la siguen.
  * Un campo bilingüe admite {"es": …, "en": …} o un texto (solo el idioma principal). Las cadenas pueden venir
  * blindadas con =?rb64?= como las del panel (firewalls que rechazan HTML en el cuerpo).
  * Devuelve [código HTTP, respuesta].
@@ -191,7 +192,8 @@ function api_put(string $type, array $in, ?array $tok = null): array
             $base[$name] = !empty($fd['i18n']) ? array_fill_keys(cms_langs(), $d) : $d;
         }
     }
-    $post = ['slug' => $slug];
+    $rename = $existing ? cms_slugify((string) ($in['new_slug'] ?? '')) : '';
+    $post = ['slug' => $rename !== '' ? $rename : $slug];
     foreach (['status', 'publish_at', 'unpublish_at'] as $k) $post[$k] = (string) ($in[$k] ?? ($base[$k] ?? ''));
     $all = $fields + ['seo_title' => ['type' => 'text', 'i18n' => true], 'seo_desc' => ['type' => 'textarea', 'i18n' => true]];
     foreach ($all as $name => $fd) {
@@ -219,11 +221,17 @@ function api_put(string $type, array $in, ?array $tok = null): array
     $_POST = $keep;
     if ($errors) return [422, ['ok' => false, 'errors' => $errors]];
     unset($item['duplicated_from']);
+    $orig = $slug;
     $slug = (string) $item['slug'];
     if (!empty($def['tree'])) { $items = cms_items($type, false); $items[$slug] = $item; $item['path'] = cms_tree_path($type, $items, $slug); }
     if (!cms_item_save($type, $item)) return [500, ['ok' => false, 'error' => 'No se pudo escribir en data/content/' . $type . '/. Revisa permisos.']];
+    if ($existing && $orig !== $slug) {   // renombrado: lo mismo que hace el editor
+        cms_item_delete($type, $orig);
+        if (is_dir(cms_versions_dir($type, $orig)) && !is_dir(cms_versions_dir($type, $slug))) @rename(cms_versions_dir($type, $orig), cms_versions_dir($type, $slug));
+        if (!empty($def['tree'])) foreach (cms_items($type, false) as $ch) if (($ch['parent'] ?? '') === $orig) { $ch['parent'] = $slug; cms_json_write(cms_content_dir($type) . '/' . $ch['slug'] . '.json', $ch); }
+    }
     if (!empty($def['tree'])) cms_tree_rebuild($type);
-    return [$existing ? 200 : 201, ['ok' => true, 'created' => !$existing, 'item' => api_summary($type, $def, $item)]];
+    return [$existing ? 200 : 201, ['ok' => true, 'created' => !$existing] + ($existing && $orig !== $slug ? ['renamed_from' => $orig] : []) + ['item' => api_summary($type, $def, $item)]];
 }
 
 /** Guarda un archivo en uploads/ con las mismas reglas que el panel (tipos, tamaño, reducción, WebP). */

@@ -52,6 +52,7 @@ if (admin_is_post()) {
     foreach (['logo', 'favicon', 'og_image'] as $k) $S[$k] = admin_post($k);
     $S['languages'] = [];
     foreach (cms_langs() as $l) if ($l !== cms_default_lang()) $S['languages'][$l] = !empty($_POST['lang_' . $l]);
+    $S['lang_auto'] = in_array(admin_post('lang_auto'), ['browser', 'country', 'both'], true) ? admin_post('lang_auto') : '';
     foreach ($socials as $k => $_) $S['social'][$k] = admin_post('social_' . $k);
     $S['other_sites'] = [];
     foreach (cms_lines(admin_post('other_sites')) as $line) {
@@ -86,7 +87,13 @@ admin_header('Ajustes', 'settings');
       </div>
 <?php foreach (cms_langs() as $l): if ($l === cms_default_lang()) continue; ?>
       <div class="ad-field"><label class="ad-check"><input type="checkbox" name="lang_<?= $l ?>" value="1"<?= !empty($S['languages'][$l]) ? ' checked' : '' ?>> Activar la versión en <?= cms_e($langNames[$l] ?? strtoupper($l)) ?> (/<?= $l ?>/)</label></div>
+<?php endforeach; if (count(cms_langs()) > 1): $la = (string) ($S['lang_auto'] ?? ''); ?>
+      <div class="ad-field"><label>Idioma según el visitante</label><select name="lang_auto">
+<?php foreach (['' => 'No: todos entran al idioma predeterminado', 'browser' => 'Según el idioma de su navegador', 'country' => 'Según su país (requiere Cloudflare)', 'both' => 'Navegador y, si no coincide ninguno, país'] as $v => $txt): ?>
+        <option value="<?= $v ?>"<?= $la === $v ? ' selected' : '' ?>><?= cms_e($txt) ?></option>
 <?php endforeach; ?>
+      </select><p class="ad-help">Quien llega de fuera a una página en <?= cms_e(strtoupper(cms_default_lang())) ?> pasa a la misma página en su idioma, si está activo y traducido. Si cambia de idioma con el selector, se recuerda (cookie) y la próxima vez entra en el que eligió. Los enlaces con prefijo (/en/…) y los buscadores no se redirigen.</p></div>
+<?php endif; ?>
       <div class="ad-field"><label>URL canónica del sitio (con https y sin barra final; fija el dominio en canonical, sitemap y datos estructurados aunque entren por www)</label><input type="url" name="site_url" value="<?= cms_e($S['site_url'] ?? '') ?>" placeholder="https://midominio.com"></div>
       <div class="ad-field"><label>Otros sitios (enlaces del footer): una por línea, "Texto | URL"</label><textarea name="other_sites" rows="3"><?= cms_e(implode("\n", array_map(fn($o) => ($o['label'] ?? '') . ' | ' . ($o['url'] ?? ''), (array) ($S['other_sites'] ?? [])))) ?></textarea>
         <p class="ad-help">Los datos de contacto y redes del pie están en la pestaña Contacto. Los <strong>textos fijos</strong> de la cabecera y el pie (títulos, copyright, etiquetas) se editan en <a href="<?= admin_url('strings') ?>">Textos del sitio</a>; el menú, en <a href="<?= admin_url('menu') ?>">Menú</a>.</p></div>

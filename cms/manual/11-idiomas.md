@@ -24,6 +24,22 @@ Lo que no cambia por idioma: imágenes, URL de páginas y colecciones, videos, p
 
 En **Ajustes → Idiomas** se marca cuáles están activos para el público. Un idioma desactivado sigue editándose en el panel, pero sus páginas no responden en el sitio ni entran al sitemap. Es la forma de trabajar una traducción con calma y publicarla de golpe.
 
+## Que cada visitante entre en su idioma
+
+En **Ajustes → General → Idioma según el visitante** eliges cómo se decide el idioma de quien llega:
+
+- **No** (predeterminado): todos entran al idioma principal y cambian con el selector.
+- **Según su navegador**: se usa el idioma configurado en el navegador del visitante, si ese idioma está activo en el sitio.
+- **Según su país**: se usa el país desde el que visita. Requiere que el sitio pase por **Cloudflare**, que es quien informa el país; sin Cloudflare esta opción no hace nada.
+- **Navegador y, si no coincide ninguno, país**: lo más completo.
+
+Cómo se comporta:
+
+- Solo actúa cuando alguien **llega desde fuera** (un buscador, un enlace, la barra de direcciones) a una página del idioma principal. Si corresponde, pasa a la **misma página** en su idioma, siempre que esa página tenga traducción.
+- **Lo que el visitante elige, se queda.** Al cambiar de idioma con el selector, el sitio lo recuerda en una cookie durante un año, y en sus siguientes visitas entra en ese idioma aunque su navegador diga otro.
+- Un enlace con prefijo (`/en/…`) siempre abre en su idioma: si compartes una página en inglés, se ve en inglés.
+- Los buscadores nunca se redirigen: cada idioma sigue indexándose en su propia URL.
+
 ## Por qué no aparece la opción de "crear un idioma" en el panel
 
 Añadir un idioma cambia la estructura del sitio, no solo el contenido: hay que decidir el código y la URL, marcar qué campos del tema se traducen, y escribir los textos fijos del diseño en el idioma nuevo. Eso lo declara quien programa el tema en `site/config.php`, en la lista `langs`, y a partir de ahí el panel muestra el conmutador en todos los campos bilingües y la casilla en Ajustes → Idiomas. Es un trabajo de una vez por idioma; después, todo es contenido.

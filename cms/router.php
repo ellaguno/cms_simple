@@ -220,6 +220,7 @@ if ($template === null || !is_file(cms_theme_file('templates/' . $template . '.p
     $template = '404';
     $page += ['title' => $t('not_found_title', '404') . ' · ' . $site, 'desc' => '', 'alt' => $alt('home'), 'noindex' => true];
 }
+if ($template !== '404') cms_lang_negotiate($lang, $page, is_string($type ?? null) ? $type : '', is_array($item ?? null) ? (string) ($item['slug'] ?? '') : '');   // Ajustes → idioma según el visitante
 $page['canonical'] = cms_abs_url($page['alt'][$lang] ?? cms_url('home', $lang));
 if (is_array($item ?? null) && is_array($item['sections'] ?? null)) $page['sections'] = $item['sections'];
 $GLOBALS['cms_current'] = ['type' => $type, 'item' => is_array($item ?? null) ? $item : null, 'page' => $page, 'lang' => $lang];   // cms_current(), para los ganchos

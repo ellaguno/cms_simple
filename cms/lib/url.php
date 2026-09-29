@@ -155,3 +155,81 @@ function cms_tel_href(): string
     $n = preg_replace('/[^\d+]+/', '', (string) (cms_settings()['phone_href'] ?? cms_settings()['phone'] ?? ''));
     return $n ? 'tel:' . $n : '';
 }
+
+/* ------------------------------------------------------------------ idioma del visitante (Ajustes → General → lang_auto) */
+
+/** Países → idioma, para elegir por el origen del visitante (cabecera CF-IPCountry de Cloudflare o GEOIP del servidor). */
+const CMS_COUNTRY_LANGS = [
+    'es' => ['MX', 'ES', 'AR', 'CO', 'CL', 'PE', 'VE', 'EC', 'GT', 'CU', 'BO', 'DO', 'HN', 'PY', 'SV', 'NI', 'CR', 'PA', 'UY', 'PR', 'GQ'],
+    'en' => ['US', 'GB', 'IE', 'CA', 'AU', 'NZ', 'ZA', 'IN', 'SG', 'PH', 'NG', 'KE', 'JM', 'TT', 'BZ', 'BS', 'BB'],
+    'pt' => ['BR', 'PT', 'AO', 'MZ', 'CV'],
+    'fr' => ['FR', 'MC', 'LU', 'SN', 'CI', 'ML', 'CM', 'MG', 'HT'],
+    'de' => ['DE', 'AT', 'LI'],
+    'it' => ['IT', 'SM', 'VA'],
+];
+
+/** Idioma activo que prefiere el visitante según su navegador (Accept-Language, en orden de preferencia), o ''. */
+function cms_browser_lang(): string
+{
+    $prefs = [];
+    foreach (explode(',', (string) ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '')) as $i => $part) {
+        if (!preg_match('/^\s*([a-z]{2,3})(?:-[a-z0-9]+)*\s*(?:;\s*q\s*=\s*([0-9.]+))?/i', $part, $m)) continue;
+        $q = isset($m[2]) ? (float) $m[2] : 1.0;
+        if ($q > 0) $prefs[] = [strtolower($m[1]), $q, $i];
+    }
+    usort($prefs, fn($a, $b) => $b[1] <=> $a[1] ?: $a[2] <=> $b[2]);
+    $active = cms_active_langs();
+    foreach ($prefs as [$l]) if (in_array($l, $active, true)) return $l;
+    return '';
+}
+
+/** Idioma activo que corresponde al país de origen del visitante, o ''. Solo funciona si el hosting informa el país (Cloudflare). */
+function cms_country_lang(): string
+{
+    $cc = strtoupper((string) ($_SERVER['HTTP_CF_IPCOUNTRY'] ?? $_SERVER['GEOIP_COUNTRY_CODE'] ?? $_SERVER['HTTP_X_COUNTRY_CODE'] ?? ''));
+    if (!preg_match('/^[A-Z]{2}$/', $cc)) return '';
+    foreach (CMS_COUNTRY_LANGS as $l => $list) if (in_array($cc, $list, true) && in_array($l, cms_active_langs(), true)) return $l;
+    return '';
+}
+
+/**
+ * Idioma según el visitante. Se llama desde el enrutador antes de dibujar una página pública.
+ * - Al entrar desde fuera (sin referer del propio sitio) a una URL del idioma predeterminado, redirige (302) a la misma
+ *   página en el idioma que el visitante eligió antes (cookie cms_lang) o, si nunca eligió, en el de su navegador o su país.
+ * - Al navegar dentro del sitio se guarda en la cookie el idioma de la página que ve: usar el selector de idioma es elegir.
+ * Las URL con prefijo (/en/…) se respetan siempre: un enlace compartido abre en su idioma. Nunca redirige a buscadores,
+ * vistas previas, POST ni contenidos sin traducción en el idioma de destino.
+ */
+function cms_lang_negotiate(string $lang, array $page, string $type = '', string $slug = ''): void
+{
+    $mode = (string) (cms_settings()['lang_auto'] ?? '');
+    $active = cms_active_langs();
+    if ($mode === '' || count($active) < 2 || ($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET' || PHP_SAPI === 'cli') return;
+    if (!empty($page['preview']) || cms_theme_preview() !== '' || isset($_GET['preview'])) return;
+    $ref = (string) parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_HOST);
+    $internal = $ref !== '' && strcasecmp($ref, (string) parse_url('//' . ($_SERVER['HTTP_HOST'] ?? ''), PHP_URL_HOST)) === 0;
+    $cookie = (string) ($_COOKIE['cms_lang'] ?? '');
+    if (!in_array($cookie, $active, true)) $cookie = '';
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+    if ($internal) {
+        if ($cookie !== $lang) setcookie('cms_lang', $lang, ['expires' => time() + 365 * 86400, 'path' => CMS_BASE ?: '/', 'secure' => $https, 'httponly' => true, 'samesite' => 'Lax']);
+        return;
+    }
+    if ($lang !== cms_default_lang()) return;
+    header('Vary: Accept-Language, Cookie', false);
+    if (preg_match('/bot|crawl|spider|slurp|facebookexternalhit|embedly|preview|headless|lighthouse|validator/i', (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''))) return;
+    $want = $cookie;
+    if ($want === '' && ($mode === 'browser' || $mode === 'both')) $want = cms_browser_lang();
+    if ($want === '' && ($mode === 'country' || $mode === 'both')) $want = cms_country_lang();
+    if ($want === '' || $want === $lang || empty($page['alt'][$want])) return;
+    if ($type !== '' && $slug !== '' && ($def = cms_type($type))) {   // sin traducción del título, la página saldría en el predeterminado: no vale la pena
+        $raw = cms_json_read(cms_content_dir($type) . '/' . cms_slugify($slug) . '.json', []);   // el elemento del enrutador ya viene localizado
+        $tv = $raw[$def['title_field'] ?? 'title'] ?? null;
+        if (is_array($tv) && trim((string) ($tv[$want] ?? '')) === '') return;
+    }
+    $qs = (string) ($_SERVER['QUERY_STRING'] ?? '');
+    $qs = trim((string) preg_replace('/(^|&)p=[^&]*/', '', $qs), '&');   // el .htaccess añade ?p=<ruta>
+    header('Cache-Control: private, no-store');
+    header('Location: ' . $page['alt'][$want] . ($qs !== '' ? '?' . $qs : ''), true, 302);
+    exit;
+}

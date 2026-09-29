@@ -8,6 +8,7 @@
  *   /{segmento-página}         → páginas estáticas de config 'pages'
  *   /{ruta/completa}           → tipos en árbol ('tree' => true; con 'routes' vacío cuelgan de la raíz)
  *   /sitemap.xml  /robots.txt  /llms.txt (site/llms.txt, si existe)  /_cms/form (POST del formulario de contacto)
+ *   /admin/api/…               → API del contenido con token (cms/admin/api.php)
  */
 declare(strict_types=1);
 
@@ -24,6 +25,7 @@ if (isset($_GET['p'])) {
 }
 $path = trim(rawurldecode($path), '/');
 
+if ($path === 'admin/api' || strpos($path, 'admin/api/') === 0) { $api_route = (string) substr($path, 9); require CMS_DIR . '/admin/api.php'; exit; }
 if ($path !== '' && ($to = cms_redirect_for($path)) !== null) { header('Location: ' . $to, true, 301); exit; }
 if ($path === 'robots.txt') { cms_robots(); exit; }
 if ($path === 'sitemap.xml') { cms_sitemap(); exit; }

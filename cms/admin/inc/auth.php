@@ -10,14 +10,17 @@ header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: same-origin');
 header('Cache-Control: no-store');
 
-$https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
-session_name('cmsadmin');
-session_set_cookie_params(['lifetime' => 0, 'path' => (CMS_BASE ?: '/'), 'secure' => $https, 'httponly' => true, 'samesite' => 'Lax']);
-session_start();
-if (!empty($_SESSION['user']) && isset($_SESSION['last']) && time() - (int) $_SESSION['last'] > ADMIN_SESSION_TTL) {
-    session_unset(); session_destroy(); session_start();
+// la API (/admin/api/…) y la línea de comandos (cms/cli.php) se autentican con token o por estar en el servidor: sin sesión ni cookie
+if (!defined('CMS_API')) {
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+    session_name('cmsadmin');
+    session_set_cookie_params(['lifetime' => 0, 'path' => (CMS_BASE ?: '/'), 'secure' => $https, 'httponly' => true, 'samesite' => 'Lax']);
+    session_start();
+    if (!empty($_SESSION['user']) && isset($_SESSION['last']) && time() - (int) $_SESSION['last'] > ADMIN_SESSION_TTL) {
+        session_unset(); session_destroy(); session_start();
+    }
+    $_SESSION['last'] = time();
 }
-$_SESSION['last'] = time();
 
 /**
  * Blindaje contra firewalls del hosting (mod_security): el panel manda codificados los campos con HTML o código
@@ -100,11 +103,38 @@ function admin_post(string $k, string $default = ''): string
 }
 
 /** Limpieza mínima del HTML del editor visual. */
+/**
+ * Quita del HTML del editor visual los colores en línea (color, background) que llegan al pegar desde Google Docs,
+ * Word o un visor de Markdown: fijan el negro del documento y pisan el color del tema (modo oscuro, textos claros).
+ * Los <span> que se quedan sin atributos se desenvuelven.
+ */
+function admin_strip_colors(string $html): string
+{
+    $html = preg_replace_callback('/\sstyle\s*=\s*("([^"]*)"|\'([^\']*)\')/i', function (array $m): string {
+        $css = html_entity_decode($m[2] !== '' ? $m[2] : ($m[3] ?? ''), ENT_QUOTES, 'UTF-8');
+        $keep = [];
+        foreach (explode(';', $css) as $decl) {
+            $decl = trim($decl);
+            if ($decl === '' || preg_match('/^(color|background(-color|-image)?)\s*:/i', $decl)) continue;
+            $keep[] = $decl;
+        }
+        return $keep ? ' style="' . htmlspecialchars(implode('; ', $keep), ENT_QUOTES, 'UTF-8') . '"' : '';
+    }, $html) ?? $html;
+    $html = preg_replace('/<font\b[^>]*>(.*?)<\/font>/is', '$1', $html) ?? $html;
+    for ($i = 0; $i < 5; $i++) {   // spans anidados sin atributos
+        $n = preg_replace('/<span\s*>((?:(?!<span\b).)*?)<\/span>/is', '$1', $html);
+        if ($n === null || $n === $html) break;
+        $html = $n;
+    }
+    return $html;
+}
+
 function admin_clean_html(string $html): string
 {
     $html = preg_replace('#<\s*(script|style|object|embed)[^>]*>.*?<\s*/\s*\1\s*>#is', '', $html) ?? $html;
     $html = preg_replace('/\s+on[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html) ?? $html;
     $html = preg_replace('/(href|src)\s*=\s*("|\')\s*javascript:[^"\']*\2/i', '$1=$2#$2', $html) ?? $html;
+    $html = admin_strip_colors($html);
     $html = trim($html);
     return in_array($html, ['<p><br></p>', '<p></p>'], true) ? '' : $html;
 }

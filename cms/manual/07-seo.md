@@ -26,7 +26,7 @@ Google posiciona páginas, no sitios. Cada cosa que alguien pueda buscar merece 
 
 El título SEO es el texto azul del resultado. Que diga qué es y para quién, con las palabras del que busca: "Software de gestión de casos con IA para abogados" gana a "El derecho a un clic". Entre 50 y 60 caracteres.
 
-La descripción no posiciona, pero decide si hacen clic. Una promesa concreta y una razón, en 150 caracteres.
+La descripción no posiciona, pero decide si hacen clic. Una promesa concreta y una razón, en 150 caracteres. Si la sacas del resumen, el núcleo le quita los saltos de línea y las etiquetas y la corta en 160 caracteres, en el límite de una palabra, con «…».
 
 ### 3. Texto real
 

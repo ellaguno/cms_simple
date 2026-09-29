@@ -10,6 +10,8 @@ Artículos, planes, preguntas frecuentes, integrantes del equipo o proyectos son
 
 En el listado ves el estado de cada elemento y puedes **Ver** o hacer **Vista previa**, **Editar**, **Duplicar** o **Eliminar**. Eliminar no tiene deshacer; si dudas, pásalo a borrador.
 
+**Duplicar** crea un borrador con el título «(copia)» y la URL «…-copia». Mientras no toques la URL a mano, sigue al título: cambia el título y la URL se rehace sola. Si intentas publicar con la URL de la copia, el editor te lo impide y te propone la del título. Las etiquetas y la categoría se copian del original; revísalas.
+
 Cuando la colección crece (un blog puede tener miles de entradas), el listado se muestra de 50 en 50 y trae herramientas para encontrar lo que buscas:
 
 - **Buscador**: escribe una o varias palabras y pulsa Enter. Busca en el título (en todos los idiomas), en la URL y en las columnas del listado (fecha, categoría…). No distingue mayúsculas ni acentos.
@@ -53,7 +55,7 @@ Campos que importan y por qué:
 - **Enlace.** Selecciona el texto y pega la dirección.
 - **Video.** Pega la URL de YouTube o Vimeo; se inserta a todo el ancho. Para quitarlo, haz clic sobre él y pulsa Supr.
 - **Subir imagen** y **Biblioteca**, para imágenes, PDF o videos ya subidos. Al hacer clic sobre una imagen ya insertada aparece su barra: **Tamaño** (25, 50, 75 o 100 % del ancho del texto, u original), **Posición** (izquierda o derecha con el texto alrededor, centrada, o normal), el **texto alternativo** y ✕ para quitarla. En pantallas pequeñas las imágenes flotadas se muestran centradas, sin texto alrededor.
-- **Quitar formato**, cuando pegas texto de Word y llega con estilos raros.
+- **Quitar formato**, cuando pegas texto de Word y llega con estilos raros. Los colores de letra y de fondo que traiga lo pegado (Google Docs, Word, visores de Markdown) se descartan siempre, al pegar y al guardar: fijaban el negro y dejaban el texto ilegible en modo oscuro o en temas con texto claro. Para limpiar un artículo que ya los tenía, basta con abrirlo y guardarlo.
 - **HTML.** Abre el código de lo que estás escribiendo, con colores y números de línea. Lo que edites ahí se guarda tal cual. Es la salida para tablas, incrustados o cualquier cosa que el editor visual no entiende. Al volver al modo visual, el editor reinterpreta el código y puede simplificar lo que no reconoce.
 
 ## Imágenes

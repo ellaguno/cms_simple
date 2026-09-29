@@ -57,6 +57,14 @@ if (admin_is_post()) {
     admin_csrf_check();
     [$item, $errors] = admin_read_item($type, $def, $fields, $item, $orig);
     $slug = $item['slug'];
+    // copia hecha con Duplicar: no se publica con la URL «…-copia»; en cuanto la URL deja de ser la de la copia, se olvida la marca
+    if (!empty($item['duplicated_from'])) {
+        if (!admin_is_copy_slug($slug, (string) $item['duplicated_from'])) unset($item['duplicated_from']);
+        elseif ($item['status'] === 'published') {
+            $tv = $item[$titleField] ?? ''; $sug = cms_slugify(is_array($tv) ? (string) ($tv[$dl] ?? '') : (string) $tv);
+            $errors[] = 'La URL todavía es la de la copia («' . $slug . '»). Cámbiala antes de publicar' . ($sug !== '' && !admin_is_copy_slug($sug, (string) $item['duplicated_from']) ? ', por ejemplo a «' . $sug . '»' : ' y quita «(copia)» del título') . '.';
+        }
+    }
     if (!$errors) {
         if ($tree) { $all2 = cms_items($type, false); $all2[$slug] = $item; $item['path'] = cms_tree_path($type, $all2, $slug); }
         if (cms_item_save($type, $item)) {
@@ -109,7 +117,7 @@ $titleInputName = !empty($fields[$titleField]['i18n']) ? $titleField . '[' . $dl
       <div class="ad-field"><label>Publicar a partir de <small class="ad-help">(vacío = de inmediato)</small></label><input type="date" name="publish_at" value="<?= cms_e($item['publish_at'] ?? '') ?>" min="<?= date('Y-m-d', time() + 86400) ?>"></div>
       <div class="ad-field"><label>Retirar a partir de <small class="ad-help">(vacío = nunca)</small></label><input type="date" name="unpublish_at" value="<?= cms_e($item['unpublish_at'] ?? '') ?>"><p class="ad-help">Desde ese día deja de verse en el sitio, el sitemap y los listados, pero sigue publicado: quita o cambia la fecha para que vuelva.</p></div>
 <?php endif; ?>
-      <div class="ad-field"><label><?= $internal ? 'Clave (slug)' : 'URL (slug)' ?></label><input type="text" name="slug" value="<?= cms_e($item['slug']) ?>" data-slug placeholder="se genera del título"><p class="ad-help"><?php if ($tree): $pp = ($item['parent'] ?? '') !== '' ? (cms_items($type, false)[$item['parent']]['path'] ?? $item['parent']) . '/' : ''; $sg = cms_segment($def, $dl); ?>/<?= $sg !== '' ? cms_e($sg) . '/' : '' ?><span data-parent-path><?= cms_e($pp) ?></span><?php else: ?>/<?= cms_e(cms_segment($def, $dl)) ?>/<?php endif; ?><span data-slug-preview><?= cms_e($item['slug']) ?></span></p></div>
+      <div class="ad-field"><label><?= $internal ? 'Clave (slug)' : 'URL (slug)' ?></label><input type="text" name="slug" value="<?= cms_e($item['slug']) ?>" data-slug<?= !empty($item['duplicated_from']) && admin_is_copy_slug((string) $item['slug'], (string) $item['duplicated_from']) ? ' data-slug-auto' : '' ?> placeholder="se genera del título"><p class="ad-help"><?php if ($tree): $pp = ($item['parent'] ?? '') !== '' ? (cms_items($type, false)[$item['parent']]['path'] ?? $item['parent']) . '/' : ''; $sg = cms_segment($def, $dl); ?>/<?= $sg !== '' ? cms_e($sg) . '/' : '' ?><span data-parent-path><?= cms_e($pp) ?></span><?php else: ?>/<?= cms_e(cms_segment($def, $dl)) ?>/<?php endif; ?><span data-slug-preview><?= cms_e($item['slug']) ?></span></p></div>
 <?php foreach ($side as $name => $fd) admin_field($name, $fd, $item[$name] ?? ''); ?>
 <?php if (!$is_new) cms_do('admin.item.sidebar', $type, $item); ?>
       <div class="ad-field ad-sticky-save">

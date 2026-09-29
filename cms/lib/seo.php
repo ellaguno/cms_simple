@@ -39,7 +39,7 @@ function cms_jsonld_item(array $def, array $item, string $lang, string $url): ?a
     $site = $S['site_name'] ?? cms_config('name');
     $img = $def['image_field'] ?? 'image';
     $title = (string) cms_f($item, $def['title_field'] ?? 'title', $lang);
-    $desc = (string) cms_f($item, $def['excerpt_field'] ?? 'excerpt', $lang);
+    $desc = cms_meta_desc((string) cms_f($item, $def['excerpt_field'] ?? 'excerpt', $lang), 300);
     $node = ['@type' => $schema, 'name' => $title, 'description' => $desc, 'url' => cms_abs_url($url), 'inLanguage' => $lang === 'en' ? 'en' : $lang . '-MX'];
     if (!empty($item[$img])) $node['image'] = [cms_abs_url(cms_img((string) $item[$img]))];
     if ($schema === 'Article' || $schema === 'BlogPosting' || $schema === 'NewsArticle') {
@@ -60,6 +60,17 @@ function cms_jsonld_item(array $def, array $item, string $lang, string $url): ?a
     return $node;
 }
 
+/** Texto de una meta descripción: sin etiquetas ni entidades, espacios y saltos colapsados y recortado a $max caracteres en límite de palabra (con «…»). */
+function cms_meta_desc(string $s, int $max = 160): string
+{
+    $s = trim((string) preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags(str_replace('<', ' <', $s)), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+    if (mb_strlen($s) <= $max) return $s;
+    $cut = mb_substr($s, 0, $max - 1);
+    $sp = mb_strrpos($cut, ' ');
+    if ($sp !== false && $sp > $max * 0.6) $cut = mb_substr($cut, 0, $sp);
+    return rtrim($cut, " ,;:.-–—") . '…';
+}
+
 /** Metadatos del <head>: title, description, canonical, hreflang, robots, OG, Twitter, JSON-LD. El tema lo llama dentro de <head>. */
 function cms_head(array $page): void
 {
@@ -67,7 +78,7 @@ function cms_head(array $page): void
     $lang = $page['lang'];
     $site = $S['site_name'] ?? cms_config('name');
     $title = $page['title'] ?? $site;
-    $desc = $page['desc'] ?? '';
+    $desc = cms_meta_desc((string) ($page['desc'] ?? ''));
     $alt = $page['alt'] ?? [];
     $og = cms_abs_url(cms_img(!empty($page['og_image']) ? (string) $page['og_image'] : (string) ($S['og_image'] ?? ($S['logo'] ?? ''))));
     echo '<meta charset="utf-8">' . "\n";

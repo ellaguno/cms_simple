@@ -156,8 +156,9 @@ function media_rename(string $rel, string $newName): array
 
 /**
  * Guarda un archivo subido ($_FILES[...]) en uploads/AAAA/MM. Devuelve [ok, path|error].
+ * Con $local = true, tmp_name es un archivo del propio servidor (línea de comandos) y se copia en vez de moverse.
  */
-function media_store(array $f): array
+function media_store(array $f, bool $local = false): array
 {
     if (($f['error'] ?? 1) !== UPLOAD_ERR_OK) {
         $msgs = [UPLOAD_ERR_INI_SIZE => 'El archivo supera el límite del servidor (' . media_human(media_limit_bytes()) . ').', UPLOAD_ERR_FORM_SIZE => 'Archivo demasiado grande.', UPLOAD_ERR_PARTIAL => 'Subida incompleta.', UPLOAD_ERR_NO_FILE => 'No se recibió el archivo.'];
@@ -192,7 +193,7 @@ function media_store(array $f): array
             }
         }
     }
-    if (!$done && !move_uploaded_file($f['tmp_name'], $dest)) return [false, 'No se pudo guardar. Revisa permisos de uploads/.'];
+    if (!$done && !($local ? copy($f['tmp_name'], $dest) : move_uploaded_file($f['tmp_name'], $dest))) return [false, 'No se pudo guardar. Revisa permisos de uploads/.'];
     @chmod($dest, 0644);
     if ($type === 'image') cms_webp_make($dest); // versión WebP para el sitio
     return [true, 'uploads/' . $sub . '/' . $name];

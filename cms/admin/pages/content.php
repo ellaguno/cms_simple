@@ -31,9 +31,9 @@ if (admin_is_post()) {
             $base = $src['slug'] . '-copia'; $slug = $base; $n = 2;
             while (is_file(cms_content_dir($type) . '/' . $slug . '.json')) $slug = $base . '-' . $n++;
             $tf = $def['title_field'] ?? 'title';
-            $copy = $src; $copy['slug'] = $slug; $copy['status'] = 'draft'; $copy['created'] = date('Y-m-d'); $copy['updated'] = date('Y-m-d'); unset($copy['publish_at'], $copy['unpublish_at']);
+            $copy = $src; $copy['slug'] = $slug; $copy['duplicated_from'] = $src['slug']; $copy['status'] = 'draft'; $copy['created'] = date('Y-m-d'); $copy['updated'] = date('Y-m-d'); unset($copy['publish_at'], $copy['unpublish_at']);
             if (is_array($copy[$tf] ?? null)) { foreach ($copy[$tf] as $l => $v) if ($v !== '') $copy[$tf][$l] = $v . ' (copia)'; } else $copy[$tf] = (string) ($copy[$tf] ?? '') . ' (copia)';
-            if (cms_item_save($type, $copy)) { admin_flash('Copia creada como borrador.'); admin_redirect(admin_url('edit', ['type' => $type, 'slug' => $slug])); }
+            if (cms_item_save($type, $copy)) { admin_flash('Copia creada como borrador. La URL seguirá al título mientras no la cambies a mano; revisa también las etiquetas, que se copiaron del original.'); admin_redirect(admin_url('edit', ['type' => $type, 'slug' => $slug])); }
             admin_flash('No se pudo duplicar.', 'err');
         }
     }

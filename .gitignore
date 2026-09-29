@@ -14,3 +14,5 @@ Thumbs.db
 data/import-tmp/
 # índices ligeros por tipo (se regeneran solos)
 data/index/
+# Tokens de la API (solo hashes, pero son de cada instalación)
+data/api-tokens.json

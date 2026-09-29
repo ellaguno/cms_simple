@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once dirname(__DIR__) . '/inc/api.php';
 
 $me = admin_user();
 $users = cms_users();
@@ -41,6 +42,13 @@ if (admin_is_post()) {
             if (cms_json_write(CMS_DATA . '/users.json', $users)) admin_flash('Contraseña actualizada.');
             else admin_flash('No se pudo guardar users.json.', 'err');
         }
+    } elseif ($action === 'token_create') {   // token para la API (/admin/api/…): se enseña una sola vez
+        $types = array_map('strval', (array) ($_POST['types'] ?? []));
+        $tok = api_token_create((string) ($me['user'] ?? ''), admin_post('label'), in_array('*', $types, true) || !$types ? ['*'] : $types);
+        if ($tok !== '') { $_SESSION['api_token_new'] = $tok; admin_flash('Token creado. Cópialo ahora: no se vuelve a mostrar.'); }
+        else admin_flash('No se pudo guardar data/api-tokens.json.', 'err');
+    } elseif ($action === 'token_revoke') {
+        admin_flash(api_token_revoke(admin_post('id')) ? 'Token revocado.' : 'No se encontró ese token.', 'ok');
     } elseif ($action === 'delete') {
         if ($user === ($me['user'] ?? '')) admin_flash('No puedes eliminar tu propio usuario.', 'err');
         elseif (count($users) <= 1) admin_flash('Debe quedar al menos un usuario.', 'err');
@@ -55,6 +63,7 @@ if (admin_is_post()) {
 
 admin_header('Usuarios', 'users');
 ?>
+<?php $newTok = (string) ($_SESSION['api_token_new'] ?? ''); unset($_SESSION['api_token_new']); ?>
 <p class="ad-help">Todos los usuarios tienen los mismos permisos de administración. Tu contraseña la cambias abajo; la de otros se restablece desde su fila.</p>
 <div class="ad-grid2">
   <section class="ad-box">
@@ -114,4 +123,39 @@ admin_header('Usuarios', 'users');
   </section>
   </div>
 </div>
+<section class="ad-box" id="api">
+  <h2>Acceso por API</h2>
+  <p class="ad-help">Para publicar desde otros programas sin pasar por los formularios: <code><?= cms_e(cms_site_url()) ?>/admin/api/</code> con la cabecera <code>Authorization: Bearer &lt;token&gt;</code> (o <code>X-CMS-Token</code>). Ver el manual, «API y línea de comandos». Cada token actúa como el usuario que lo creó; revócalo si deja de usarse.</p>
+<?php if ($newTok !== ''): ?>
+  <div class="ad-flash ok"><strong>Token nuevo (se muestra una sola vez):</strong><br><input type="text" readonly value="<?= cms_e($newTok) ?>" onclick="this.select()" style="width:100%;font-family:monospace"></div>
+<?php endif; $toks = api_tokens(); if ($toks): ?>
+  <table class="ad-table">
+    <thead><tr><th>Nombre</th><th>Usuario</th><th>Alcance</th><th>Creado</th><th>Último uso</th><th></th></tr></thead>
+    <tbody>
+<?php foreach ($toks as $t): ?>
+      <tr>
+        <td><strong><?= cms_e((string) ($t['label'] ?? '')) ?></strong> <small class="ad-help">cms_<?= cms_e((string) ($t['id'] ?? '')) ?>_…</small></td>
+        <td><?= cms_e((string) ($t['user'] ?? '')) ?></td>
+        <td><?= in_array('*', (array) ($t['types'] ?? []), true) ? 'Todo el contenido' : cms_e(implode(', ', array_map(fn($k) => (string) (cms_type((string) $k)['label'] ?? $k), (array) ($t['types'] ?? [])))) ?></td>
+        <td><?= cms_e((string) ($t['created'] ?? '')) ?></td>
+        <td><?= cms_e((string) ($t['last_used'] ?? '') ?: '—') ?></td>
+        <td class="ad-row-actions"><form method="post" class="ad-inline" data-confirm="¿Revocar el token «<?= cms_e((string) ($t['label'] ?? '')) ?>»? Los programas que lo usen dejarán de funcionar."><?= admin_csrf_field() ?><input type="hidden" name="action" value="token_revoke"><input type="hidden" name="id" value="<?= cms_e((string) ($t['id'] ?? '')) ?>"><button class="ad-btn ad-btn-sm ad-btn-danger" type="submit">Revocar</button></form></td>
+      </tr>
+<?php endforeach; ?>
+    </tbody>
+  </table>
+<?php endif; ?>
+  <form method="post" class="ad-form" autocomplete="off">
+    <?= admin_csrf_field() ?><input type="hidden" name="action" value="token_create">
+    <div class="ad-field"><label>Nombre del token (para reconocerlo)</label><input type="text" name="label" required maxlength="60" placeholder="ej. Rutina de novedades"></div>
+    <div class="ad-field"><label>Puede leer y escribir</label>
+      <label class="ad-check"><input type="checkbox" name="types[]" value="*" checked> Todo el contenido</label>
+<?php foreach ((array) cms_config('types', []) as $k => $d): if (!cms_type((string) $k)) continue; ?>
+      <label class="ad-check"><input type="checkbox" name="types[]" value="<?= cms_e((string) $k) ?>"> <?= cms_e((string) ($d['label'] ?? $k)) ?></label>
+<?php endforeach; ?>
+      <p class="ad-help">Desmarca «Todo el contenido» para limitarlo a las colecciones elegidas. Subir medios está permitido a cualquier token.</p>
+    </div>
+    <button class="ad-btn" type="submit">Crear token</button>
+  </form>
+</section>
 <?php admin_footer();

@@ -229,6 +229,12 @@ function admin_read_item(string $type, array $def, array $fields, array $existin
     return [$new + $existing, $errors];
 }
 
+/** ¿$slug sigue siendo el que Duplicar le puso a la copia de $from («<from>-copia» o «<from>-copia-N»)? */
+function admin_is_copy_slug(string $slug, string $from): bool
+{
+    return $from !== '' && (bool) preg_match('/^' . preg_quote($from, '/') . '-copia(-\d+)?$/', $slug);
+}
+
 /** Conmutador de idioma para formularios con campos bilingües. */
 function admin_lang_switch(): void
 {

@@ -311,6 +311,11 @@
       });
       // iframes pegados desde el portapapeles → video
       quill.clipboard.addMatcher("IFRAME", function (node) { return new Delta().insert({ video: node.getAttribute("src") }); });
+      // al pegar desde Docs, Word o un visor de Markdown no se conservan colores ni fondos (fijan el negro y rompen el modo oscuro)
+      quill.clipboard.addMatcher(Node.ELEMENT_NODE, function (node, delta) {
+        delta.ops.forEach(function (op) { if (op.attributes) { delete op.attributes.color; delete op.attributes.background; } });
+        return delta;
+      });
 
       /* barra de imagen: tamaño, posición, texto alternativo, quitar */
       var imgBar = document.createElement("div"), curImg = null;
@@ -512,7 +517,7 @@
   var form = document.querySelector("form[data-slug-source]");
   if (form) {
     var src = form.querySelector('[name="' + form.getAttribute("data-slug-source") + '"]'), slug = form.querySelector("[data-slug]"), prev = form.querySelector("[data-slug-preview]");
-    var touched = !!(slug && slug.value);
+    var touched = !!(slug && slug.value) && !slug.hasAttribute("data-slug-auto");   // copia de Duplicar: la URL sigue al título hasta que se edite a mano
     var slugify = function (s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); };
     // al teclear en el slug se conserva el guion final (si no, no se puede escribir "mi-articulo"); se remata al salir del campo
     var soft = function (s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/-{2,}/g, "-").replace(/^-+/, ""); };

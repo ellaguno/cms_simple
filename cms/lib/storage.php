@@ -493,7 +493,7 @@ function cms_tree_children(string $type, string $slug = ''): array
 /** Primeros segmentos de URL que no puede usar una página de árbol en la raíz. */
 function cms_reserved_segments(): array
 {
-    $r = ['admin', 'cms', 'site', 'data', 'uploads', 'api', 'index.php', 'sitemap.xml', 'robots.txt', 'llms.txt', '_cms'];
+    $r = ['admin', 'cms', 'site', 'data', 'uploads', 'api', 'index.php', 'sitemap.xml', 'robots.txt', 'llms.txt', 'feed.xml', 'feed', '_cms'];
     foreach (cms_config('types') as $k => $d) foreach ((array) ($d['routes'] ?? [$k]) as $sg) if ($sg !== '') $r[] = $sg;
     foreach (cms_config('pages') as $k => $d) foreach ((array) ($d['routes'] ?? [$k]) as $sg) if ($sg !== '') $r[] = $sg;
     foreach (cms_langs() as $l) $r[] = $l;

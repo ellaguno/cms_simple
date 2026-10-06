@@ -8,6 +8,7 @@
  *   /{segmento-página}         → páginas estáticas de config 'pages'
  *   /{ruta/completa}           → tipos en árbol ('tree' => true; con 'routes' vacío cuelgan de la raíz)
  *   /sitemap.xml  /robots.txt  /llms.txt (site/llms.txt, si existe)  /_cms/form (POST del formulario de contacto)
+ *   /feed.xml  /{segmento-tipo}/feed.xml  /{segmento-tipo}/{categoría}/feed.xml   → RSS 2.0 (lib/feed.php; también /feed)
  *   /admin/api/…               → API del contenido con token (cms/admin/api.php)
  */
 declare(strict_types=1);
@@ -56,6 +57,11 @@ $S = cms_settings();
 $site = $S['site_name'] ?? cms_config('name');
 $t = fn(string $k, $d = '') => cms_t($k, $lang, $d);
 $seg = $path === '' ? [] : explode('/', $path);
+
+// feed RSS: /feed.xml (todo), /coleccion/feed.xml, /coleccion/categoria/feed.xml (también /feed, al estilo de WordPress)
+if ($seg !== [] && in_array(end($seg), ['feed.xml', 'feed'], true) && count($seg) <= 3) {
+    if (cms_feed($lang, array_slice($seg, 0, -1))) exit;
+}
 
 $alt = function (string $route, ?string $slug = null): array {
     $out = [];

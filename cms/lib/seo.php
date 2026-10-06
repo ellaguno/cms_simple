@@ -112,6 +112,8 @@ function cms_head(array $page): void
     if ($og) echo '<meta name="twitter:image" content="' . cms_e($og) . '">' . "\n";
     if (!empty($S['google_verification'])) echo '<meta name="google-site-verification" content="' . cms_e($S['google_verification']) . '">' . "\n";
     echo '<link rel="icon" href="' . (!empty($S['favicon']) ? cms_e(cms_img($S['favicon'])) : 'data:,') . '">' . "\n";
+    // feed RSS del sitio y, en una colección o uno de sus elementos, el de la colección (lib/feed.php)
+    if (empty($page['preview']) && cms_theme_preview() === '') foreach (cms_feed_links($page) as [$ft, $fu]) echo '<link rel="alternate" type="application/rss+xml" title="' . cms_e($ft) . '" href="' . cms_e(cms_abs_url($fu)) . '">' . "\n";
     echo '<meta name="generator" content="cms_simple ' . CMS_VERSION . '">' . "\n";
     // imágenes del editor visual con posición (barra de imagen del panel); el ancho va inline. El tema puede afinarlo.
     echo '<style id="cms-content">.cms-img-left{float:left;margin:.3em 1.5em 1em 0}.cms-img-right{float:right;margin:.3em 0 1em 1.5em}.cms-img-center{display:block;margin:1em auto}@media(max-width:640px){.cms-img-left,.cms-img-right{float:none;display:block;margin:1em auto}}</style>' . "\n";

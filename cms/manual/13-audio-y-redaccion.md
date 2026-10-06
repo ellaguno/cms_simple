@@ -21,6 +21,7 @@ Opciones útiles:
 - **Automático al publicar**: genera el audio al guardar un elemento publicado que no lo tenga. Cómodo, pero el guardado tarda más.
 - En una página del constructor, el bloque **Reproductor de audio** pone el reproductor donde quieras, con un texto al lado; sin archivo indicado usa el audio de esa página.
 - Puedes escribir a mano la ruta de un MP3 propio (subido por FTP a `uploads/`) en el campo Audio del elemento.
+- **Podcast sin más trabajo**: cada artículo con audio lleva su MP3 adjunto en el feed RSS del sitio (`/feed.xml`, o el de la colección, `/blog/feed.xml`). Esa dirección se da de alta en Apple Podcasts, Spotify o cualquier app de podcasts y los episodios aparecen solos al publicar; ver [SEO](cap:07-seo).
 
 ## Redacción con IA
 

@@ -48,6 +48,9 @@ if (admin_is_post()) {
     $S['google_verification'] = admin_post('google_verification');
     $S['ga_id'] = strtoupper(preg_replace('/[^A-Za-z0-9-]/', '', admin_post('ga_id')));   // solo el ID (G-…, UA-…, GT-…); sin HTML, así ningún firewall lo rechaza
     $S['head_code'] = admin_post('head_code');
+    $S['feed_on'] = !empty($_POST['feed_on']);
+    $S['feed_full'] = !empty($_POST['feed_full']);
+    $S['feed_count'] = max(1, min(100, (int) admin_post('feed_count') ?: 20));
     $S['site_url'] = rtrim(trim(admin_post('site_url')), '/');
     foreach (['logo', 'favicon', 'og_image'] as $k) $S[$k] = admin_post($k);
     $S['languages'] = [];
@@ -132,6 +135,14 @@ admin_header('Ajustes', 'settings');
       <div class="ad-field"><label>Código en el &lt;head&gt; (Tag Manager, píxeles, otras verificaciones)</label><textarea name="head_code" rows="6" class="ad-code" spellcheck="false" placeholder="Pega aquí el fragmento completo, con sus etiquetas <script>"><?= cms_e($S['head_code'] ?? '') ?></textarea>
         <p class="ad-help">Se imprime tal cual dentro del &lt;head&gt; de todas las páginas públicas (no en las vistas previas del panel). Para Google Analytics usa mejor el campo de arriba.</p></div>
       <p class="ad-help">Los títulos y descripciones por página se editan en cada elemento; los de portada y listados, en <a href="<?= admin_url('strings') ?>">Textos del sitio → SEO</a>.</p>
+    </section>
+    <section class="ad-box">
+      <h2>Feed RSS</h2>
+      <div class="ad-field"><label class="ad-check"><input type="checkbox" name="feed_on" value="1"<?= !isset($S['feed_on']) || !empty($S['feed_on']) ? ' checked' : '' ?>> Publicar el feed RSS del sitio en <a href="<?= CMS_BASE ?>/feed.xml" target="_blank" rel="noopener"><?= cms_e(cms_site_url()) ?>/feed.xml</a></label>
+        <p class="ad-help">Entran las colecciones de artículos (las que llevan esquema Article, BlogPosting o NewsArticle, o <code>'feed' =&gt; true</code> en su definición). Cada colección tiene además el suyo en <code>/coleccion/feed.xml</code> y cada categoría en <code>/coleccion/categoria/feed.xml</code>; los sitios con varios idiomas, uno por idioma (<code>/en/feed.xml</code>). Las páginas lo anuncian en su <code>&lt;head&gt;</code> para los lectores de feeds.</p></div>
+      <div class="ad-field"><label class="ad-check"><input type="checkbox" name="feed_full" value="1"<?= !isset($S['feed_full']) || !empty($S['feed_full']) ? ' checked' : '' ?>> Incluir el texto completo de cada artículo (<code>content:encoded</code>)</label>
+        <p class="ad-help">Desmarcado, el feed lleva solo el resumen y el enlace. Con el paquete Audio activo, cada artículo con MP3 lleva su audio como adjunto (<code>enclosure</code>), así el feed funciona también como podcast.</p></div>
+      <div class="ad-field ad-field-half"><label>Artículos en el feed</label><input type="number" name="feed_count" min="1" max="100" value="<?= (int) ($S['feed_count'] ?? 20) ?>"></div>
     </section>
   </div>
 

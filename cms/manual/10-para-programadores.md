@@ -22,7 +22,8 @@ data/, uploads/             contenido y archivos de cada instalación
 Se declara en `site/config.php`, en `types`. Un tipo tiene ruta, plantillas de listado y detalle, campos, orden y opciones:
 
 - `tree => true`: los elementos tienen página padre y ruta completa; con `routes` vacío cuelgan de la raíz.
-- `noindex => true`: detalles con `noindex` y fuera del sitemap.
+- `noindex => true`: detalles con `noindex` y fuera del sitemap (y del feed RSS).
+- `feed => true|false`: entra (o no) en el feed RSS; sin indicarlo, entran los tipos con `schema` Article, BlogPosting o NewsArticle.
 - `no_list => true`: sin índice público.
 - `group => 'Páginas'`: agrupa en el menú del panel.
 - Un campo `type => 'sections'` convierte el tipo en páginas del constructor.
@@ -73,7 +74,7 @@ cms_on('head', function (array $page) { echo '<meta name="x" content="y">'; }); 
 cms_on('item.save', function (string $type, array $item) { /* p. ej. generar algo */ });
 ```
 
-Puntos de gancho del motor: `content` (el HTML que devuelve `cms_content()`: campos html y bloques de texto; `$ctx` es `cms_current()`, con `type`, `item`, `page` y `lang`), `head` (al final de `cms_head()`), `item.save` (tras guardar un elemento), `admin.item.sidebar` (la barra lateral del editor de un elemento guardado, para botones propios) y `cron` (cuando el hosting llama a `/_cms/cron?token=…` o se ejecuta `php cms/cron.php`; recibe una función `$log`). Se añade un punto nuevo solo cuando un paquete real lo necesita.
+Puntos de gancho del motor: `content` (el HTML que devuelve `cms_content()`: campos html y bloques de texto; `$ctx` es `cms_current()`, con `type`, `item`, `page` y `lang`), `head` (al final de `cms_head()`), `item.save` (tras guardar un elemento), `admin.item.sidebar` (la barra lateral del editor de un elemento guardado, para botones propios), `cron` (cuando el hosting llama a `/_cms/cron?token=…` o se ejecuta `php cms/cron.php`; recibe una función `$log`) y `feed.item` (filtro sobre el arreglo de cada `<item>` del feed RSS: `title`, `link`, `guid`, `date`, `author`, `categories`, `desc`, `html`, `enclosure` y `extra`; el paquete audio pone ahí el `enclosure` con su MP3). En los ganchos `content`, `$ctx['page']['route']` vale `feed` cuando el HTML va al feed. Se añade un punto nuevo solo cuando un paquete real lo necesita.
 
 Ojo con `cms_current()['item']` al dibujar el sitio: llega resuelto al idioma de la petición, con respaldo al predeterminado; si necesitas saber si un campo existe en ese idioma exacto, lee el archivo del elemento (el paquete audio lo hace con `au_raw_item()`).
 

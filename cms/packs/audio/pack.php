@@ -7,7 +7,7 @@
 $voicesOpenAI = ['alloy' => 'Alloy', 'ash' => 'Ash', 'ballad' => 'Ballad', 'coral' => 'Coral', 'echo' => 'Echo', 'fable' => 'Fable', 'nova' => 'Nova', 'onyx' => 'Onyx', 'sage' => 'Sage', 'shimmer' => 'Shimmer'];
 return [
     'label' => 'Audio: texto a voz',
-    'version' => '1.0.0',
+    'version' => '1.1.0',
     'desc' => 'Convierte artículos y páginas en audio (MP3) con OpenAI, ElevenLabs, Azure o Google Cloud, con un reproductor al principio o al final del texto. Botón "Generar audio" en el editor (por idioma), generación automática al publicar (opcional), página Audio con el estado de cada colección y bloque "Reproductor" para el constructor. Sin clave, el proveedor de prueba genera un MP3 en silencio para probar el flujo.',
     'assets' => ['css' => ['assets/audio.css']],
     'effects' => [],

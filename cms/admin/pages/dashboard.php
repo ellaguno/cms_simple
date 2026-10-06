@@ -35,7 +35,7 @@ admin_header('Inicio', 'dashboard');
       <li><a href="<?= admin_url('menu') ?>">Editar los enlaces del menú</a></li>
       <li><a href="<?= admin_url('strings') ?>">Revisar los textos fijos del sitio<?= count(cms_langs()) > 1 ? ' y sus traducciones' : '' ?></a></li>
       <li><a href="<?= admin_url('backup') ?>">Crear un respaldo del sitio</a></li>
-      <li><a href="<?= CMS_BASE ?>/sitemap.xml" target="_blank" rel="noopener">Ver sitemap.xml</a></li>
+      <li><a href="<?= CMS_BASE ?>/sitemap.xml" target="_blank" rel="noopener">Ver sitemap.xml</a><?php if (cms_feed_enabled() && cms_feed_types()): ?> · <a href="<?= CMS_BASE ?>/feed.xml" target="_blank" rel="noopener">Ver feed.xml</a><?php endif; ?></li>
       <li><form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="reindex"><button class="ad-btn ad-btn-sm ad-btn-light" type="submit" title="Los índices ligeros de data/index/ se rehacen solos; este botón fuerza la reconstrucción">Reconstruir los índices de contenido</button></form> <small class="ad-help">si copiaste archivos a data/content a mano</small></li>
     </ul>
   </section>

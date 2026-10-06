@@ -16,9 +16,9 @@ Nació para [katapolt.mx](https://katapolt.mx) y está pensado para reutilizarse
 - **Multilingüe**: cualquier campo marcado `i18n` se edita por idioma con un conmutador (un idioma a la vez, con el texto del idioma base como referencia). URLs con prefijo por idioma (`/en/...`), `hreflang`, respaldo al idioma predeterminado cuando falta traducción.
 - **Medios**: subida por botón o arrastrando (imágenes, PDF, video), biblioteca para insertar en el editor o en campos de imagen, WebP automático, aviso de "en uso" antes de borrar.
 - **Menú, textos fijos, ajustes, redirecciones 301** editables desde el panel. Publicación programada y fecha de retiro (caducidad) por elemento, sin cron. **Categorías** por colección con registro propio (Diseño → Categorías) y subsecciones indexables `/coleccion/categoria/`.
-- **Paquetes**: bloques y efectos para el constructor y, desde 1.27, código con ganchos (`content`, `head`, `item.save`, `admin.item.sidebar`, `cron`), ajustes, campos propios y página en el panel. Incluidos: visual, motion, media, marketing, contenido, agencia (portada con pase de imágenes, banda con círculo, equipo y habilidades), enlaces (enlazado interno automático), audio (texto a voz) y redaccion (artículos y resúmenes de noticias con IA).
+- **Paquetes**: bloques y efectos para el constructor y, desde 1.27, código con ganchos (`content`, `head`, `item.save`, `admin.item.sidebar`, `cron`, `feed.item`), ajustes, campos propios y página en el panel. Incluidos: visual, motion, media, marketing, contenido, agencia (portada con pase de imágenes, banda con círculo, equipo y habilidades), enlaces (enlazado interno automático), audio (texto a voz) y redaccion (artículos y resúmenes de noticias con IA).
 - **Código del tema**: editor de código en el panel para plantillas, layout, CSS y JS, con respaldos, restauración y verificación de sintaxis PHP.
-- **SEO de serie**: `title`/`description` por página y campos SEO por elemento, `canonical`, `hreflang`, Open Graph y Twitter Card, JSON-LD (`Organization`, `WebSite`, `BreadcrumbList` y `Article`/`CreativeWork`/… según el tipo), `sitemap.xml` con `lastmod`, `robots.txt`, `noindex` en filtros y 404, imágenes con `<picture>` WebP y dimensiones.
+- **SEO de serie**: `title`/`description` por página y campos SEO por elemento, `canonical`, `hreflang`, Open Graph y Twitter Card, JSON-LD (`Organization`, `WebSite`, `BreadcrumbList` y `Article`/`CreativeWork`/… según el tipo), `sitemap.xml` con `lastmod`, `robots.txt`, `noindex` en filtros y 404, imágenes con `<picture>` WebP y dimensiones. **Feed RSS 2.0** (1.39) en `/feed.xml`, por colección y por categoría, con `content:encoded` (texto completo) y `<enclosure>` del MP3 cuando el paquete audio generó el audio (sirve como podcast).
 - **Formulario de contacto** genérico (`POST /_cms/form`) con `mail()`, honeypot y registro en `data/mensajes.log`.
 - **URLs limpias** con `.htaccess` (Apache + mod_rewrite, el estándar de cPanel). Funciona en la raíz o en una subcarpeta.
 
@@ -49,9 +49,9 @@ index.php          entrada pública (delegada a cms/router.php)
 admin/index.php    entrada del panel (delegada a cms/admin/index.php)
 cms/               NÚCLEO — no se edita por sitio
   bootstrap.php    constantes, configuración, carga de librerías
-  router.php       enrutador público (idiomas, tipos, páginas, sitemap, robots, redirecciones, formulario)
+  router.php       enrutador público (idiomas, tipos, páginas, sitemap, feed RSS, robots, redirecciones, formulario)
   form.php         receptor del formulario de contacto
-  lib/             storage (JSON), url, html (Markdown/HTML, <picture>, WebP), seo (head, JSON-LD), icons, Parsedown
+  lib/             storage (JSON), url, html (Markdown/HTML, <picture>, WebP), seo (head, JSON-LD, sitemap), feed (RSS), icons, Parsedown
   admin/           panel: inc/ (auth, layout, campos por esquema, medios), pages/, assets/
 site/              TEMA — lo propio de cada sitio
   config.php       nombre, idiomas, tipos de contenido y campos, páginas, ajustes propios, grupos de textos
@@ -341,6 +341,32 @@ páginas hijas de la página Portafolio; cuerpo gris oscuro; bloques propios `ad
 espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con icono, mosaico del portafolio, texto con
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
+
+## Feed RSS con texto completo y audio adjunto (1.39)
+
+El núcleo publica un feed RSS 2.0 (`cms/lib/feed.php`), encendido de serie y configurable en **Ajustes → Marca y SEO → Feed RSS**
+(apagarlo, cuántos artículos lleva y si incluye el texto completo):
+
+- `/feed.xml`: todas las colecciones con feed, mezcladas por fecha; `/<coleccion>/feed.xml` una colección;
+  `/<coleccion>/<categoria>/feed.xml` una categoría. También responde `/feed`, `/blog/feed`… al estilo de WordPress.
+  Con varios idiomas hay uno por idioma (`/en/feed.xml`), y un artículo sin título traducido no entra en ese idioma.
+- Entran las colecciones con `'schema'` Article, BlogPosting o NewsArticle; `'feed' => true|false` en la definición del
+  tipo lo fuerza en cualquier sentido (las internas, `no_list` y `noindex` nunca entran). Un campo `feed_hidden`
+  (casilla) en el tipo deja sacar un elemento concreto.
+- Cada `<item>` lleva título, enlace, `guid`, `pubDate`, `dc:creator` (el autor de Ajustes), `<category>` por categoría
+  y etiqueta, `<description>` con el resumen y `<content:encoded>` con el cuerpo completo: el HTML del editor pasado por
+  los ganchos `content` (enlaces automáticos incluidos), con las URL relativas vueltas absolutas y la imagen destacada
+  al principio. Las páginas del constructor sin campo html aportan los títulos y textos de sus bloques.
+- Las páginas anuncian su feed en el `<head>` (`<link rel="alternate" type="application/rss+xml">`): el del sitio en
+  todas y, en una colección, su categoría o uno de sus elementos, además el de la colección.
+- **Gancho `feed.item`** (filtro `$fi, $type, $item, $lang`): el arreglo del elemento antes de escribirlo
+  (`title`, `link`, `guid`, `date`, `author`, `categories`, `desc`, `html`, `enclosure`, `extra`). Un paquete puede
+  cambiar cualquier cosa, poner un `enclosure` (`['url', 'length', 'type']`) o añadir etiquetas XML ya escapadas en
+  `extra`. `feed.channel` (filtro sobre el XML del canal) permite añadir etiquetas de canal. En los ganchos `content`,
+  `cms_current()['page']['route']` vale `feed` para distinguir el feed del sitio.
+- **Paquete audio 1.1**: cada artículo con MP3 en el idioma del feed lleva `<enclosure url=… length=… type="audio/mpeg">`,
+  así el mismo feed se suscribe en un lector de noticias o en una app de podcasts; dentro del `content:encoded` no se
+  inserta el reproductor (el audio ya va adjunto).
 
 ## Vista previa de temas, páginas de muestra opcionales y créditos (1.36)
 
@@ -780,7 +806,7 @@ MIT. Incluye [Parsedown](https://github.com/erusev/parsedown) (MIT). El panel ca
 
 `cms_simple` is a flat-file PHP CMS: JSON content, a schema-driven admin panel (content types and fields declared in `site/config.php`),
 multilingual fields with a language switcher, media library (images/PDF/video with automatic WebP), menus, site texts, settings,
-301 redirects, users, a built-in code editor for theme files (with backups and PHP syntax check), and SEO out of the box (meta, canonical, hreflang, Open Graph, JSON-LD, sitemap with lastmod, robots, `<picture>`).
-Packs extend it with page-builder blocks and, since 1.27, with code: a pack's `inc.php` is loaded on every request and can hook `content`, `head`, `item.save`, `admin.item.sidebar` and `cron`, declare a settings group, per-item fields and its own admin page. Categories per collection with their own registry and indexable `/collection/category/` subsections. Scheduled publishing and an expiry date per item, no cron needed; a host cron endpoint (`/_cms/cron?token=…`) runs pack jobs. Bundled packs: `enlaces` (automatic internal linking), `audio` (text-to-speech with OpenAI, ElevenLabs, Azure or Google) and `redaccion` (AI-written articles and news digests with OpenRouter, OpenAI, Anthropic or DeepSeek).
+301 redirects, users, a built-in code editor for theme files (with backups and PHP syntax check), and SEO out of the box (meta, canonical, hreflang, Open Graph, JSON-LD, sitemap with lastmod, robots, `<picture>`), and an RSS 2.0 feed (site, per collection and per category, with `content:encoded` full text and an audio `<enclosure>` when the audio pack generated an MP3, so it doubles as a podcast feed).
+Packs extend it with page-builder blocks and, since 1.27, with code: a pack's `inc.php` is loaded on every request and can hook `content`, `head`, `item.save`, `admin.item.sidebar`, `cron` and `feed.item`, declare a settings group, per-item fields and its own admin page. Categories per collection with their own registry and indexable `/collection/category/` subsections. Scheduled publishing and an expiry date per item, no cron needed; a host cron endpoint (`/_cms/cron?token=…`) runs pack jobs. Bundled packs: `enlaces` (automatic internal linking), `audio` (text-to-speech with OpenAI, ElevenLabs, Azure or Google) and `redaccion` (AI-written articles and news digests with OpenRouter, OpenAI, Anthropic or DeepSeek).
 Requires PHP 7.4+ and Apache with mod_rewrite. Copy to your web root, make `data/` and `uploads/` writable, open `/admin/` and create the first user.
 The admin UI is in Spanish. MIT license.

@@ -10,6 +10,7 @@ No tienes que hacer nada de esto; conviene saber que existe:
 - **Títulos y descripciones** por página, con lo que escribes en SEO o en el título y resumen.
 - **Datos estructurados**: organización, sitio, migas de pan, artículos, preguntas frecuentes y producto, en el formato que Google lee.
 - **Sitemap** en `/sitemap.xml`, con solo las páginas con contenido real, y `robots.txt`.
+- **Feed RSS** en `/feed.xml` con los últimos artículos completos, para lectores de noticias, boletines automáticos y apps de podcast (ver abajo).
 - **Noindex** en páginas de relleno, para no diluir el sitio.
 - **Imágenes en WebP** con tamaño declarado, y librerías pesadas cargadas solo cuando hacen falta.
 - **Enlaces para compartir** con imagen y texto correctos en redes y mensajería.
@@ -53,7 +54,13 @@ El sistema ya carga lo pesado bajo demanda. Lo que puedes estropear: imágenes e
 - **Google Analytics**: escribe solo el ID de medición (empieza con `G-`) en **Ajustes → Marca y SEO → Google Analytics — ID de medición**. El sitio arma el código por ti y lo pone en todas las páginas públicas. Como el panel no envía ninguna etiqueta, funciona aunque el alojamiento tenga un firewall que rechace los formularios con `<script>`.
 - **Tag Manager, píxeles u otras verificaciones**: pega el fragmento completo en **Ajustes → Marca y SEO → Código en el &lt;head&gt;**. Sale en todas las páginas públicas, no en las vistas previas. No hace falta tocar archivos del tema.
 
-### 8. Cuando cambies una URL
+### 8. El feed RSS
+
+Tus artículos salen también en `/feed.xml`: el texto completo, con su imagen y sus categorías, en el formato que leen Feedly y cualquier lector de noticias, los servicios que arman boletines por correo a partir de un feed y las automatizaciones (Zapier, Make, n8n) que publican en redes cada artículo nuevo. Cada colección tiene el suyo (`/blog/feed.xml`) y cada categoría también (`/blog/diseno/feed.xml`); con varios idiomas, uno por idioma (`/en/feed.xml`). Las páginas lo anuncian solas en su código, así que un lector lo encuentra con solo escribir la dirección del sitio.
+
+Si tienes activo el paquete **Audio** y el artículo tiene su MP3, el feed lo adjunta: la misma dirección funciona como podcast en Apple Podcasts, Pocket Casts o cualquier app que acepte un feed RSS. En **Ajustes → Marca y SEO → Feed RSS** puedes apagarlo, decidir cuántos artículos lleva y si va el texto completo o solo el resumen.
+
+### 9. Cuando cambies una URL
 
 Crea una redirección 301 de la vieja a la nueva. Sin ella, pierdes lo que la página había ganado y los enlaces externos quedan rotos.
 

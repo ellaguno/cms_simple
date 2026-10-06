@@ -287,6 +287,7 @@ if (!function_exists('au_settings')) {
         $o = au_settings();
         if ($o['player'] === 'none' || empty($ctx['item']) || !au_type_ok((string) ($ctx['type'] ?? ''))) return $html;
         if (function_exists('cms_is_demo') && cms_is_demo()) return $html;
+        if (($ctx['page']['route'] ?? '') === 'feed') return $html;   // en el feed RSS el audio va como <enclosure>, no como reproductor dentro del texto
         static $done = false;
         if ($done) return $html;
         $lang = (string) ($ctx['lang'] ?? cms_default_lang());
@@ -313,6 +314,19 @@ if (!function_exists('au_settings')) {
         $raw = !empty($cur['item']) ? au_raw_item((string) $cur['type'], (string) ($cur['item']['slug'] ?? '')) : null;
         if (!$raw || au_path($raw, (string) $cur['lang']) === '') return;
         echo '<style>' . au_css() . '</style>' . "\n";
+    });
+
+    // feed RSS (1.39): el MP3 del idioma del feed como <enclosure>, para que los lectores y las apps de podcast lo reproduzcan
+    cms_on('feed.item', function (array $fi, string $type, array $item, string $lang): array {
+        if (!au_type_ok($type) || !empty($fi['enclosure'])) return $fi;
+        $raw = au_raw_item($type, (string) ($item['slug'] ?? ''));
+        $path = $raw ? au_path($raw, $lang) : '';
+        if ($path === '') return $fi;
+        $abs = cms_local_path($path);
+        $len = $abs && is_file($abs) ? (int) filesize($abs) : 0;
+        if ($abs !== null && $len === 0) return $fi;   // ruta local que no existe: nada que adjuntar
+        $fi['enclosure'] = ['url' => cms_abs_url(cms_img($path)), 'length' => $len, 'type' => 'audio/mpeg'];
+        return $fi;
     });
 
     // generación automática al publicar (opcional)

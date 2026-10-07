@@ -479,21 +479,73 @@ if (!function_exists('lms_settings')) {
     function lms_csrf_field(): string { return '<input type="hidden" name="_lms" value="' . cms_e(lms_csrf()) . '">'; }
     function lms_csrf_ok(): bool { return is_string($_POST['_lms'] ?? null) && hash_equals(lms_csrf(), (string) $_POST['_lms']); }
 
-    /* intentos de acceso, por IP */
-    function lms_throttle_wait(): int
+    /*
+     * Intentos fallidos de entrar (data/lms/attempts.json). Dos contadores con 15 minutos de espera:
+     *   p:<ip+correo>  5 fallos bloquean ese correo desde esa IP (en una oficina con una sola IP, el que se equivoca no
+     *                  deja fuera a sus compañeros; y nadie puede bloquear la cuenta de otro desde fuera)
+     *   i:<ip>         30 fallos bloquean la IP (quien prueba muchos correos)
+     * El panel (Aula → Alumnos y avance) muestra los bloqueos y los quita; cambiar la contraseña también los quita.
+     */
+    if (!defined('LMS_TRIES_ACCOUNT')) define('LMS_TRIES_ACCOUNT', 5);
+    if (!defined('LMS_TRIES_IP')) define('LMS_TRIES_IP', 30);
+
+    function lms_attempts_file(): string { return lms_dir() . '/attempts.json'; }
+
+    function lms_attempts(): array
     {
-        $e = cms_json_read(lms_dir() . '/attempts.json', [])[md5((string) ($_SERVER['REMOTE_ADDR'] ?? ''))] ?? null;
-        return $e && ($e['n'] ?? 0) >= 5 && time() < ($e['until'] ?? 0) ? (int) $e['until'] - time() : 0;
+        $a = cms_json_read(lms_attempts_file(), []);
+        foreach ($a as $k => $e) if (!is_array($e) || ($e['until'] ?? 0) < time() || strpos((string) $k, ':') === false) unset($a[$k]);   // vencidos y del formato anterior (solo IP)
+        return $a;
     }
-    function lms_throttle_record(bool $ok): void
+
+    function lms_throttle_keys(string $email): array
     {
-        $f = lms_dir() . '/attempts.json';
-        $a = cms_json_read($f, []);
-        foreach ($a as $k => $e) if (($e['until'] ?? 0) < time() - 3600) unset($a[$k]);
-        $ip = md5((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
-        if ($ok) unset($a[$ip]);
-        else $a[$ip] = ['n' => (int) ($a[$ip]['n'] ?? 0) + 1, 'until' => time() + 15 * 60];
-        cms_json_write($f, $a);
+        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        return ['p:' . md5($ip . '|' . lms_email_norm($email)), 'i:' . md5($ip)];
+    }
+
+    /** Segundos que faltan para poder volver a intentar con este correo desde esta IP (0 = puede). */
+    function lms_throttle_wait(string $email = ''): int
+    {
+        [$pk, $ik] = lms_throttle_keys($email);
+        $a = lms_attempts();
+        $w = 0;
+        if (($a[$pk]['n'] ?? 0) >= LMS_TRIES_ACCOUNT) $w = max($w, (int) $a[$pk]['until'] - time());
+        if (($a[$ik]['n'] ?? 0) >= LMS_TRIES_IP) $w = max($w, (int) $a[$ik]['until'] - time());
+        return $w;
+    }
+
+    function lms_throttle_record(bool $ok, string $email = ''): void
+    {
+        [$pk, $ik] = lms_throttle_keys($email);
+        $a = lms_attempts();
+        if ($ok) unset($a[$pk]);
+        else {
+            $a[$pk] = ['n' => (int) ($a[$pk]['n'] ?? 0) + 1, 'until' => time() + 15 * 60, 'email' => lms_email_norm($email)];
+            $a[$ik] = ['n' => (int) ($a[$ik]['n'] ?? 0) + 1, 'until' => time() + 15 * 60];
+        }
+        cms_json_write(lms_attempts_file(), $a);
+    }
+
+    /** Bloqueos vigentes para el panel: [['email' => …|'' (IP), 'mins' => n], …]. */
+    function lms_blocks(): array
+    {
+        $out = [];
+        foreach (lms_attempts() as $k => $e) {
+            $lim = strpos((string) $k, 'p:') === 0 ? LMS_TRIES_ACCOUNT : LMS_TRIES_IP;
+            if (($e['n'] ?? 0) >= $lim) $out[] = ['email' => (string) ($e['email'] ?? ''), 'mins' => (int) ceil(((int) $e['until'] - time()) / 60)];
+        }
+        return $out;
+    }
+
+    /** Quita los bloqueos de un correo, o todos si $email es ''. */
+    function lms_unblock(string $email = ''): bool
+    {
+        if ($email === '') return !is_file(lms_attempts_file()) || @unlink(lms_attempts_file());
+        $email = lms_email_norm($email);
+        $a = lms_attempts();
+        foreach ($a as $k => $e) if (($e['email'] ?? '') === $email) unset($a[$k]);
+        return cms_json_write(lms_attempts_file(), $a);
     }
 
     /* ================================================================== URL y utilidades de vista */
@@ -870,16 +922,17 @@ if (!function_exists('lms_settings')) {
                 if ($user) lms_redirect($back);
                 if ($post) {
                     if (!lms_csrf_ok()) { $err = lms_tx('err_csrf'); break; }
-                    if (($w = lms_throttle_wait()) > 0) { $err = lms_tx('err_blocked', (int) ceil($w / 60)); break; }
-                    $u = lms_user_by_email((string) ($_POST['email'] ?? ''));
+                    $em = (string) ($_POST['email'] ?? '');
+                    if (($w = lms_throttle_wait($em)) > 0) { $err = lms_tx('err_blocked', (int) ceil($w / 60)); break; }
+                    $u = lms_user_by_email($em);
                     $pass = (string) ($_POST['password'] ?? '');
                     if ($u && !empty($u['active']) && password_verify($pass, (string) $u['hash'])) {
-                        lms_throttle_record(true);
+                        lms_throttle_record(true, $em);
                         if (password_needs_rehash((string) $u['hash'], PASSWORD_DEFAULT)) { lms_user_update($u['id'], ['pass' => $pass]); $u = lms_user_get($u['id']) ?? $u; }
                         lms_login($u, !empty($_POST['remember']));
                         lms_redirect($back);
                     }
-                    lms_throttle_record(false);
+                    lms_throttle_record(false, $em);
                     $err = lms_tx('err_login');
                 }
                 break;
@@ -894,9 +947,9 @@ if (!function_exists('lms_settings')) {
                     if (!empty($_POST['website'])) lms_redirect(lms_url('', $lang));   // trampa para robots
                     if ($code !== '' && !hash_equals(mb_strtolower($code), mb_strtolower(trim((string) ($_POST['code'] ?? ''))))) { $err = lms_tx('err_code'); break; }
                     if ($pass !== (string) ($_POST['password2'] ?? '')) { $err = lms_tx('err_repeat'); break; }
-                    if (($w = lms_throttle_wait()) > 0) { $err = lms_tx('err_blocked', (int) ceil($w / 60)); break; }
+                    if (($w = lms_throttle_wait((string) ($_POST['email'] ?? ''))) > 0) { $err = lms_tx('err_blocked', (int) ceil($w / 60)); break; }
                     [$ok, $r] = lms_user_create((string) ($_POST['name'] ?? ''), (string) ($_POST['email'] ?? ''), $pass, 'registro propio');
-                    if (!$ok) { if ($r === 'err_exists') lms_throttle_record(false); $err = lms_tx($r); break; }
+                    if (!$ok) { if ($r === 'err_exists') lms_throttle_record(false, (string) ($_POST['email'] ?? '')); $err = lms_tx($r); break; }
                     $u = lms_user_get($r);
                     if (lms_settings()['notify_to'] !== '') lms_mail(lms_settings()['notify_to'], 'Alumno nuevo en el aula: ' . $u['name'], "Se registró un alumno nuevo:\n\n" . $u['name'] . "\n" . $u['email'] . "\n\nPanel: " . cms_origin() . CMS_BASE . '/admin/?p=pack:' . basename(__DIR__) . '&id=' . $u['id'] . "\n");
                     lms_login($u, false);

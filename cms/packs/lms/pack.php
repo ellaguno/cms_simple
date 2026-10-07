@@ -11,7 +11,7 @@ $lmsS = function_exists('cms_settings') ? cms_settings() : [];
 $lmsRoute = cms_slugify((string) ($lmsS['lms_courses_route'] ?? '')) ?: 'cursos';
 return [
     'label' => 'Aula: cursos en línea (LMS)',
-    'version' => '1.1.0',
+    'version' => '1.1.1',
     'desc' => 'Cursos con lecciones, alumnos con cuenta propia, inscripciones y avance por lección. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada y siguen con la siguiente. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance de cada alumno y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos. Preparado para exámenes y calificaciones en una versión siguiente.',
     'assets' => [],
     'effects' => [],

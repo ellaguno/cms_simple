@@ -27,9 +27,12 @@ foreach (cms_config('pages') as $pk => $pd) if (($pd['schema'] ?? '') === 'Conta
     <p class="lms-tags">
       <?php if (($lv = (string) cms_f($item, 'level', $lang)) !== ''): ?><span class="tag tag-steel"><?= cms_e($lv) ?></span><?php endif; ?>
       <?php if (($du = (string) cms_f($item, 'duration', $lang)) !== ''): ?><span class="tag tag-steel"><?= cms_e($du) ?></span><?php endif; ?>
+      <?php if (!empty($item['soon'])): ?><span class="tag tag-warn"><?= cms_e(lms_tx('soon')) ?></span><?php endif; ?>
       <span class="tag tag-steel"><?= cms_e(count($lessons) === 1 ? lms_tx('lesson_1') : lms_tx('lessons_n', count($lessons))) ?></span>
       <?php if ($st['completed'] !== ''): ?><span class="tag tag-ok"><?= cms_e(lms_tx('completed')) ?></span><?php endif; ?>
     </p>
+    <?php if (($au = (string) cms_f($item, 'audience', $lang)) !== ''): ?><p class="lms-for"><strong><?= cms_e(lms_tx('for')) ?></strong> <?= cms_e($au) ?></p><?php endif; ?>
+    <?php if ($topics = array_filter((array) cms_f($item, 'topics', $lang, []))): ?><p class="lms-topics"><?php foreach ($topics as $tp): ?><span><?= cms_e((string) $tp) ?></span><?php endforeach; ?></p><?php endif; ?>
 <?php if ($user && $st['started'] && $st['total'] > 0): ?>
     <div class="lms-progress"><?= lms_bar($st['pct'], lms_tx('progress', $st['done'], $st['total'], $st['pct'])) ?><small><?= cms_e(lms_tx('progress', $st['done'], $st['total'], $st['pct'])) ?></small></div>
 <?php endif; ?>
@@ -41,11 +44,12 @@ foreach (cms_config('pages') as $pk => $pd) if (($pd['schema'] ?? '') === 'Conta
 <?php elseif ($first && !$user): ?>
       <a class="btn" href="<?= cms_e(lms_url('entrar', null, ['r' => lms_here()])) ?>"><?= cms_e(lms_tx('login_to_start')) ?> <?= lms_icon('arrow') ?></a>
       <?php if (lms_settings()['signup'] && $access !== 'inscritos'): ?><a class="btn btn-ghost" href="<?= cms_e(lms_url('registro')) ?>"><?= cms_e(lms_tx('signup')) ?></a><?php endif; ?>
-<?php elseif ($first): ?>
+<?php elseif ($first && empty($item['soon'])): ?>
       <a class="btn btn-ghost" href="<?= cms_e($S_contact) ?>"><?= cms_e(lms_tx('ask_enroll')) ?></a>
 <?php endif; ?>
     </div>
-    <?php if ($first && !$canTake && $access === 'inscritos'): ?><p class="note lms-note"><?= cms_e(lms_tx('only_enrolled')) ?></p><?php endif; ?>
+    <?php if (!empty($item['soon'])): ?><p class="note lms-note"><?= cms_e(lms_tx('soon_text')) ?></p><?php endif; ?>
+    <?php if ($first && !$canTake && $access === 'inscritos' && empty($item['soon'])): ?><p class="note lms-note"><?= cms_e(lms_tx('only_enrolled')) ?></p><?php endif; ?>
     <?php if ($st['completed'] !== ''): ?><p class="note lms-note"><?= cms_e(lms_tx('completed_on', lms_date($st['completed']))) ?></p><?php endif; ?>
     <?php if ($staff): ?><p class="note lms-note"><?= cms_e(lms_tx('staff_view')) ?></p><?php endif; ?>
   </div>

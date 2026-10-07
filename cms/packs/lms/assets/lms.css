@@ -35,6 +35,17 @@
 .lms-card-img img,.lms-card-img picture{display:block;width:100%;height:100%;object-fit:cover}
 .lms-card p{color:var(--lms-text);font-size:.94rem}
 
+/* tapa de color (curso sin imagen), temas y "Para" */
+.lms-tapa{display:flex!important;align-items:flex-end;padding:1.1rem 1.3rem;background:radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--lms-c) 55%,transparent),transparent 60%),linear-gradient(160deg,color-mix(in srgb,var(--lms-c) 22%,var(--bg-1,#0b1017)),var(--bg-1,#0b1017));aspect-ratio:16/7!important}
+.lms-tapa span{font-family:var(--display,inherit);font-size:1.5rem;font-weight:400;color:#fff;line-height:1.1}
+.lms-card.is-soon{opacity:.72}
+.lms-card.is-soon .card-more{color:var(--lms-muted)}
+.lms-topics{display:flex;flex-wrap:wrap;gap:.35rem;margin:.3rem 0 0}
+.lms-topics span{font-size:.76rem;padding:.2rem .55rem;border-radius:99px;border:1px solid var(--lms-line);color:var(--lms-text)}
+.lms-for{font-size:.86rem;color:var(--lms-muted);margin:.5rem 0 0}
+.lms-for strong{color:var(--lms-text);font-weight:600}
+.lms-card .lms-for{display:block}
+
 /* página del curso y de la lección: contenido + temario */
 .lms-course{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:clamp(1.6rem,4vw,3.2rem);align-items:start}
 .lms-course-side{position:sticky;top:calc(var(--hdr-h,72px) + 1rem)}

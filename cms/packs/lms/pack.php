@@ -6,6 +6,9 @@
  * Las vistas públicas usan site_header()/site_footer() del tema y sus clases (.phead, .sec, .card, .btn…), así que
  * toman el aspecto del sitio; el tema puede dar sus propias plantillas cursos.php, curso.php y leccion.php.
  */
+// dirección del listado de cursos (Ajustes → Aula); el manifiesto se lee después de cargar los ajustes
+$lmsS = function_exists('cms_settings') ? cms_settings() : [];
+$lmsRoute = cms_slugify((string) ($lmsS['lms_courses_route'] ?? '')) ?: 'cursos';
 return [
     'label' => 'Aula: cursos en línea (LMS)',
     'version' => '1.0.0',
@@ -18,7 +21,7 @@ return [
     'types' => [
         'cursos' => [
             'label' => 'Cursos', 'label_singular' => 'Curso', 'group' => 'Aula',
-            'routes' => ['es' => 'cursos', 'en' => 'courses'],
+            'routes' => ['es' => $lmsRoute, 'en' => $lmsRoute === 'cursos' ? 'courses' : $lmsRoute],
             'template_list' => 'cursos', 'template_single' => 'curso',
             'schema' => 'Course', 'feed' => false,
             'sort' => ['field' => 'order', 'dir' => 'asc'], 'list' => ['access', 'order'],
@@ -30,6 +33,8 @@ return [
                 'body'     => ['type' => 'html', 'label' => 'Descripción', 'i18n' => true,
                                'help' => 'A quién va dirigido, requisitos, temario general. Se ve en la página del curso, antes de inscribirse.'],
                 'goals'    => ['type' => 'lines', 'label' => 'Lo que se aprende (uno por línea)', 'i18n' => true, 'rows' => 5],
+                'topics'   => ['type' => 'tags', 'label' => 'Temas (etiquetas en la tarjeta del curso)', 'i18n' => true],
+                'audience' => ['type' => 'text', 'label' => 'Para quién', 'i18n' => true, 'placeholder' => 'Técnico · Funcional · Ventas'],
                 'image'    => ['type' => 'image', 'label' => 'Imagen', 'sidebar' => true],
                 'access'   => ['type' => 'select', 'label' => 'Acceso a las lecciones', 'sidebar' => true,
                                'options' => ['' => 'El de Ajustes → Aula', 'abierto' => 'Abierto: cualquiera las ve', 'cuenta' => 'Con cuenta: cualquier alumno que entre', 'inscritos' => 'Solo inscritos por el administrador'],
@@ -37,6 +42,8 @@ return [
                 'level'    => ['type' => 'text', 'label' => 'Nivel', 'i18n' => true, 'sidebar' => true, 'placeholder' => 'Básico, Intermedio…'],
                 'duration' => ['type' => 'text', 'label' => 'Duración', 'i18n' => true, 'sidebar' => true, 'placeholder' => '6 horas'],
                 'order'    => ['type' => 'number', 'label' => 'Orden en el listado', 'sidebar' => true],
+                'soon'     => ['type' => 'checkbox', 'label' => 'Próximamente', 'text' => 'Se anuncia en el listado, pero aún no se puede abrir', 'sidebar' => true],
+                'color'    => ['type' => 'color', 'label' => 'Color de la tarjeta (sin imagen)', 'sidebar' => true],
             ],
         ],
         'lecciones' => [
@@ -48,8 +55,9 @@ return [
             'help' => 'Cada lección pertenece a un curso y se ordena con "Orden". "Módulo" agrupa lecciones en el temario (Módulo 1, Módulo 2…).',
             'fields' => [
                 'title'    => ['type' => 'text', 'label' => 'Título de la lección', 'i18n' => true, 'required' => true],
-                'video'    => ['type' => 'text', 'label' => 'Video (opcional)', 'placeholder' => 'https://youtu.be/…, https://vimeo.com/…, o uploads/2026/10/clase.mp4',
-                               'help' => 'YouTube, Vimeo o un MP4/WebM de Medios. Se pone arriba del texto.'],
+                'summary'  => ['type' => 'textarea', 'label' => 'De qué trata (se ve bajo el título)', 'i18n' => true, 'rows' => 2],
+                'video'    => ['type' => 'text', 'label' => 'Video (opcional)', 'placeholder' => 'https://youtu.be/…, capacitacion/arbitraje/videos/01.mp4, uploads/2026/10/clase.mp4',
+                               'help' => 'YouTube, Vimeo o un MP4/WebM: de Medios o de una carpeta de Archivos y carpetas. Los de una carpeta propia quedan protegidos: solo los ve quien tiene acceso a la lección (Ajustes → Aula).'],
                 'body'     => ['type' => 'html', 'label' => 'Contenido', 'i18n' => true, 'size' => 'lg'],
                 'files'    => ['type' => 'lines', 'label' => 'Materiales para descargar (uno por línea: "Texto | ruta o URL")', 'rows' => 4,
                                'placeholder' => "Presentación | uploads/2026/10/presentacion.pdf\nEjercicio | uploads/2026/10/ejercicio.xlsx"],
@@ -57,6 +65,8 @@ return [
                 'module'   => ['type' => 'text', 'label' => 'Módulo', 'i18n' => true, 'sidebar' => true, 'placeholder' => 'Módulo 1: Fundamentos'],
                 'order'    => ['type' => 'number', 'label' => 'Orden dentro del curso', 'sidebar' => true],
                 'duration' => ['type' => 'text', 'label' => 'Duración', 'sidebar' => true, 'placeholder' => '12 min'],
+                'audience' => ['type' => 'text', 'label' => 'Para quién', 'i18n' => true, 'sidebar' => true, 'placeholder' => 'Todos'],
+                'poster'   => ['type' => 'image', 'label' => 'Portada del video', 'sidebar' => true],
                 'preview'  => ['type' => 'checkbox', 'label' => 'Lección de muestra', 'text' => 'Visible para todos, sin cuenta ni inscripción', 'sidebar' => true],
             ],
         ],
@@ -70,6 +80,10 @@ return [
                                'help' => 'Si lo pones, solo se registra quien lo conozca (útil para un grupo o un cliente).'],
         'lms_route'        => ['type' => 'text', 'label' => 'Dirección del aula', 'default' => 'aula', 'placeholder' => 'aula', 'half' => true,
                                'help' => 'Las páginas del alumno quedan en /aula, /aula/entrar, /aula/cuenta… Añade "/aula" al Menú para que se vea.'],
+        'lms_courses_route' => ['type' => 'text', 'label' => 'Dirección del listado de cursos', 'default' => 'cursos', 'placeholder' => 'cursos', 'half' => true,
+                               'help' => 'Los cursos quedan en /cursos/<curso>. No uses el nombre de una carpeta de Archivos y carpetas (p. ej. capacitacion): esa carpeta se sirve antes que el aula.'],
+        'lms_protect'      => ['type' => 'checkbox', 'label' => 'Videos protegidos', 'default' => true,
+                               'text' => 'Los videos y materiales que estén en una carpeta propia (Archivos y carpetas) se sirven solo a quien puede ver la lección: el aula le pone a esa carpeta un .htaccess que corta el acceso directo'],
         'lms_notify_to'    => ['type' => 'email', 'label' => 'Avisar de cada registro nuevo a (opcional)', 'half' => true],
         'lms_course_type'  => ['type' => 'text', 'label' => 'Colección de cursos', 'default' => 'cursos', 'placeholder' => 'cursos', 'half' => true,
                                'help' => 'Solo si el tema trae su propia colección de cursos con otra clave.'],

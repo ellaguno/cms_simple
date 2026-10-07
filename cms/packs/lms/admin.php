@@ -6,8 +6,10 @@
  *   &tab=cursos         cursos: lecciones, inscritos, terminados y avance promedio
  *   &course=<curso>     un curso: cada alumno con su avance, inscribir por lista de correos
  *   &csv=alumnos|<curso>  exportación CSV (UTF-8 con BOM, para Excel)
+ *   &tab=importar[&dir=<carpeta>]  importar un curso hecho a mano en Archivos y carpetas (import.php)
  */
 declare(strict_types=1);
+require_once __DIR__ . '/import.php';
 $self = 'pack:' . $pack['name'];
 $url = fn(array $q = []) => admin_url($self, $q);
 $lang = cms_default_lang();
@@ -79,6 +81,11 @@ if (admin_is_post()) {
         return lms_mail((string) $u['email'], "Tu acceso al aula de $site", $body);
     };
 
+    if ($action === 'import') {
+        [$ok, $msgs] = lms_import_run(admin_post('dir'), ['publish' => !empty($_POST['publish']), 'soon' => !empty($_POST['soon']), 'redirect' => !empty($_POST['redirect'])]);
+        admin_flash(implode(' ', $msgs), $ok ? 'ok' : 'err');
+        admin_redirect($ok ? $url(['tab' => 'cursos']) : $url(['tab' => 'importar', 'dir' => admin_post('dir')]));
+    }
     if ($action === 'add') {
         $pass = (string) ($_POST['pass'] ?? '');
         if ($pass === '') $pass = lms_password_gen();
@@ -135,7 +142,7 @@ if (admin_is_post()) {
 // ------------------------------------------------------------------ vistas
 $id = preg_replace('/[^a-f0-9]/', '', (string) ($_GET['id'] ?? ''));
 $course = cms_slugify((string) ($_GET['course'] ?? ''));
-$tab = $course !== '' ? 'cursos' : ((string) ($_GET['tab'] ?? '') === 'cursos' ? 'cursos' : 'alumnos');
+$tab = $course !== '' ? 'cursos' : (in_array((string) ($_GET['tab'] ?? ''), ['cursos', 'importar'], true) ? (string) $_GET['tab'] : 'alumnos');
 $stats = $allStats();
 $accessLabel = ['abierto' => 'Abierto', 'cuenta' => 'Con cuenta', 'inscritos' => 'Solo inscritos'];
 $pill = fn(array $s) => $s['completed'] !== '' ? '<span class="ad-pill on">Terminado</span>' : ($s['done'] > 0 ? '<span class="ad-pill warn">' . $s['pct'] . ' %</span>' : '<span class="ad-pill">Sin empezar</span>');
@@ -148,6 +155,7 @@ admin_header('Aula: alumnos y avance', $self);
   <nav class="ad-tabs" style="border:0;margin:0;padding:0">
     <a href="<?= cms_e($url()) ?>"<?= $tab === 'alumnos' && $id === '' ? ' style="background:#000;color:#fff"' : '' ?>>Alumnos (<?= count($users) ?>)</a>
     <a href="<?= cms_e($url(['tab' => 'cursos'])) ?>"<?= $tab === 'cursos' ? ' style="background:#000;color:#fff"' : '' ?>>Cursos (<?= count($courses) ?>)</a>
+    <a href="<?= cms_e($url(['tab' => 'importar'])) ?>"<?= $tab === 'importar' ? ' style="background:#000;color:#fff"' : '' ?>>Importar</a>
   </nav>
   <p class="ad-help" style="margin:0">Público: <a href="<?= cms_e(lms_url('', $lang)) ?>" target="_blank" rel="noopener"><?= cms_e(lms_url('', $lang)) ?></a> · <a href="<?= cms_e(cms_url('list:' . $ct, $lang)) ?>" target="_blank" rel="noopener"><?= cms_e(cms_url('list:' . $ct, $lang)) ?></a> · <a href="<?= admin_url('settings') ?>">Ajustes del aula</a></p>
 </div>
@@ -263,6 +271,57 @@ admin_header('Aula: alumnos y avance', $self);
     <p><button class="ad-btn" type="submit">Inscribir</button></p>
   </form>
 </section>
+
+<?php elseif ($tab === 'importar'): /* ============================== importar de Archivos y carpetas */
+    $cands = lms_import_candidates();
+    $dir = trim((string) ($_GET['dir'] ?? ''), '/');
+    $plan = $dir !== '' ? lms_import_plan($dir) : null; ?>
+<section class="ad-box">
+  <h2>Importar un curso hecho a mano</h2>
+  <p class="ad-help">Para los cursos subidos como carpetas en <a href="<?= admin_url('archivos') ?>">Archivos y carpetas</a> (un <code>index.html</code> con la lista <code>MODULOS</code> de videos, como <code>/capacitacion/arbitraje/</code>). Se crea el curso con una lección por video; los videos se quedan donde están<?= lms_settings()['protect'] ? ' y su carpeta queda protegida: solo se ven desde el aula, a quien tenga acceso' : '' ?>. Los datos de la tarjeta (temas, para quién, color, duración) se toman del catálogo de la carpeta de arriba si lo hay.</p>
+<?php if (!$cands): ?>
+  <p class="ad-help">No encontré carpetas con cursos de ese formato.</p>
+<?php else: ?>
+  <table class="ad-table">
+    <thead><tr><th>Carpeta</th><th>Título</th><th></th></tr></thead>
+    <tbody>
+<?php foreach ($cands as $rel => $h1): ?>
+      <tr><td><code>/<?= cms_e($rel) ?>/</code></td><td><?= cms_e($h1) ?></td><td class="ad-row-actions"><a class="ad-btn ad-btn-sm<?= $rel === $dir ? '' : ' ad-btn-light' ?>" href="<?= cms_e($url(['tab' => 'importar', 'dir' => $rel])) ?>">Revisar</a></td></tr>
+<?php endforeach; ?>
+    </tbody>
+  </table>
+<?php endif; ?>
+</section>
+<?php if ($plan && isset($plan['error'])): ?>
+<p class="ad-flash err"><?= cms_e($plan['error']) ?></p>
+<?php elseif ($plan): $pc = $plan['course']; $dl = cms_default_lang(); $exists = (bool) cms_item($ct, $pc['slug'], false); ?>
+<section class="ad-box">
+  <h2><?= cms_e($pc['title'][$dl]) ?> <span class="ad-pill"><?= count($plan['lessons']) ?> lecciones</span><?= $exists ? ' <span class="ad-pill warn">ya existe</span>' : '' ?></h2>
+  <p class="ad-help">Quedará en <code><?= cms_e(cms_url('item:' . $ct, $dl, $pc['slug'])) ?></code> · <?= cms_e($pc['duration'][$dl] ?: 'sin duración') ?><?= $pc['audience'][$dl] !== '' ? ' · Para: ' . cms_e($pc['audience'][$dl]) : '' ?><?= $pc['topics'][$dl] ? ' · Temas: ' . cms_e(implode(', ', $pc['topics'][$dl])) : '' ?></p>
+  <p><?= cms_e($pc['excerpt'][$dl]) ?></p>
+  <table class="ad-table">
+    <thead><tr><th>#</th><th>Lección</th><th>Duración</th><th>Para</th><th>Video</th></tr></thead>
+    <tbody>
+<?php foreach ($plan['lessons'] as $l): ?>
+      <tr><td><?= (int) $l['order'] ?></td><td><strong><?= cms_e($l['title'][$dl]) ?></strong><small class="ad-help"><?= cms_e($l['summary'][$dl]) ?></small></td><td><?= cms_e($l['duration']) ?></td><td><?= cms_e($l['audience'][$dl]) ?></td><td><code><?= cms_e($l['video']) ?></code><?= $l['poster'] !== '' ? ' + portada' : '' ?></td></tr>
+<?php endforeach; ?>
+    </tbody>
+  </table>
+<?php foreach ($plan['warn'] as $w): ?>  <p class="ad-flash err"><?= cms_e($w) ?></p>
+<?php endforeach; ?>
+<?php if (!$exists): ?>
+  <form method="post" class="ad-form" style="margin-top:14px">
+    <?= admin_csrf_field() ?><input type="hidden" name="action" value="import"><input type="hidden" name="dir" value="<?= cms_e($plan['rel']) ?>">
+    <label class="ad-check"><input type="checkbox" name="publish" value="1"> Publicar el curso ya (si no, queda en borrador para revisarlo; en borrador solo lo ves tú desde el panel)</label>
+<?php if ($plan['soon']): ?>
+    <label class="ad-check"><input type="checkbox" name="soon" value="1" checked> Crear también como «Próximamente» los cursos en preparación del catálogo: <?= cms_e(implode(', ', array_map(fn($x) => (string) ($x['titulo'] ?? $x['clave']), $plan['soon']))) ?></label>
+<?php endif; ?>
+    <label class="ad-check"><input type="checkbox" name="redirect" value="1"> Cambiar las páginas viejas (<code>/<?= cms_e($plan['rel']) ?>/</code><?= $plan['catalog'] !== '' ? ' y <code>/' . cms_e($plan['catalog']) . '/</code>' : '' ?>) por una redirección al aula. Se guarda una copia en data/backups/lms-import/.</label>
+    <p><button class="ad-btn" type="submit">Importar curso</button></p>
+  </form>
+<?php endif; ?>
+</section>
+<?php endif; ?>
 
 <?php elseif ($tab === 'cursos'): /* ============================== cursos */ ?>
 <section class="ad-box">

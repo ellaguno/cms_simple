@@ -29,6 +29,8 @@ $listTitle = $t($ct . '_title', lms_tx('courses'));
     <nav class="crumbs" aria-label="Ruta"><a href="<?= cms_e(cms_url('list:' . $ct, $lang)) ?>"><?= cms_e($listTitle) ?></a><span>/</span><a href="<?= cms_e($courseUrl) ?>"><?= cms_e($courseTitle) ?></a><?php if ($module !== ''): ?><span>/</span><span><?= cms_e($module) ?></span><?php endif; ?></nav>
     <?php if ($pos): ?><p class="kicker lms-kicker"><?= cms_e(lms_tx('lesson', $pos, count($lessons))) ?><?php if (($du = (string) ($item['duration'] ?? '')) !== ''): ?> · <?= cms_e($du) ?><?php endif; ?></p><?php endif; ?>
     <h1 class="lms-lesson-title"><?= cms_e($title) ?><?php if ($done): ?> <span class="tag tag-ok"><?= cms_e(lms_tx('done')) ?></span><?php endif; ?></h1>
+    <?php if (($sm = (string) cms_f($item, 'summary', $lang)) !== ''): ?><p class="lead"><?= cms_e($sm) ?></p><?php endif; ?>
+    <?php if (($au = (string) cms_f($item, 'audience', $lang)) !== ''): ?><p class="lms-for"><strong><?= cms_e(lms_tx('for')) ?></strong> <?= cms_e($au) ?></p><?php endif; ?>
     <?php if ($staff): ?><p class="note lms-note"><?= cms_e(lms_tx('staff_view')) ?></p><?php endif; ?>
   </div>
 </section>
@@ -52,7 +54,7 @@ $listTitle = $t($ct . '_title', lms_tx('courses'));
 <?php endif; ?>
         </div>
 <?php else: ?>
-        <?= lms_video((string) ($item['video'] ?? ''), $title) ?>
+        <?= lms_video($item, $title) ?>
         <div class="rte lms-body"><?= cms_content((string) cms_f($item, 'body', $lang)) ?></div>
 <?php if ($files = lms_files($item)): ?>
         <div class="lms-files">

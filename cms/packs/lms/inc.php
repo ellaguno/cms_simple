@@ -34,6 +34,7 @@ if (!function_exists('lms_settings')) {
             'signup'       => !empty($S['lms_signup']),
             'signup_code'  => $g('lms_signup_code', ''),
             'route'        => cms_slugify($g('lms_route', 'aula')) ?: 'aula',
+            'protect'      => !isset($S['lms_protect']) || !empty($S['lms_protect']),
             'notify_to'    => filter_var($g('lms_notify_to', ''), FILTER_VALIDATE_EMAIL) ? $g('lms_notify_to', '') : '',
             'course_type'  => preg_replace('/[^a-z0-9_-]/i', '', $g('lms_course_type', 'cursos')) ?: 'cursos',
             'lesson_type'  => preg_replace('/[^a-z0-9_-]/i', '', $g('lms_lesson_type', 'lecciones')) ?: 'lecciones',
@@ -92,6 +93,9 @@ if (!function_exists('lms_settings')) {
             'ask_enroll'     => ['es' => 'Pide acceso', 'en' => 'Request access'],
             'contents'       => ['es' => 'Contenido del curso', 'en' => 'Course content'],
             'you_learn'      => ['es' => 'Lo que vas a aprender', 'en' => 'What you will learn'],
+            'for'            => ['es' => 'Para:', 'en' => 'For:'],
+            'soon'           => ['es' => 'Próximamente', 'en' => 'Coming soon'],
+            'soon_text'      => ['es' => 'Este curso está en preparación.', 'en' => 'This course is in preparation.'],
             'sample'         => ['es' => 'Muestra', 'en' => 'Preview'],
             'level'          => ['es' => 'Nivel', 'en' => 'Level'],
             'duration'       => ['es' => 'Duración', 'en' => 'Duration'],
@@ -319,7 +323,9 @@ if (!function_exists('lms_settings')) {
     /** ¿Quien está viendo puede abrir esta lección? */
     function lms_can_view(array $course, array $lesson): bool
     {
-        if (!empty($lesson['preview']) || lms_staff()) return true;
+        if (lms_staff()) return true;
+        if (!empty($course['soon'])) return false;   // "Próximamente": se anuncia, no se abre
+        if (!empty($lesson['preview'])) return true;
         $a = lms_course_access($course);
         if ($a === 'abierto') return true;
         $u = lms_user();
@@ -512,10 +518,102 @@ if (!function_exists('lms_settings')) {
         return '<svg class="lms-ico lms-ico-' . $k . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $p . '</svg>';
     }
 
-    /** Reproductor para el campo video: YouTube, Vimeo o un archivo de video. */
-    function lms_video(string $src, string $title = ''): string
+    /* ---- archivos de las lecciones: videos y materiales en uploads/ o en una carpeta propia (Archivos y carpetas) */
+
+    /** Carpetas raíz que no son "propias": sus archivos no se protegen ni se sirven por el aula. */
+    function lms_core_dirs(): array { return ['cms', 'site', 'themes', 'packs', 'data', 'admin', 'uploads', 'tools']; }
+
+    /** Ruta relativa limpia de un archivo local ("capacitacion/x/v.mp4", "/uploads/…" → sin barra inicial) o '' si es externo. */
+    function lms_rel(string $path): string
     {
-        $src = trim($src);
+        $path = trim($path);
+        if ($path === '' || preg_match('#^([a-z][a-z0-9+.-]*:|//)#i', $path)) return '';
+        $path = ltrim(preg_replace('#[?\#].*$#', '', $path) ?? '', '/');
+        if (CMS_BASE !== '' && strpos('/' . $path, CMS_BASE . '/') === 0) $path = substr($path, strlen(CMS_BASE));
+        $path = ltrim($path, '/');
+        return strpos($path, '..') === false && strpos($path, '\\') === false ? $path : '';
+    }
+
+    /** Archivo absoluto si la ruta es local, existe y está dentro del sitio (nunca en data/ ni cms/); si no, null. */
+    function lms_local_file(string $path): ?string
+    {
+        $rel = lms_rel($path);
+        if ($rel === '' || in_array(strtolower(explode('/', $rel)[0]), ['data', 'cms', 'admin'], true)) return null;
+        $f = realpath(CMS_ROOT . '/' . $rel);
+        $root = realpath(CMS_ROOT);
+        return $f && $root && strpos($f, $root . DIRECTORY_SEPARATOR) === 0 && is_file($f) ? $f : null;
+    }
+
+    /** ¿Este archivo va protegido? (local, en una carpeta propia, con la protección encendida). */
+    function lms_protected(string $path): bool
+    {
+        if (!lms_settings()['protect'] || !lms_local_file($path)) return false;
+        return !in_array(strtolower(explode('/', lms_rel($path))[0]), lms_core_dirs(), true);
+    }
+
+    /** URL pública de un archivo: externo tal cual, local desde la raíz del sitio, o como imagen del tema. */
+    function lms_media_url(string $path): string
+    {
+        $rel = lms_rel($path);
+        if ($rel === '') return trim($path);
+        if (is_file(CMS_ROOT . '/' . $rel)) return CMS_BASE . '/' . str_replace('%2F', '/', rawurlencode($rel));
+        return cms_img($path);
+    }
+
+    /** Corta el acceso directo a la carpeta de un archivo protegido con un .htaccess (como data/.htaccess). */
+    function lms_protect_dir(string $path): bool
+    {
+        $f = lms_local_file($path);
+        if (!$f || !lms_protected($path)) return false;
+        $ht = dirname($f) . '/.htaccess';
+        if (is_file($ht) && strpos((string) file_get_contents($ht), 'Require all denied') !== false) return true;
+        $rule = "# Aula (paquete lms): sin acceso directo; los archivos se sirven por /" . lms_settings()['route'] . "/video y /archivo a quien puede ver la lección\n"
+            . "<IfModule mod_authz_core.c>\n  Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n  Order deny,allow\n  Deny from all\n</IfModule>\n";
+        return @file_put_contents($ht, (is_file($ht) ? rtrim((string) file_get_contents($ht)) . "\n\n" : '') . $rule) !== false;
+    }
+
+    /** Envía un archivo con soporte de Range (para adelantar el video) y termina. */
+    function lms_send_file(string $file): void
+    {
+        $size = (int) filesize($file);
+        $mime = ['mp4' => 'video/mp4', 'm4v' => 'video/mp4', 'webm' => 'video/webm', 'mov' => 'video/quicktime', 'mp3' => 'audio/mpeg', 'pdf' => 'application/pdf',
+                 'vtt' => 'text/vtt', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'zip' => 'application/zip'][strtolower(pathinfo($file, PATHINFO_EXTENSION))] ?? 'application/octet-stream';
+        $start = 0; $end = $size - 1;
+        while (ob_get_level()) ob_end_clean();
+        header('Content-Type: ' . $mime);
+        header('Accept-Ranges: bytes');
+        header('Cache-Control: private, max-age=3600');
+        header('X-Content-Type-Options: nosniff');
+        if (!preg_match('#^(video|audio|image)/|pdf$#', $mime)) header('Content-Disposition: attachment; filename="' . str_replace('"', '', basename($file)) . '"');
+        if (preg_match('/^bytes=(\d*)-(\d*)$/', (string) ($_SERVER['HTTP_RANGE'] ?? ''), $m) && ($m[1] !== '' || $m[2] !== '')) {
+            if ($m[1] === '') { $start = max(0, $size - (int) $m[2]); }
+            else { $start = (int) $m[1]; if ($m[2] !== '') $end = min($end, (int) $m[2]); }
+            if ($start > $end || $start >= $size) { http_response_code(416); header('Content-Range: bytes */' . $size); exit; }
+            http_response_code(206);
+            header("Content-Range: bytes $start-$end/$size");
+        }
+        header('Content-Length: ' . ($end - $start + 1));
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'HEAD') exit;
+        @set_time_limit(0);
+        $fh = fopen($file, 'rb');
+        fseek($fh, $start);
+        $left = $end - $start + 1;
+        while ($left > 0 && !feof($fh) && !connection_aborted()) { $chunk = fread($fh, (int) min(1 << 20, $left)); echo $chunk; flush(); $left -= strlen((string) $chunk); }
+        fclose($fh);
+        exit;
+    }
+
+    /** URL del video de una lección: protegido por el aula o directo. */
+    function lms_video_url(array $lesson): string
+    {
+        $src = trim((string) ($lesson['video'] ?? ''));
+        return lms_protected($src) ? lms_url('video', null, ['l' => $lesson['slug']]) : lms_media_url($src);
+    }
+
+    /** Reproductor de una lección: YouTube, Vimeo o un archivo de video (con su portada). */
+    function lms_video(array $lesson, string $title = ''): string
+    {
+        $src = trim((string) ($lesson['video'] ?? ''));
         if ($src === '') return '';
         $t = cms_e($title);
         if (preg_match('~(?:youtube\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})~', $src, $m)) {
@@ -525,13 +623,14 @@ if (!function_exists('lms_settings')) {
             return '<div class="lms-video"><iframe src="https://player.vimeo.com/video/' . $m[1] . '?dnt=1" title="' . $t . '" loading="lazy" allow="fullscreen; picture-in-picture" allowfullscreen></iframe></div>';
         }
         if (preg_match('~\.(mp4|webm|m4v|mov)(\?.*)?$~i', $src)) {
-            return '<div class="lms-video"><video controls preload="metadata" playsinline src="' . cms_e(cms_img($src)) . '"></video></div>';
+            $poster = trim((string) ($lesson['poster'] ?? ''));
+            return '<div class="lms-video"><video controls preload="metadata" playsinline controlslist="nodownload"' . ($poster !== '' ? ' poster="' . cms_e(lms_media_url($poster)) . '"' : '') . ' src="' . cms_e(lms_video_url($lesson)) . '"></video></div>';
         }
-        return '<p><a class="btn btn-ghost" href="' . cms_e(cms_img($src)) . '" target="_blank" rel="noopener">' . lms_icon('play') . ' Video</a></p>';
+        return '<p><a class="btn btn-ghost" href="' . cms_e(lms_video_url($lesson)) . '" target="_blank" rel="noopener">' . lms_icon('play') . ' Video</a></p>';
     }
 
-    /** Materiales de una lección: [[texto, url], …] a partir de líneas "Texto | ruta" (o solo la ruta). */
-    function lms_files(array $lesson): array
+    /** Materiales de una lección: [[texto, ruta], …] a partir de líneas "Texto | ruta" (o solo la ruta). */
+    function lms_file_list(array $lesson): array
     {
         $out = [];
         foreach ((array) ($lesson['files'] ?? []) as $line) {
@@ -539,8 +638,16 @@ if (!function_exists('lms_settings')) {
             if ($line === '') continue;
             [$label, $path] = strpos($line, '|') !== false ? array_map('trim', explode('|', $line, 2)) : [basename(parse_url($line, PHP_URL_PATH) ?: $line), $line];
             if ($path === '' || preg_match('~^\s*javascript:~i', $path)) continue;
-            $out[] = [$label !== '' ? $label : $path, cms_img($path)];
+            $out[] = [$label !== '' ? $label : $path, $path];
         }
+        return $out;
+    }
+
+    /** Materiales con su URL (protegida por el aula cuando toca): [[texto, url], …]. */
+    function lms_files(array $lesson): array
+    {
+        $out = [];
+        foreach (lms_file_list($lesson) as $i => [$label, $path]) $out[] = [$label, lms_protected($path) ? lms_url('archivo', null, ['l' => $lesson['slug'], 'n' => $i]) : lms_media_url($path)];
         return $out;
     }
 
@@ -551,16 +658,24 @@ if (!function_exists('lms_settings')) {
         $n = count(lms_lessons($slug));
         $st = $user ? lms_stats($slug, $user) : null;
         $title = (string) cms_f($c, 'title', $lang);
-        $h = '<a class="card lms-card" href="' . cms_e(cms_url('item:' . lms_course_type(), $lang, $slug)) . '">';
+        $soon = !empty($c['soon']);
+        $color = preg_match('/^#[0-9a-f]{6}$/i', (string) ($c['color'] ?? '')) ? (string) $c['color'] : '';
+        $tag = $soon ? 'div' : 'a';
+        $h = '<' . $tag . ' class="card lms-card' . ($soon ? ' is-soon' : '') . '"' . ($soon ? '' : ' href="' . cms_e(cms_url('item:' . lms_course_type(), $lang, $slug)) . '"') . ($color !== '' ? ' style="--lms-c:' . $color . '"' : '') . '>';
         if (!empty($c['image'])) $h .= '<span class="lms-card-img">' . cms_picture((string) $c['image'], $title) . '</span>';
+        elseif ($color !== '') $h .= '<span class="lms-card-img lms-tapa"><span>' . cms_e($title) . '</span></span>';
         $tags = [];
         if (($lv = (string) cms_f($c, 'level', $lang)) !== '') $tags[] = '<span class="tag tag-steel">' . cms_e($lv) . '</span>';
         if (($du = (string) cms_f($c, 'duration', $lang)) !== '') $tags[] = '<span class="tag tag-steel">' . cms_e($du) . '</span>';
         $tags[] = '<span class="tag tag-steel">' . cms_e($n === 1 ? lms_tx('lesson_1') : lms_tx('lessons_n', $n)) . '</span>';
+        if ($soon) $tags = ['<span class="tag tag-warn">' . cms_e(lms_tx('soon')) . '</span>'];
         if ($st && $st['completed'] !== '') $tags[] = '<span class="tag tag-ok">' . cms_e(lms_tx('completed')) . '</span>';
         $h .= '<span class="lms-tags">' . implode(' ', $tags) . '</span>';
-        $h .= '<h3 style="font-size:1.1rem">' . cms_e($title) . '</h3>';
+        if (!empty($c['image']) || $color === '') $h .= '<h3 style="font-size:1.1rem">' . cms_e($title) . '</h3>';   // con tapa de color, el título ya va en ella
         if (($ex = (string) cms_f($c, 'excerpt', $lang)) !== '') $h .= '<p>' . cms_e($ex) . '</p>';
+        if ($topics = array_filter((array) cms_f($c, 'topics', $lang, []))) $h .= '<span class="lms-topics">' . implode('', array_map(fn($x) => '<span>' . cms_e((string) $x) . '</span>', $topics)) . '</span>';
+        if (($au = (string) cms_f($c, 'audience', $lang)) !== '') $h .= '<span class="lms-for"><strong>' . cms_e(lms_tx('for')) . '</strong> ' . cms_e($au) . '</span>';
+        if ($soon) return $h . '<span class="card-more">' . cms_e(lms_tx('soon')) . '</span></div>' . "\n";
         if ($st && $st['started'] && $st['total'] > 0) $h .= '<span class="lms-progress">' . lms_bar($st['pct']) . '<small>' . cms_e(lms_tx('progress', $st['done'], $st['total'], $st['pct'])) . '</small></span>';
         $cta = !$st || !$st['started'] ? lms_tx('start') : ($st['next'] ? lms_tx('continue') : lms_tx('review'));
         return $h . '<span class="card-more">' . cms_e($cta) . ' ' . lms_icon('arrow') . '</span></a>' . "\n";
@@ -706,6 +821,19 @@ if (!function_exists('lms_settings')) {
                 lms_redirect(CMS_BASE . cms_lang_prefix($lang) . '/');
                 break;
 
+            case 'video':     // ?l=<lección>: el video protegido, a quien puede ver la lección
+            case 'archivo':   // ?l=<lección>&n=<n>: un material protegido
+                lms_staff();
+                $lesson = cms_type(lms_lesson_type()) ? cms_item(lms_lesson_type(), cms_slugify((string) ($_GET['l'] ?? ''))) : null;
+                $course = $lesson ? lms_course(lms_lesson_course($lesson)) : null;
+                if (!$lesson && lms_staff() && cms_type(lms_lesson_type())) { $lesson = cms_item(lms_lesson_type(), cms_slugify((string) ($_GET['l'] ?? '')), false); $course = $lesson ? lms_course(lms_lesson_course($lesson), false) : null; }
+                $path = '';
+                if ($lesson) $path = $sub === 'video' ? (string) ($lesson['video'] ?? '') : (string) (lms_file_list($lesson)[(int) ($_GET['n'] ?? -1)][1] ?? '');
+                $file = $path !== '' ? lms_local_file($path) : null;
+                if (!$file || !$course || !lms_can_view($course, $lesson)) { http_response_code($file ? 403 : 404); header('Content-Type: text/plain; charset=utf-8'); echo $file ? 'Sin acceso.' : 'No encontrado.'; exit; }
+                lms_send_file($file);
+                break;
+
             case 'avance':   // POST: marcar o desmarcar una lección; vuelve a la lección o pasa a la siguiente
                 if (!$post) lms_redirect(lms_url('', $lang));
                 $slug = cms_slugify((string) ($_POST['lesson'] ?? ''));
@@ -745,6 +873,13 @@ if (!function_exists('lms_settings')) {
     /* ================================================================== ganchos */
 
     cms_on('route', fn($r, array $seg, string $lang) => $r ?? lms_route($seg, $lang));
+
+    // al guardar una lección, su video y sus materiales de carpeta propia quedan sin acceso directo
+    cms_on('item.save', function (string $type, array $item) {
+        if ($type !== lms_lesson_type() || !lms_settings()['protect']) return;
+        lms_protect_dir((string) ($item['video'] ?? ''));
+        foreach (lms_file_list($item) as [, $path]) lms_protect_dir($path);
+    });
 
     // plantillas de cursos y lecciones cuando el tema no trae las suyas
     cms_on('template', function ($file, string $template, string $type, string $route) {

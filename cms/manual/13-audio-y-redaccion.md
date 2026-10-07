@@ -10,7 +10,7 @@ Las claves se guardan en `data/settings.json`, que no se sirve por internet. Aun
 
 ## Audio: texto a voz
 
-En **Ajustes → Audio** eliges proveedor y voz: OpenAI, ElevenLabs, Azure o Google Cloud. Ahí decides también dónde va el reproductor (al principio o al final del texto, o solo donde tú lo pongas), en qué colecciones se ofrece, si se lee el título y el máximo de caracteres a convertir.
+En **Ajustes → Audio** eliges proveedor y voz: OpenAI, ElevenLabs, Azure o Google Cloud. Ahí decides también el estilo del reproductor y dónde va (al principio o al final del texto, o solo donde tú lo pongas), en qué colecciones se ofrece, si se lee el título y el máximo de caracteres a convertir.
 
 En cada artículo, la barra lateral del editor tiene **Generar audio**, uno por idioma. Convierte el texto tal como está guardado (guarda antes tus cambios), tarda unos segundos por cada 4,000 caracteres y deja el MP3 en `uploads/audio/`. Si editas el texto después, vuelve a generar: el audio no se actualiza solo. **Quitar** borra el archivo.
 
@@ -19,6 +19,7 @@ La página **Audio** del menú tiene un botón para probar la voz elegida y una 
 Opciones útiles:
 
 - **Automático al publicar**: genera el audio al guardar un elemento publicado que no lo tenga. Cómodo, pero el guardado tarda más.
+- El estilo **compacto** (el de serie) es una píldora pequeña con botón redondo, título, tiempo, una onda que se rellena al avanzar (clic o arrastre para saltar; flechas del teclado ±5 s), velocidad (1× a 2×) y descarga. Toma el color de acento del tema (`--cms-accent`) y se ve igual en Firefox, Chrome y Safari, en temas claros y oscuros. El estilo **del navegador** usa el reproductor nativo, que cambia de un navegador a otro. Un tema puede ajustar el compacto con `.cms-audio` y las variables `--au-accent` y `--au-on-accent`.
 - En una página del constructor, el bloque **Reproductor de audio** pone el reproductor donde quieras, con un texto al lado; sin archivo indicado usa el audio de esa página.
 - Puedes escribir a mano la ruta de un MP3 propio (subido por FTP a `uploads/`) en el campo Audio del elemento.
 - **Podcast sin más trabajo**: cada artículo con audio lleva su MP3 adjunto en el feed RSS del sitio (`/feed.xml`, o el de la colección, `/blog/feed.xml`). Esa dirección se da de alta en Apple Podcasts, Spotify o cualquier app de podcasts y los episodios aparecen solos al publicar; ver [SEO](cap:07-seo).

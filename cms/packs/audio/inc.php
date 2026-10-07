@@ -30,6 +30,7 @@ if (!function_exists('au_settings')) {
             'auto' => !empty($S['audio_auto']),
             'title' => !isset($S['audio_title']) || !empty($S['audio_title']),
             'max_chars' => max(500, min(100000, (int) $g('audio_max_chars', '15000'))),
+            'style' => in_array($g('audio_style', 'compacto'), ['compacto', 'nativo'], true) ? $g('audio_style', 'compacto') : 'compacto',
         ];
     }
 
@@ -261,23 +262,36 @@ if (!function_exists('au_settings')) {
         return $ok;
     }
 
-    /** HTML del reproductor. $path relativa (uploads/…) o URL. */
+    /**
+     * HTML del reproductor. $path relativa (uploads/…) o URL. Siempre lleva el <audio controls> nativo (se ve si no hay
+     * JS); con el estilo compacto, el script del paquete (una vez por página) lo convierte en la píldora con onda.
+     */
     function au_player(string $path, string $lang, string $label = ''): string
     {
         if (trim($path) === '') return '';
         $S = cms_settings();
         if ($label === '') $label = trim((string) cms_localize($S['audio_label'] ?? '', $lang)) ?: ($lang === 'en' ? 'Listen to this article' : 'Escucha este artículo');
         $url = cms_img($path);
-        return '<figure class="cms-audio"><figcaption class="cms-audio-label">' . cms_e($label) . '</figcaption>'
-            . '<audio class="cms-audio-el" controls preload="none" src="' . cms_e($url) . '"></audio>'
+        $compact = au_settings()['style'] === 'compacto';
+        $html = '<figure class="cms-audio"' . ($compact ? ' data-au data-au-lang="' . cms_e($lang) . '"' : '') . '><figcaption class="cms-audio-label">' . cms_e($label) . '</figcaption>'
+            . '<audio class="cms-audio-el" controls preload="metadata" src="' . cms_e($url) . '"></audio>'
             . '<a class="cms-audio-dl" href="' . cms_e($url) . '" download>MP3</a></figure>';
+        if ($compact && empty($GLOBALS['au_js_done'])) $html .= au_js();   // bloque Reproductor con un archivo propio: el <head> no lo sabía
+        return $html;
     }
 
-    /** CSS mínimo del reproductor (el tema puede sobrescribir .cms-audio). */
+    /** Script del reproductor compacto, una vez por página. */
+    function au_js(): string
+    {
+        if (!empty($GLOBALS['au_js_done'])) return '';
+        $GLOBALS['au_js_done'] = true;
+        return '<script>' . trim((string) @file_get_contents(__DIR__ . '/assets/audio.js')) . '</script>' . "\n";
+    }
+
+    /** CSS del reproductor (el mismo archivo que carga el bloque; el tema puede sobrescribir .cms-audio). */
     function au_css(): string
     {
-        return '.cms-audio{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 1.5em;padding:12px 16px;border:1px solid var(--cms-line,rgba(0,0,0,.12));border-radius:var(--cms-radius,12px);background:var(--cms-soft,rgba(0,0,0,.03))}'
-            . '.cms-audio-label{font-weight:600;font-size:.95em}.cms-audio-el{flex:1 1 240px;min-width:0;height:36px}.cms-audio-dl{font-size:.8em;opacity:.7;text-decoration:none}.cms-audio-dl:hover{opacity:1}';
+        return trim((string) @file_get_contents(__DIR__ . '/assets/audio.css'));
     }
 
     /* ------------------------------------------------------------------ ganchos */
@@ -314,6 +328,7 @@ if (!function_exists('au_settings')) {
         $raw = !empty($cur['item']) ? au_raw_item((string) $cur['type'], (string) ($cur['item']['slug'] ?? '')) : null;
         if (!$raw || au_path($raw, (string) $cur['lang']) === '') return;
         echo '<style>' . au_css() . '</style>' . "\n";
+        if (au_settings()['style'] === 'compacto') echo au_js();   // en el <head>: arranca solo con DOMContentLoaded y no pasa por los filtros del contenido
     });
 
     // feed RSS (1.39): el MP3 del idioma del feed como <enclosure>, para que los lectores y las apps de podcast lo reproduzcan

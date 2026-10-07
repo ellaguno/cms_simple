@@ -7,7 +7,7 @@
 $voicesOpenAI = ['alloy' => 'Alloy', 'ash' => 'Ash', 'ballad' => 'Ballad', 'coral' => 'Coral', 'echo' => 'Echo', 'fable' => 'Fable', 'nova' => 'Nova', 'onyx' => 'Onyx', 'sage' => 'Sage', 'shimmer' => 'Shimmer'];
 return [
     'label' => 'Audio: texto a voz',
-    'version' => '1.1.1',
+    'version' => '1.2.0',
     'desc' => 'Convierte artículos y páginas en audio (MP3) con OpenAI, ElevenLabs, Azure o Google Cloud, con un reproductor al principio o al final del texto. Botón "Generar audio" en el editor (por idioma), generación automática al publicar (opcional), página Audio con el estado de cada colección y bloque "Reproductor" para el constructor. Sin clave, el proveedor de prueba genera un MP3 en silencio para probar el flujo.',
     'assets' => ['css' => ['assets/audio.css']],
     'effects' => [],
@@ -30,6 +30,8 @@ return [
         'audio_types'   => ['type' => 'text', 'label' => 'Colecciones con audio (claves separadas por coma; vacío = todas)', 'placeholder' => 'posts', 'half' => true],
         'audio_player'  => ['type' => 'select', 'label' => 'Reproductor en el texto', 'default' => 'top',
                             'options' => ['top' => 'Al principio del texto', 'bottom' => 'Al final del texto', 'none' => 'No poner (solo con el bloque Reproductor o desde el tema)'], 'half' => true],
+        'audio_style'   => ['type' => 'select', 'label' => 'Estilo del reproductor', 'default' => 'compacto',
+                            'options' => ['compacto' => 'Compacto: botón redondo, onda, tiempo, velocidad y descarga (con el color del tema)', 'nativo' => 'El del navegador (cambia entre Firefox, Chrome y Safari)'], 'half' => true],
         'audio_label'   => ['type' => 'text', 'i18n' => true, 'label' => 'Texto junto al reproductor', 'placeholder' => 'Escucha este artículo', 'half' => true],
         'audio_auto'    => ['type' => 'checkbox', 'label' => 'Automático', 'text' => 'Generar el audio al publicar un elemento que no lo tenga (tarda unos segundos más al guardar)'],
         'audio_title'   => ['type' => 'checkbox', 'label' => 'Título', 'text' => 'Leer el título antes del texto', 'default' => true],

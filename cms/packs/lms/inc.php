@@ -96,6 +96,19 @@ if (!function_exists('lms_settings')) {
             'for'            => ['es' => 'Para:', 'en' => 'For:'],
             'soon'           => ['es' => 'Próximamente', 'en' => 'Coming soon'],
             'soon_text'      => ['es' => 'Este curso está en preparación.', 'en' => 'This course is in preparation.'],
+            'available'      => ['es' => 'Disponible', 'en' => 'Available'],
+            'in_progress'    => ['es' => 'En curso', 'en' => 'In progress'],
+            'in_prep'        => ['es' => 'En preparación', 'en' => 'In preparation'],
+            'soon_short'     => ['es' => 'Pronto', 'en' => 'Soon'],
+            'see_course'     => ['es' => 'Ver curso', 'en' => 'See course'],
+            'n_course_1'     => ['es' => 'curso disponible', 'en' => 'course available'],
+            'n_courses'      => ['es' => 'cursos disponibles', 'en' => 'courses available'],
+            'n_soon'         => ['es' => 'en preparación', 'en' => 'in preparation'],
+            'n_lessons'      => ['es' => 'lecciones en video', 'en' => 'video lessons'],
+            'n_minutes'      => ['es' => 'de contenido', 'en' => 'of content'],
+            'hero_kicker'    => ['es' => 'Capacitación', 'en' => 'Training'],
+            'hero_title'     => ['es' => 'Cursos en línea, *a tu ritmo*', 'en' => 'Online courses, *at your own pace*'],
+            'hero_lead'      => ['es' => 'Cursos en video, cortos y en orden. Entra con tu cuenta y sigue donde te quedaste.', 'en' => 'Short video courses, in order. Sign in and pick up where you left off.'],
             'sample'         => ['es' => 'Muestra', 'en' => 'Preview'],
             'level'          => ['es' => 'Nivel', 'en' => 'Level'],
             'duration'       => ['es' => 'Duración', 'en' => 'Duration'],
@@ -130,6 +143,22 @@ if (!function_exists('lms_settings')) {
         $s = (string) cms_t('lms_' . $k, $lang, '');
         if ($s === '') $s = $T[$k][$lang] ?? ($T[$k]['es'] ?? $k);
         return $args ? vsprintf($s, $args) : $s;
+    }
+
+    /** Texto de Ajustes → Aula en el idioma de la página (campos i18n), con respaldo al de lms_tx(). */
+    function lms_setting_text(string $key, string $fallbackTx = ''): string
+    {
+        $v = cms_settings()[$key] ?? '';
+        $lang = cms_current()['lang'] ?: cms_default_lang();
+        if (is_array($v)) $v = (string) ($v[$lang] ?? '') !== '' ? $v[$lang] : ($v[cms_default_lang()] ?? '');
+        $v = trim((string) $v);
+        return $v !== '' ? $v : ($fallbackTx !== '' ? lms_tx($fallbackTx) : '');
+    }
+
+    /** Título con *énfasis*: escapa y convierte lo que va entre asteriscos en <em>. */
+    function lms_emph(string $s): string
+    {
+        return preg_replace('/\*(.+?)\*/u', '<em>$1</em>', cms_e($s)) ?? cms_e($s);
     }
 
     /* ================================================================== alumnos */
@@ -651,34 +680,113 @@ if (!function_exists('lms_settings')) {
         return $out;
     }
 
-    /** Tarjeta de un curso para los listados (usa .card del tema): imagen, etiquetas, resumen y avance de quien la ve. */
+    /** Íconos para la tapa de un curso (campo icon) y para "Cómo están hechos". */
+    function lms_course_icons(): array
+    {
+        return [
+            'flechas'  => '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+            'nucleo'   => '<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>',
+            'billetes' => '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/>',
+            'grafica'  => '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
+            'libro'    => '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7"/>',
+            'escudo'   => '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+            'codigo'   => '<path d="m9 6-6 6 6 6M15 6l6 6-6 6"/>',
+            'personas' => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
+            'engrane'  => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+            'video'    => '<rect x="2" y="5" width="15" height="14" rx="2"/><path d="m17 10 5-3v10l-5-3"/>',
+            'subtitulos' => '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M7 13h4M13 13h4M7 16h7"/>',
+            'capas'    => '<path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>',
+            'reloj'    => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        ];
+    }
+
+    function lms_svg(string $name, string $class = ''): string
+    {
+        $p = lms_course_icons()[$name] ?? '';
+        return $p === '' ? '' : '<svg' . ($class !== '' ? ' class="' . $class . '"' : '') . ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $p . '</svg>';
+    }
+
+    /** Minutos de una duración escrita a mano: "9:43", "12 min", "1 h 10 min", "70min". 0 si no se entiende. */
+    function lms_minutes(string $d): float
+    {
+        $d = mb_strtolower(trim($d));
+        if ($d === '') return 0;
+        if (preg_match('/^(\d+):(\d{1,2})(?::(\d{1,2}))?/', $d, $m)) return isset($m[3]) ? $m[1] * 60 + $m[2] + $m[3] / 60 : $m[1] + $m[2] / 60;
+        $min = 0;
+        if (preg_match('/(\d+(?:[.,]\d+)?)\s*h/', $d, $m)) $min += (float) str_replace(',', '.', $m[1]) * 60;
+        if (preg_match('/(\d+)\s*min/', $d, $m)) $min += (int) $m[1];
+        elseif (!$min && preg_match('/^(\d+)$/', $d, $m)) $min = (int) $m[1];
+        return $min;
+    }
+
+    /** "1 h 10 min", "45 min". */
+    function lms_minutes_text(float $min): string
+    {
+        $min = (int) round($min);
+        return $min >= 60 ? intdiv($min, 60) . ' h' . ($min % 60 ? ' ' . ($min % 60) . ' min' : '') : $min . ' min';
+    }
+
+    /** Duración de un curso: la del campo o la suma de sus lecciones. */
+    function lms_course_minutes(array $c): float
+    {
+        $sum = 0;
+        foreach (lms_lessons((string) $c['slug']) as $l) $sum += lms_minutes((string) ($l['duration'] ?? ''));
+        return $sum ?: lms_minutes((string) cms_f($c, 'duration', cms_current()['lang'] ?: cms_default_lang()));
+    }
+
+    /**
+     * Tarjeta de un curso, al estilo del catálogo de capacitación: tapa de color con estado, ícono, serie y nombre
+     * (o la imagen del curso); debajo título, resumen, temas, para quién, avance de quien la ve y un pie con
+     * lecciones, duración y el botón.
+     */
     function lms_course_card(array $c, string $lang, ?array $user): string
     {
         $slug = (string) $c['slug'];
         $n = count(lms_lessons($slug));
         $st = $user ? lms_stats($slug, $user) : null;
         $title = (string) cms_f($c, 'title', $lang);
+        $short = trim((string) cms_f($c, 'short', $lang)) ?: $title;
         $soon = !empty($c['soon']);
         $color = preg_match('/^#[0-9a-f]{6}$/i', (string) ($c['color'] ?? '')) ? (string) $c['color'] : '';
-        $tag = $soon ? 'div' : 'a';
-        $h = '<' . $tag . ' class="card lms-card' . ($soon ? ' is-soon' : '') . '"' . ($soon ? '' : ' href="' . cms_e(cms_url('item:' . lms_course_type(), $lang, $slug)) . '"') . ($color !== '' ? ' style="--lms-c:' . $color . '"' : '') . '>';
-        if (!empty($c['image'])) $h .= '<span class="lms-card-img">' . cms_picture((string) $c['image'], $title) . '</span>';
-        elseif ($color !== '') $h .= '<span class="lms-card-img lms-tapa"><span>' . cms_e($title) . '</span></span>';
-        $tags = [];
-        if (($lv = (string) cms_f($c, 'level', $lang)) !== '') $tags[] = '<span class="tag tag-steel">' . cms_e($lv) . '</span>';
-        if (($du = (string) cms_f($c, 'duration', $lang)) !== '') $tags[] = '<span class="tag tag-steel">' . cms_e($du) . '</span>';
-        $tags[] = '<span class="tag tag-steel">' . cms_e($n === 1 ? lms_tx('lesson_1') : lms_tx('lessons_n', $n)) . '</span>';
-        if ($soon) $tags = ['<span class="tag tag-warn">' . cms_e(lms_tx('soon')) . '</span>'];
-        if ($st && $st['completed'] !== '') $tags[] = '<span class="tag tag-ok">' . cms_e(lms_tx('completed')) . '</span>';
-        $h .= '<span class="lms-tags">' . implode(' ', $tags) . '</span>';
-        if (!empty($c['image']) || $color === '') $h .= '<h3 style="font-size:1.1rem">' . cms_e($title) . '</h3>';   // con tapa de color, el título ya va en ella
+        $series = trim((string) cms_f($c, 'series', $lang)) ?: lms_setting_text('lms_series');
+        $min = lms_course_minutes($c);
+        $tag = $soon ? 'article' : 'a';
+        $h = '<' . $tag . ' class="lms-c' . ($soon ? ' is-soon' : '') . '"' . ($soon ? '' : ' href="' . cms_e(cms_url('item:' . lms_course_type(), $lang, $slug)) . '"') . ($color !== '' ? ' style="--c:' . $color . '"' : '') . '>';
+        // tapa
+        $state = $soon ? '<span class="lms-c-state">' . cms_e(lms_tx('soon')) . '</span>'
+            : ($st && $st['completed'] !== '' ? '<span class="lms-c-state is-ok">' . cms_e(lms_tx('completed')) . '</span>'
+            : ($st && $st['started'] ? '<span class="lms-c-state is-on">' . cms_e(lms_tx('in_progress')) . '</span>'
+            : '<span class="lms-c-state is-on">' . cms_e(lms_tx('available')) . '</span>'));
+        $h .= '<span class="lms-c-tapa' . (!empty($c['image']) ? ' has-img' : '') . '">' . $state;
+        if (!empty($c['image'])) $h .= '<span class="lms-c-img">' . cms_picture((string) $c['image'], $title) . '</span>';
+        if (($ic = lms_svg((string) ($c['icon'] ?? ''))) !== '') $h .= '<span class="lms-c-icon">' . $ic . '</span>';
+        if ($series !== '') $h .= '<span class="lms-c-series">' . cms_e($series) . '</span>';
+        $h .= '<span class="lms-c-name">' . cms_e($short) . '</span></span>';
+        // detalle
+        $h .= '<span class="lms-c-body"><h3>' . cms_e($title) . '</h3>';
         if (($ex = (string) cms_f($c, 'excerpt', $lang)) !== '') $h .= '<p>' . cms_e($ex) . '</p>';
-        if ($topics = array_filter((array) cms_f($c, 'topics', $lang, []))) $h .= '<span class="lms-topics">' . implode('', array_map(fn($x) => '<span>' . cms_e((string) $x) . '</span>', $topics)) . '</span>';
+        if ($topics = array_filter((array) cms_f($c, 'topics', $lang, []))) $h .= '<span class="lms-c-topics">' . implode('', array_map(fn($x) => '<span>' . cms_e((string) $x) . '</span>', $topics)) . '</span>';
         if (($au = (string) cms_f($c, 'audience', $lang)) !== '') $h .= '<span class="lms-for"><strong>' . cms_e(lms_tx('for')) . '</strong> ' . cms_e($au) . '</span>';
-        if ($soon) return $h . '<span class="card-more">' . cms_e(lms_tx('soon')) . '</span></div>' . "\n";
-        if ($st && $st['started'] && $st['total'] > 0) $h .= '<span class="lms-progress">' . lms_bar($st['pct']) . '<small>' . cms_e(lms_tx('progress', $st['done'], $st['total'], $st['pct'])) . '</small></span>';
-        $cta = !$st || !$st['started'] ? lms_tx('start') : ($st['next'] ? lms_tx('continue') : lms_tx('review'));
-        return $h . '<span class="card-more">' . cms_e($cta) . ' ' . lms_icon('arrow') . '</span></a>' . "\n";
+        if (!$soon && $st && $st['started'] && $st['total'] > 0) $h .= '<span class="lms-progress">' . lms_bar($st['pct']) . '<small>' . cms_e(lms_tx('progress', $st['done'], $st['total'], $st['pct'])) . '</small></span>';
+        // pie
+        $meta = $soon ? '<span>' . lms_svg('reloj') . cms_e(lms_tx('in_prep')) . '</span>'
+            : '<span>' . lms_svg('video') . cms_e($n === 1 ? lms_tx('lesson_1') : lms_tx('lessons_n', $n)) . '</span>' . ($min ? '<span>' . lms_svg('reloj') . cms_e(lms_minutes_text($min)) . '</span>' : '');
+        $cta = $soon ? lms_tx('soon_short') : (!$st || !$st['started'] ? lms_tx('see_course') : ($st['next'] ? lms_tx('continue') : lms_tx('review')));
+        $h .= '<span class="lms-c-foot"><span class="lms-c-meta">' . $meta . '</span><span class="lms-c-go">' . cms_e($cta) . ($soon ? '' : ' ' . lms_icon('arrow')) . '</span></span>';
+        return $h . '</span></' . $tag . '>' . "\n";
+    }
+
+    /** Cifras del héroe: cursos disponibles, en preparación, lecciones y minutos de los disponibles. */
+    function lms_catalog_numbers(array $courses): array
+    {
+        $ready = array_filter($courses, fn($c) => empty($c['soon']));
+        $lessons = 0; $min = 0;
+        foreach ($ready as $c) { $lessons += count(lms_lessons((string) $c['slug'])); $min += lms_course_minutes($c); }
+        $out = [[count($ready), count($ready) === 1 ? lms_tx('n_course_1') : lms_tx('n_courses')]];
+        if ($soon = count($courses) - count($ready)) $out[] = [$soon, lms_tx('n_soon')];
+        $out[] = [$lessons, lms_tx('n_lessons')];
+        if ($min) $out[] = [lms_minutes_text($min), lms_tx('n_minutes')];
+        return $out;
     }
 
     /** Temario de un curso por módulos, con el estado de cada lección para quien lo ve; $current resalta una. */

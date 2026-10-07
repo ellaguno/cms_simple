@@ -42,6 +42,9 @@ function lms_imp_array(string $html, string $name): array
     return $out;
 }
 
+/** Ícono del catálogo si es uno de los del aula. */
+function lms_imp_icon(string $k): string { return isset(lms_course_icons()[$k]) ? $k : ''; }
+
 /** Texto plano de un fragmento HTML (espacios colapsados). */
 function lms_imp_text(string $html): string
 {
@@ -81,7 +84,9 @@ function lms_import_plan(string $rel): array
     // la tarjeta en el catálogo de la carpeta de arriba, si la hay
     $card = []; $soon = []; $catOrder = 0;
     $parent = dirname($rel);
-    $catalog = $parent !== '.' && is_file(CMS_ROOT . '/' . $parent . '/index.html') ? lms_imp_array((string) file_get_contents(CMS_ROOT . '/' . $parent . '/index.html'), 'CURSOS') : [];
+    $catHtml = $parent !== '.' && is_file(CMS_ROOT . '/' . $parent . '/index.html') ? (string) file_get_contents(CMS_ROOT . '/' . $parent . '/index.html') : '';
+    $catalog = $catHtml !== '' ? lms_imp_array($catHtml, 'CURSOS') : [];
+    $series = preg_match('/class="serie">([^<$]+)</', $catHtml, $sm) ? lms_imp_text($sm[1]) : '';   // la serie fija de las tapas ("Curso · NextSabi")
     foreach ($catalog as $i => $c) {
         $liga = trim((string) ($c['liga'] ?? ''), '/');
         if ($liga === $folder || (string) ($c['clave'] ?? '') === $folder) { $card = $c; $catOrder = $i + 1; }
@@ -101,6 +106,7 @@ function lms_import_plan(string $rel): array
         'duration' => [$es => $minutes ? ($minutes >= 60 ? intdiv($minutes, 60) . ' h' . ($minutes % 60 ? ' ' . ($minutes % 60) . ' min' : '') : $minutes . ' min') : ''],
         'color' => preg_match('/^#[0-9a-f]{6}$/i', (string) ($card['color'] ?? '')) ? strtolower((string) $card['color']) : '',
         'order' => $catOrder ?: '', 'access' => '', 'imported_from' => $rel,
+        'short' => [$es => (string) ($card['nombre'] ?? '')], 'series' => [$es => $series], 'icon' => lms_imp_icon((string) ($card['icono'] ?? '')),
     ];
     $lessons = []; $warn = [];
     foreach ($mods as $i => $m) {
@@ -118,7 +124,7 @@ function lms_import_plan(string $rel): array
             'course' => $slug, 'order' => $i + 1, 'module' => [$es => ''], 'body' => [$es => ''], 'files' => [], 'preview' => false,
         ];
     }
-    return ['course' => $course, 'lessons' => $lessons, 'soon' => $soon, 'warn' => $warn, 'rel' => $rel, 'catalog' => $catalog ? $parent : ''];
+    return ['course' => $course, 'lessons' => $lessons, 'soon' => $soon, 'series' => $series, 'warn' => $warn, 'rel' => $rel, 'catalog' => $catalog ? $parent : ''];
 }
 
 /** Página que reemplaza a una vieja: lleva a la nueva dirección (meta refresh + enlace; sin PHP, sirve en carpetas estáticas). */
@@ -164,6 +170,7 @@ function lms_import_run(string $rel, array $opt): array
             if (cms_item_save($ct, ['slug' => $sl, 'title' => [$es => (string) ($s['titulo'] ?? $s['nombre'] ?? $sl)], 'excerpt' => [$es => (string) ($s['texto'] ?? '')],
                 'topics' => [$es => array_values((array) ($s['temas'] ?? []))], 'audience' => [$es => (string) ($s['para'] ?? '')],
                 'color' => preg_match('/^#[0-9a-f]{6}$/i', (string) ($s['color'] ?? '')) ? strtolower((string) $s['color']) : '',
+                'short' => [$es => (string) ($s['nombre'] ?? '')], 'series' => [$es => (string) ($plan['series'] ?? '')], 'icon' => lms_imp_icon((string) ($s['icono'] ?? '')),
                 'order' => $s['_order'], 'soon' => true, 'access' => '', 'status' => 'published', 'created' => $now, 'updated' => $now])) $k++;
         }
         if ($k) $msgs[] = $k . ' curso(s) en preparación creados como «Próximamente».';

@@ -7,6 +7,8 @@ if (!$def) { admin_flash('Tipo de contenido desconocido.', 'err'); admin_redirec
 $dl = cms_default_lang();
 $titleField = $def['title_field'] ?? 'title';
 $cols = (array) ($def['list'] ?? []);
+// selectores con 'options_from' (el curso de una lección): el listado y sus filtros muestran el título, no el slug
+foreach ($cols as $c) if (!empty($def['fields'][$c]['options_from'])) $def['fields'][$c]['options'] = admin_select_options($def['fields'][$c]);
 
 /* ---------- filtros del listado (buscador, estado, columnas) y paginación; todo por GET para poder compartir/volver ---------- */
 $q = trim((string) ($_GET['q'] ?? ''));

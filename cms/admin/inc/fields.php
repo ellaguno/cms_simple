@@ -5,7 +5,7 @@
  * Definición de campo (site/config.php):
  *   'campo' => ['type' => text|textarea|html|date|number|url|email|select|checkbox|image|images|lines|tags,
  *               'label' => 'Etiqueta', 'help' => 'Ayuda', 'i18n' => true|false, 'required' => bool,
- *               'options' => [...] (select), 'rows' => n, 'sidebar' => true (columna derecha), 'placeholder' => '',
+ *               'options' => [...] (select), 'options_from' => 'tipo' (select con los elementos de esa colección), 'rows' => n, 'sidebar' => true (columna derecha), 'placeholder' => '',
  *               'show_if' => ['otro_campo' => 'valor'] (solo se muestra cuando ese control vale eso; 'valor' puede ser una lista)]
  * Los tipos de contenido siempre tienen además: slug, status, seo_title, seo_desc, created, updated.
  */
@@ -14,6 +14,19 @@ declare(strict_types=1);
 function admin_field_label(string $name, array $def): string
 {
     return (string) ($def['label'] ?? ucfirst(str_replace(['_', '-'], ' ', $name)));
+}
+
+/**
+ * Opciones de un selector: 'options' y, con 'options_from' => 'tipo' (1.41), los elementos de esa colección
+ * (slug => título), p. ej. el curso al que pertenece una lección.
+ */
+function admin_select_options(array $def): array
+{
+    $opts = (array) ($def['options'] ?? []);
+    if (!empty($def['options_from']) && ($fd = cms_type((string) $def['options_from']))) {
+        foreach (cms_items((string) $def['options_from'], false) as $it) $opts[(string) $it['slug']] = (string) (cms_f($it, $fd['title_field'] ?? 'title', cms_default_lang()) ?: $it['slug']);
+    }
+    return $opts;
 }
 
 /** Un control HTML (sin envoltorio). $value ya es el valor de ese idioma. */
@@ -38,8 +51,10 @@ function admin_control(string $inputName, array $def, $value, string $extra = ''
         case 'tags':
             return '<input type="text" name="' . cms_e($inputName) . '" value="' . cms_e(is_array($value) ? implode(', ', $value) : (string) $value) . '" placeholder="separadas por coma">';
         case 'select':
-            $out = '<select name="' . cms_e($inputName) . '">';
-            foreach ((array) ($def['options'] ?? []) as $k => $lab) {
+            $out = '<select name="' . cms_e($inputName) . '"' . $req . '>';
+            $opts = admin_select_options($def);
+            if (!empty($def['options_from']) && (string) $value !== '' && !isset($opts[(string) $value])) $opts[(string) $value] = $value . ' (no existe)';
+            foreach ($opts as $k => $lab) {
                 $val = is_int($k) ? $lab : $k;
                 $out .= '<option value="' . cms_e($val) . '"' . ((string) $value === (string) $val ? ' selected' : '') . '>' . cms_e($lab) . '</option>';
             }

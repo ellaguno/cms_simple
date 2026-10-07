@@ -32,7 +32,10 @@ function admin_nav(): array
     foreach (cms_packs() as $pn => $pk) {
         if (empty($pk['admin']['file'])) continue;
         $g = (string) ($pk['admin']['group'] ?? 'contenido');
-        $packPages[isset($packPages[$g]) ? $g : 'contenido']['pack:' . $pn] = [(string) ($pk['admin']['label'] ?? $pk['label']), admin_url('pack:' . $pn)];
+        $entry = [(string) ($pk['admin']['label'] ?? $pk['label']), admin_url('pack:' . $pn)];
+        // o el grupo propio de unas colecciones ('group' => 'Aula'), para que la página vaya junto a ellas (1.41)
+        if (!isset($packPages[$g]) && isset($groups['group:' . cms_slugify($g)])) { $groups['group:' . cms_slugify($g)]['items'] = ['pack:' . $pn => $entry] + $groups['group:' . cms_slugify($g)]['items']; continue; }
+        $packPages[isset($packPages[$g]) ? $g : 'contenido']['pack:' . $pn] = $entry;
     }
     $nav['group:contenido'] = ['group' => 'Contenido', 'items' => $content + $packPages['contenido']];
     $nav += $groups;

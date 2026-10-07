@@ -1,0 +1,48 @@
+<?php
+/**
+ * Paquete lms — /aula: el tablero del alumno. Sus cursos con el avance y el botón para seguir, y los demás cursos
+ * a los que puede entrar. El tema puede reemplazarlo con templates/lms/aula.php.
+ */
+$user = lms_user();
+$mine = []; $others = [];
+$prog = lms_progress($user['id'])['courses'];
+foreach (cms_items(lms_course_type()) as $c) {
+    $s = (string) $c['slug'];
+    if (!empty($prog[$s]['enrolled']) || !empty($prog[$s]['lessons'])) $mine[] = $c;
+    elseif (lms_course_access($c) !== 'inscritos') $others[] = $c;
+}
+?>
+<section class="phead lms-head">
+  <div class="wrap phead-in">
+    <p class="kicker lms-kicker"><?= cms_e(lms_tx('my_classroom')) ?></p>
+    <h1><?= cms_e(lms_tx('hello', (string) strtok((string) $user['name'], ' '))) ?></h1>
+    <p class="lead"><?= cms_e(lms_tx('dash_lead')) ?></p>
+    <?= lms_notice() ?>
+    <div class="btnrow lms-userbar">
+      <a class="btn btn-ghost btn-sm" href="<?= cms_e(lms_url('cuenta')) ?>"><?= lms_icon('user') ?> <?= cms_e(lms_tx('account')) ?></a>
+      <form method="post" action="<?= cms_e(lms_url('salir')) ?>" class="lms-inline"><?= lms_csrf_field() ?><button class="btn btn-ghost btn-sm" type="submit"><?= cms_e(lms_tx('logout')) ?></button></form>
+    </div>
+  </div>
+</section>
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head"><h2 style="font-size:1.5rem"><?= cms_e(lms_tx('my_courses')) ?></h2></div>
+<?php if (!$mine): ?>
+    <p class="lead"><?= cms_e(lms_tx('no_courses')) ?></p>
+<?php else: ?>
+    <div class="grid g3 lms-grid">
+<?php foreach ($mine as $c) echo lms_course_card($c, $lang, $user); ?>
+    </div>
+<?php endif; ?>
+  </div>
+</section>
+<?php if ($others): ?>
+<section class="sec sec-alt">
+  <div class="wrap">
+    <div class="sec-head"><h2 style="font-size:1.5rem"><?= cms_e(lms_tx('other_courses')) ?></h2></div>
+    <div class="grid g3 lms-grid">
+<?php foreach ($others as $c) echo lms_course_card($c, $lang, $user); ?>
+    </div>
+  </div>
+</section>
+<?php endif; ?>

@@ -15,12 +15,18 @@
  *                                        para botones o información propios del paquete (echo HTML). Está dentro del
  *                                        <form> del editor: sin <form> propios (no se anidan); botones con form="id".
  *   admin.item.after    acción ($type, $item)  después del <form> del editor (1.39.1): para los <form> de esos botones.
+ *   route      filtro  (null, $seg, $lang)  en el enrutador, para una URL que nada atendió (1.41): devuelve
+ *                                        ['file' => plantilla, 'page' => [...], 'type', 'item'] o null. Puede atender
+ *                                        un POST y redirigir: todavía no se ha enviado nada al navegador.
+ *   template   filtro  ($file, $plantilla, $tipo, $ruta)  ruta de la plantilla del tema que se va a dibujar (1.41):
+ *                                        un paquete da la suya cuando el tema no la tiene (is_file($file) es false).
  *   cron       acción  ($log)            cuando el cron del hosting llama a /_cms/cron?token=… (o php cms/cron.php).
  *                                        $log es una función ($mensaje) para dejar constancia en data/cron.json.
  *
  * Un paquete registra sus ganchos en <paquete>/inc.php, que el arranque carga una vez si el paquete está activo.
  * Además del manifiesto: 'admin' => ['label' => 'Audio', 'file' => 'admin.php'] da al paquete una página en el panel
- * (?p=pack:<nombre>, con $pack disponible), que aparece en el menú lateral.
+ * (?p=pack:<nombre>, con $pack disponible), que aparece en el menú lateral. Y 'types' => [clave => definición] añade
+ * colecciones como las de config.php (1.41); si el tema ya declara esa clave, gana la del tema.
  */
 declare(strict_types=1);
 

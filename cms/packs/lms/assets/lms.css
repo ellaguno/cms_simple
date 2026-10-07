@@ -1,0 +1,103 @@
+/* Paquete lms — componentes del aula. El resto (.phead, .sec, .card, .btn, .form, .tag) lo pone el tema.
+   Los colores salen de las variables del tema (las de confiabilidad.com.mx: --cyan, --line, --ink-2…) y, si no
+   existen, de las del núcleo (--cms-accent) o de un respaldo. Para cambiarlos sin tocar el paquete, define
+   --lms-accent, --lms-ok, --lms-line, --lms-muted, --lms-surface o --lms-radius en el CSS del tema. */
+:root{
+  --lms-accent:var(--cyan,var(--cms-accent,#18b6ef));
+  --lms-ok:var(--ok,#2fbf87);
+  --lms-line:var(--line,rgba(127,140,160,.25));
+  --lms-muted:var(--ink-3,#7b8794);
+  --lms-text:var(--ink-2,inherit);
+  --lms-surface:var(--bg-2,rgba(127,140,160,.07));
+  --lms-radius:var(--r,12px);
+}
+
+.lms-ico{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em}
+.lms-tags{display:flex;flex-wrap:wrap;gap:.4rem;margin:.2rem 0 .4rem}
+.lms-head .lms-tags{margin-top:1.1rem}
+.lms-kicker{margin-bottom:.8rem}
+.lms-note{margin-top:1.2rem}
+.lms-msg{display:block;margin:1rem 0}
+.lms-inline{display:inline;margin:0}
+.lms-head .btn-sm,.lms-mark .btn-sm{padding:.6rem 1rem;font-size:.86rem}
+.lms-userbar{margin-top:1.4rem;align-items:center}
+
+/* avance */
+.lms-bar{position:relative;height:6px;border-radius:99px;background:var(--lms-line);overflow:hidden}
+.lms-bar>span{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:linear-gradient(90deg,var(--lms-accent),var(--cyan-2,var(--lms-accent)));transition:width .4s ease}
+.lms-progress{display:grid;gap:.45rem;margin-top:1.1rem;max-width:420px}
+.lms-progress small{font-size:.8rem;color:var(--lms-muted);letter-spacing:.02em}
+.lms-card .lms-progress{margin-top:.9rem;max-width:none}
+
+/* tarjetas de curso */
+.lms-card{display:flex;flex-direction:column;gap:.5rem;color:inherit}
+.lms-card-img{display:block;margin:-1.6rem -1.5rem .6rem;border-radius:var(--lms-radius) var(--lms-radius) 0 0;overflow:hidden;aspect-ratio:16/9;background:var(--lms-surface)}
+.lms-card-img img,.lms-card-img picture{display:block;width:100%;height:100%;object-fit:cover}
+.lms-card p{color:var(--lms-text);font-size:.94rem}
+
+/* página del curso y de la lección: contenido + temario */
+.lms-course{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:clamp(1.6rem,4vw,3.2rem);align-items:start}
+.lms-course-side{position:sticky;top:calc(var(--hdr-h,72px) + 1rem)}
+.lms-cover{margin:0 0 2rem;border-radius:var(--lms-radius);overflow:hidden;border:1px solid var(--lms-line)}
+.lms-cover img{display:block;width:100%}
+.lms-h2{font-size:clamp(1.3rem,2.4vw,1.7rem);margin-top:2.4rem}
+.lms-h3{font-size:1.1rem;font-weight:500;margin:0 0 .9rem}
+.lms-h3 a{color:inherit}
+.lms-goals{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.7rem 1.4rem}
+.lms-goals li{display:flex;gap:.6rem;align-items:flex-start;color:var(--lms-text)}
+.lms-goals .lms-ico{color:var(--lms-ok);margin-top:.15em}
+
+.lms-syllabus{padding:1.4rem 1.3rem}
+.lms-syllabus .lms-progress{margin:0 0 1.1rem}
+.lms-module{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--lms-muted);margin:1.2rem 0 .45rem;font-family:inherit}
+.lms-module:first-of-type{margin-top:0}
+.lms-lessons{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.lms-l>a,.lms-l>span{display:flex;gap:.6rem;align-items:flex-start;padding:.5rem .6rem;border-radius:8px;color:var(--lms-text);font-size:.92rem;line-height:1.4}
+.lms-l>a:hover{background:var(--lms-surface);color:inherit}
+.lms-l .lms-ico{margin-top:.08em;color:var(--lms-muted)}
+.lms-l-title{flex:1}
+.lms-l-meta{display:flex;gap:.4rem;align-items:center;flex:none}
+.lms-l-meta small{font-size:.76rem;color:var(--lms-muted)}
+.lms-l-done .lms-ico{color:var(--lms-ok)}
+.lms-l-lock>span{opacity:.6}
+.lms-l.is-current>span{background:var(--lms-surface);box-shadow:inset 2px 0 0 var(--lms-accent);color:inherit}
+.lms-l.is-current .lms-ico{color:var(--lms-accent)}
+
+/* lección */
+.lms-head-lesson .phead-in{padding-block:clamp(2.2rem,5vw,3.4rem) clamp(1.6rem,4vw,2.4rem)}
+.lms-lesson-title{font-size:clamp(1.7rem,4vw,2.7rem)}
+.lms-lesson-title .tag{vertical-align:middle;font-size:.62rem}
+.lms-sec{padding-top:clamp(2rem,5vw,3.4rem)}
+.lms-video{position:relative;aspect-ratio:16/9;margin:0 0 2rem;border-radius:var(--lms-radius);overflow:hidden;background:#000;border:1px solid var(--lms-line)}
+.lms-video iframe,.lms-video video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.lms-files{margin-top:2.2rem;padding-top:1.6rem;border-top:1px solid var(--lms-line)}
+.lms-files ul{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.lms-files a{display:inline-flex;gap:.55rem;align-items:center}
+.lms-actions{margin-top:2.4rem;padding-top:1.6rem;border-top:1px solid var(--lms-line)}
+.lms-mark{display:flex;flex-wrap:wrap;gap:1rem;align-items:center}
+.lms-done{display:inline-flex;gap:.5rem;align-items:center;color:var(--lms-ok);font-weight:500}
+.lms-locked{padding:2rem 1.8rem}
+.lms-locked .lms-ico{width:100%;height:100%}
+.lms-pager{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:2.2rem}
+.lms-pager a{display:grid;gap:.25rem;padding:1rem 1.1rem;border:1px solid var(--lms-line);border-radius:var(--lms-radius);color:inherit;background:var(--lms-surface)}
+.lms-pager a:hover{border-color:var(--lms-accent)}
+.lms-pager small{display:inline-flex;gap:.35rem;align-items:center;font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--lms-muted)}
+.lms-pager span{font-size:.95rem}
+.lms-pager-next{text-align:right;justify-items:end}
+
+/* formularios del alumno */
+.lms-narrow{max-width:560px}
+.lms-form-card{padding:clamp(1.4rem,4vw,2.2rem)}
+.lms-check{display:flex;gap:.55rem;align-items:center;font-size:.88rem;letter-spacing:0;color:var(--lms-text);font-weight:400}
+.lms-check input{width:auto;margin:0}
+.lms-alt{margin-top:1.4rem}
+.lms-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+@media (max-width:900px){
+  .lms-course{grid-template-columns:1fr}
+  .lms-course-side{position:static}
+}
+@media (max-width:560px){
+  .lms-pager{grid-template-columns:1fr}
+  .lms-pager-next{text-align:left;justify-items:start}
+}

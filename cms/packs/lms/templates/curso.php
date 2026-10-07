@@ -1,0 +1,77 @@
+<?php
+/**
+ * Paquete lms — página de un curso: descripción, avance de quien lo ve, botón para empezar o continuar y temario
+ * con el estado de cada lección. El tema puede reemplazarla con templates/curso.php o templates/lms/curso.php.
+ */
+$user = lms_user();
+$staff = lms_staff();
+$slug = (string) $item['slug'];
+$lessons = lms_lessons($slug);
+$st = lms_stats($slug, $user);
+$access = lms_course_access($item);
+$canTake = lms_can_take($item);
+$title = (string) cms_f($item, 'title', $lang);
+$lt = lms_lesson_type();
+$lurl = fn(array $l) => cms_url('item:' . $lt, $lang, $l['slug']);
+$first = $lessons[0] ?? null;
+$listTitle = $t($type . '_title', $def['label'] ?? lms_tx('courses'));
+$goals = (array) cms_f($item, 'goals', $lang, []);
+$S_contact = cms_url('home', $lang);
+foreach (cms_config('pages') as $pk => $pd) if (($pd['schema'] ?? '') === 'ContactPage') { $S_contact = cms_url('page:' . $pk, $lang); break; }
+?>
+<section class="phead lms-head">
+  <div class="wrap phead-in">
+    <nav class="crumbs" aria-label="Ruta"><a href="<?= cms_e(cms_url('home', $lang)) ?>"><?= cms_e($t('crumb_home', $lang === 'en' ? 'Home' : 'Inicio')) ?></a><span>/</span><a href="<?= cms_e(cms_url('list:' . $type, $lang)) ?>"><?= cms_e($listTitle) ?></a><span>/</span><em style="font-style:normal"><?= cms_e($title) ?></em></nav>
+    <h1><?= cms_e($title) ?></h1>
+    <?php if (($ex = (string) cms_f($item, 'excerpt', $lang)) !== ''): ?><p class="lead"><?= cms_e($ex) ?></p><?php endif; ?>
+    <p class="lms-tags">
+      <?php if (($lv = (string) cms_f($item, 'level', $lang)) !== ''): ?><span class="tag tag-steel"><?= cms_e($lv) ?></span><?php endif; ?>
+      <?php if (($du = (string) cms_f($item, 'duration', $lang)) !== ''): ?><span class="tag tag-steel"><?= cms_e($du) ?></span><?php endif; ?>
+      <span class="tag tag-steel"><?= cms_e(count($lessons) === 1 ? lms_tx('lesson_1') : lms_tx('lessons_n', count($lessons))) ?></span>
+      <?php if ($st['completed'] !== ''): ?><span class="tag tag-ok"><?= cms_e(lms_tx('completed')) ?></span><?php endif; ?>
+    </p>
+<?php if ($user && $st['started'] && $st['total'] > 0): ?>
+    <div class="lms-progress"><?= lms_bar($st['pct'], lms_tx('progress', $st['done'], $st['total'], $st['pct'])) ?><small><?= cms_e(lms_tx('progress', $st['done'], $st['total'], $st['pct'])) ?></small></div>
+<?php endif; ?>
+    <?= lms_notice() ?>
+    <div class="btnrow">
+<?php if ($first && $canTake): $to = $st['next'] ?? $first; ?>
+      <a class="btn" href="<?= cms_e($lurl($to)) ?>"><?= cms_e(!$st['started'] ? lms_tx('start') : ($st['next'] ? lms_tx('continue') : lms_tx('review'))) ?> <?= lms_icon('arrow') ?></a>
+      <?php if (!$user && !$staff): ?><a class="btn btn-ghost" href="<?= cms_e(lms_url('entrar', null, ['r' => lms_here()])) ?>"><?= cms_e(lms_tx('login_to_save')) ?></a><?php endif; ?>
+<?php elseif ($first && !$user): ?>
+      <a class="btn" href="<?= cms_e(lms_url('entrar', null, ['r' => lms_here()])) ?>"><?= cms_e(lms_tx('login_to_start')) ?> <?= lms_icon('arrow') ?></a>
+      <?php if (lms_settings()['signup'] && $access !== 'inscritos'): ?><a class="btn btn-ghost" href="<?= cms_e(lms_url('registro')) ?>"><?= cms_e(lms_tx('signup')) ?></a><?php endif; ?>
+<?php elseif ($first): ?>
+      <a class="btn btn-ghost" href="<?= cms_e($S_contact) ?>"><?= cms_e(lms_tx('ask_enroll')) ?></a>
+<?php endif; ?>
+    </div>
+    <?php if ($first && !$canTake && $access === 'inscritos'): ?><p class="note lms-note"><?= cms_e(lms_tx('only_enrolled')) ?></p><?php endif; ?>
+    <?php if ($st['completed'] !== ''): ?><p class="note lms-note"><?= cms_e(lms_tx('completed_on', lms_date($st['completed']))) ?></p><?php endif; ?>
+    <?php if ($staff): ?><p class="note lms-note"><?= cms_e(lms_tx('staff_view')) ?></p><?php endif; ?>
+  </div>
+</section>
+<section class="sec">
+  <div class="wrap">
+    <div class="lms-course">
+      <div class="lms-course-main">
+<?php if (!empty($item['image'])): ?>
+        <figure class="lms-cover"><?= cms_picture((string) $item['image'], $title, '', true) ?></figure>
+<?php endif; ?>
+        <div class="rte"><?= cms_content((string) cms_f($item, 'body', $lang)) ?></div>
+<?php if ($goals): ?>
+        <h2 class="lms-h2"><?= cms_e(lms_tx('you_learn')) ?></h2>
+        <ul class="lms-goals">
+<?php foreach ($goals as $g): ?>          <li><?= lms_icon('done') ?><span><?= cms_e((string) $g) ?></span></li>
+<?php endforeach; ?>
+        </ul>
+<?php endif; ?>
+      </div>
+      <aside class="lms-course-side">
+        <div class="card lms-syllabus">
+          <h2 class="lms-h3"><?= cms_e(lms_tx('contents')) ?></h2>
+          <?= lms_syllabus($item, $lessons, $st, $lang) ?>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>

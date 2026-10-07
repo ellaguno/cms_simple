@@ -342,6 +342,26 @@ espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con 
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
 
+## Estadísticas de uso (1.40)
+
+El panel tiene una página **Estadísticas** (y una tarjeta en Inicio) con visitas, páginas vistas, descargas, procedencia,
+países, dispositivos e idiomas, por mes, mes anterior, 3 o 12 meses. Todo lo anota `cms/lib/stats.php`, sin cookies ni
+servicios externos, en `data/stats/AAAA-MM.json` (un archivo por mes; se guardan 12 de serie):
+
+- **Páginas**: el enrutador registra al terminar cada página pública que respondió 200. No cuentan los bots (por su
+  User-Agent), las precargas, las vistas previas ni quien entró al panel (cookie `cms_staff`, que el panel pone al entrar).
+- **Visitas**: una huella diaria (HMAC de fecha, IP y navegador con el secreto del sitio); no se guardan IPs y la huella
+  cambia cada día. La primera página del día de cada visitante anota su procedencia (dominio del referer), país
+  (`CF-IPCountry` de Cloudflare) y dispositivo.
+- **Descargas**: PDF, Office/OpenDocument, comprimidos y audio de `uploads/`. Como Apache los sirve directo, el `.htaccess`
+  de la raíz lleva un bloque `# BEGIN cms_simple descargas` que los manda a `/_cms/dl/<archivo>`: ahí se cuentan (una vez
+  por visitante, archivo y día, así los trozos de un MP3 no suman) y se redirige (302, `no-store`) al archivo con
+  `?cmsdirect=1`, que Apache entrega tal cual. El actualizador solo instala `cms/`, así que el panel pone o quita ese
+  bloque por su cuenta (al entrar y al guardar Ajustes); si no puede escribir el `.htaccess`, Estadísticas muestra el
+  bloque para pegarlo a mano. `_router-dev.php` lo emula. Imágenes y video no se cuentan.
+- **Ajustes → Marca y SEO → Estadísticas** las apaga (`stats_on`) y fija los meses que se guardan (`stats_months`);
+  `'stats' => false` en `site/config.php` las quita del todo.
+
 ## Feed RSS con texto completo y audio adjunto (1.39)
 
 El núcleo publica un feed RSS 2.0 (`cms/lib/feed.php`), encendido de serie y configurable en **Ajustes → Marca y SEO → Feed RSS**

@@ -51,6 +51,8 @@ if (admin_is_post()) {
     $S['feed_on'] = !empty($_POST['feed_on']);
     $S['feed_full'] = !empty($_POST['feed_full']);
     $S['feed_count'] = max(1, min(100, (int) admin_post('feed_count') ?: 20));
+    $S['stats_on'] = !empty($_POST['stats_on']);
+    $S['stats_months'] = max(1, min(60, (int) admin_post('stats_months') ?: 12));
     $S['site_url'] = rtrim(trim(admin_post('site_url')), '/');
     foreach (['logo', 'favicon', 'og_image'] as $k) $S[$k] = admin_post($k);
     $S['languages'] = [];
@@ -65,7 +67,10 @@ if (admin_is_post()) {
     }
     foreach ($declared as $name => $fd) $S[$name] = admin_read_field($name, $fd);
     if ($S['email'] !== '' && !filter_var($S['email'], FILTER_VALIDATE_EMAIL)) admin_flash('El correo de contacto no es válido.', 'err');
-    elseif (cms_json_write(CMS_DATA . '/settings.json', $S)) { admin_flash('Ajustes guardados.'); admin_redirect(admin_url('settings', ['tab' => $tab])); }
+    elseif (cms_json_write(CMS_DATA . '/settings.json', $S)) {
+        cms_settings(true);
+        if (!cms_stats_htaccess_sync()) admin_flash('Ajustes guardados, pero no se pudo escribir el .htaccess de la raíz para contar las descargas. Revisa Estadísticas.', 'err');
+        else admin_flash('Ajustes guardados.'); admin_redirect(admin_url('settings', ['tab' => $tab])); }
     else admin_flash('No se pudieron guardar los ajustes.', 'err');
 }
 
@@ -143,6 +148,12 @@ admin_header('Ajustes', 'settings');
       <div class="ad-field"><label class="ad-check"><input type="checkbox" name="feed_full" value="1"<?= !isset($S['feed_full']) || !empty($S['feed_full']) ? ' checked' : '' ?>> Incluir el texto completo de cada artículo (<code>content:encoded</code>)</label>
         <p class="ad-help">Desmarcado, el feed lleva solo el resumen y el enlace. Con el paquete Audio activo, cada artículo con MP3 lleva su audio como adjunto (<code>enclosure</code>), así el feed funciona también como podcast.</p></div>
       <div class="ad-field ad-field-half"><label>Artículos en el feed</label><input type="number" name="feed_count" min="1" max="100" value="<?= (int) ($S['feed_count'] ?? 20) ?>"></div>
+    </section>
+    <section class="ad-box">
+      <h2>Estadísticas</h2>
+      <div class="ad-field"><label class="ad-check"><input type="checkbox" name="stats_on" value="1"<?= !isset($S['stats_on']) || !empty($S['stats_on']) ? ' checked' : '' ?>> Contar visitas, páginas vistas y descargas (<a href="<?= admin_url('estadisticas') ?>">ver estadísticas</a>)</label>
+        <p class="ad-help">Sin cookies ni servicios externos: el sitio anota en <code>data/stats/</code> cuántas veces se ve cada página y se descarga cada documento o audio de Medios. No cuentan los buscadores ni quien entra al panel. Para las descargas se añade un bloque al <code>.htaccess</code> de la raíz; al apagarlo se quita.</p></div>
+      <div class="ad-field ad-field-half"><label>Meses que se guardan</label><input type="number" name="stats_months" min="1" max="60" value="<?= (int) ($S['stats_months'] ?? 12) ?>"></div>
     </section>
   </div>
 

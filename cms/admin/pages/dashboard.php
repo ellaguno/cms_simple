@@ -16,6 +16,9 @@ admin_header('Inicio', 'dashboard');
 <div class="ad-flash err">Las carpetas <code>data/</code> y <code>uploads/</code> deben tener permiso de escritura (755 o 775) para poder guardar cambios.</div>
 <?php endif; ?>
 <div class="ad-cards">
+<?php if (cms_stats_enabled()): $st = cms_stats_recent(30); ?>
+  <a class="ad-card" href="<?= admin_url('estadisticas') ?>"><strong><?= number_format($st['u']) ?></strong><span>Visitas en 30 días · <?= number_format($st['v']) ?> páginas vistas<?= $st['dl'] ? ' · ' . number_format($st['dl']) . ' descargas' : '' ?></span></a>
+<?php endif; ?>
 <?php foreach ($types as $k => $def): $all = cms_items($k, false); $pub = count(array_filter($all, fn($i) => ($i['status'] ?? '') === 'published')); ?>
   <a class="ad-card" href="<?= admin_url('content', ['type' => $k]) ?>"><strong><?= count($all) ?></strong><span><?= cms_e($def['label'] ?? $k) ?> · <?= $pub ?> publicados</span></a>
 <?php endforeach; ?>

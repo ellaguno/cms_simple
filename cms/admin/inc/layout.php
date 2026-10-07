@@ -10,6 +10,7 @@ declare(strict_types=1);
 function admin_nav(): array
 {
     $nav = ['dashboard' => ['Inicio', admin_url('dashboard')]];
+    if (cms_stats_enabled()) $nav['estadisticas'] = ['Estadísticas', admin_url('estadisticas')];
     // Contenido: las colecciones sin grupo propio, Medios y Mapa del sitio; las colecciones con 'group' conservan su grupo
     $content = []; $groups = [];
     $internal = [];

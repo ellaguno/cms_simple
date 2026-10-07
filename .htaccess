@@ -1,3 +1,10 @@
+# BEGIN cms_simple descargas (Estadísticas; lo pone y lo quita el panel)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{QUERY_STRING} !(^|&)cmsdirect=1(&|$)
+  RewriteRule ^uploads/(.+\.(pdf|docx?|xlsx?|pptx?|ppsx?|od[tsp]|rtf|csv|epub|zip|rar|7z|gz|tgz|mp3|m4a|aac|wav|ogg|oga|opus|flac))$ index.php?p=_cms/dl/$1 [B,NC,QSA,L]
+</IfModule>
+# END cms_simple descargas
 # cms_simple — URLs limpias y protección de carpetas
 Options -Indexes
 DirectoryIndex index.php index.html

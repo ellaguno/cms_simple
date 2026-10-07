@@ -12,7 +12,7 @@
  */
 declare(strict_types=1);
 
-const CMS_VERSION = '1.39.1';
+const CMS_VERSION = '1.40.0';
 
 define('CMS_DIR', __DIR__);
 define('CMS_ROOT', dirname(__DIR__));
@@ -196,6 +196,7 @@ require_once CMS_DIR . '/lib/packs.php';
 require_once CMS_DIR . '/lib/styles.php';
 require_once CMS_DIR . '/lib/registry.php';
 require_once CMS_DIR . '/lib/update.php';
+require_once CMS_DIR . '/lib/stats.php';
 if (CMS_SITE_PARENT !== '' && is_file(CMS_SITE_PARENT . '/inc/functions.php')) require_once CMS_SITE_PARENT . '/inc/functions.php';   // tema padre primero
 if (is_file(CMS_SITE . '/inc/functions.php')) require_once CMS_SITE . '/inc/functions.php';
 // paquetes con código: <paquete>/inc.php se carga una vez por petición si el paquete está activo (ganchos y helpers)

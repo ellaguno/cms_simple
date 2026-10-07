@@ -11,7 +11,7 @@ require_once __DIR__ . '/inc/layout.php';
 require_once __DIR__ . '/inc/fields.php';
 require_once __DIR__ . '/inc/media.php';
 
-$pages = ['dashboard', 'map', 'importar', 'manual', 'login', 'logout', 'content', 'edit', 'preview', 'demo', 'diseno', 'catalogo', 'actualizar', 'media', 'menu', 'strings', 'settings', 'redirects', 'backup', 'users', 'password', 'upload', 'code', 'categorias', 'render', 'archivos'];
+$pages = ['dashboard', 'map', 'importar', 'manual', 'login', 'logout', 'content', 'edit', 'preview', 'demo', 'diseno', 'catalogo', 'actualizar', 'media', 'menu', 'strings', 'settings', 'redirects', 'backup', 'users', 'password', 'upload', 'code', 'categorias', 'render', 'archivos', 'estadisticas'];
 $p = (string) ($_GET['p'] ?? 'dashboard');
 // página propia de un paquete activo: ?p=pack:<nombre> → <paquete>/<archivo declarado en 'admin' => ['file' => …]>
 $packPage = '';
@@ -22,5 +22,11 @@ if (preg_match('/^pack:([a-z0-9_-]+)$/i', $p, $m)) {
 }
 if ($packPage === '' && !in_array($p, $pages, true)) $p = 'dashboard';
 if (!in_array($p, ['login', 'logout'], true)) admin_require_login();
+if (admin_user()) {
+    // quien entra al panel no cuenta en las estadísticas del sitio (lib/stats.php), ni después de cerrar la sesión
+    if (!isset($_COOKIE['cms_staff'])) setcookie('cms_staff', '1', ['expires' => time() + 86400 * 400, 'path' => (CMS_BASE ?: '/'), 'httponly' => true, 'samesite' => 'Lax']);
+    // el bloque de descargas del .htaccess de la raíz: el actualizador solo instala cms/, así que se pone (o se quita) desde aquí
+    if (cms_stats_htaccess_state() !== (cms_stats_enabled() ? 'ok' : 'missing')) cms_stats_htaccess_sync();
+}
 if ($packPage !== '') { $pack = $pk; require $packPage; exit; }
 require __DIR__ . '/pages/' . $p . '.php';

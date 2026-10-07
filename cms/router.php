@@ -10,6 +10,7 @@
  *   /sitemap.xml  /robots.txt  /llms.txt (site/llms.txt, si existe)  /_cms/form (POST del formulario de contacto)
  *   /feed.xml  /{segmento-tipo}/feed.xml  /{segmento-tipo}/{categoría}/feed.xml   → RSS 2.0 (lib/feed.php; también /feed)
  *   /admin/api/…               → API del contenido con token (cms/admin/api.php)
+ *   /_cms/dl/{archivo}         → descarga contada de uploads/ (el .htaccess manda aquí PDF, MP3, ZIP…; lib/stats.php)
  */
 declare(strict_types=1);
 
@@ -33,6 +34,7 @@ if ($path === 'sitemap.xml') { cms_sitemap(); exit; }
 if ($path === 'llms.txt' && is_file(cms_theme_file('llms.txt'))) { header('Content-Type: text/plain; charset=utf-8'); echo str_replace('{{site}}', cms_site_url(), (string) file_get_contents(cms_theme_file('llms.txt'))); exit; }
 if ($path === '_cms/form') { require CMS_DIR . '/form.php'; exit; }
 if ($path === '_cms/cron') { require CMS_DIR . '/cron.php'; exit; }
+if (strpos($path, '_cms/dl/') === 0) { cms_stats_download(substr($path, 8)); exit; }
 
 // ---- idioma
 $lang = cms_default_lang();
@@ -233,6 +235,9 @@ $GLOBALS['cms_current'] = ['type' => $type, 'item' => is_array($item ?? null) ? 
 // los bloques de la cabecera y el pie elegidos cuentan para los recursos (CSS/JS de paquetes) de la página
 foreach (['header', 'footer'] as $lk) if (($lit = cms_layout($lk, $page)) !== null) $page['sections'] = array_merge((array) ($page['sections'] ?? []), (array) ($lit['sections'] ?? []));
 $GLOBALS['cms_current']['page'] = $page;
+
+// estadísticas (lib/stats.php): al terminar, si la página respondió 200 y no es de un bot ni de alguien del panel
+if ($template !== '404') register_shutdown_function('cms_stats_page', $page, is_string($type ?? null) ? $type : '', is_array($item ?? null) ? (string) ($item['slug'] ?? '') : '');
 
 site_header($page);
 require cms_theme_file('templates/' . $template . '.php');

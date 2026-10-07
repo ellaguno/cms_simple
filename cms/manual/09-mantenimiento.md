@@ -10,6 +10,18 @@ En **Respaldos** creas un zip con esas carpetas en un clic, con una nota para re
 
 Hazlo antes de cualquier cambio grande y, en general, una vez al mes. Descarga los importantes: el hosting no es un archivo. Sin el panel, restaurar es descomprimir el zip en la raíz del sitio por FTP.
 
+## Estadísticas
+
+En **Estadísticas** (debajo de Inicio) ves cuánta gente visita el sitio, qué páginas ven más, qué documentos y audios se descargan, de dónde llegan (Google, redes sociales, otros sitios o directo), desde qué país y en qué dispositivo. Elige el periodo arriba: este mes, el anterior, tres o doce meses. La tarjeta de Inicio resume los últimos 30 días.
+
+- **Visitas** son personas distintas por día; **páginas vistas**, cada página que abren. El sitio no usa cookies para esto ni guarda direcciones IP, así que no hace falta el aviso de cookies por ellas.
+- No cuentan los buscadores ni otros robots, las vistas previas, ni tú: el navegador con el que entras al panel queda marcado y deja de contarse, también después de cerrar la sesión.
+- **Descargas**: PDF, documentos de Word, Excel y PowerPoint, comprimidos y audio que subiste a Medios, una vez por persona, archivo y día, también cuando alguien los abre desde un enlace compartido o desde una app de podcast. Para contarlas el sitio añade unas líneas al archivo `.htaccess` de la raíz; si el hosting no le deja escribirlo, la página de Estadísticas te muestra esas líneas para que las pegues por FTP.
+- El país solo aparece si el sitio pasa por Cloudflare.
+- Son cifras para orientarse. Para campañas, conversiones o eventos usa Google Analytics (Ajustes → Marca y SEO).
+
+Se apagan, y se elige cuántos meses guardar, en **Ajustes → Marca y SEO → Estadísticas**. Los datos viven en `data/stats/` y entran en los respaldos.
+
 ## Aviso de cookies
 
 En **Ajustes → Cookies** se activa una barra que pide aceptar el uso de cookies, con texto por idioma, botón, enlace a la política de privacidad y posición (abajo o en la esquina). Aparece hasta que la persona la acepta y no vuelve a salir en ese navegador. Si el sitio solo usa cookies técnicas, como la sesión del panel, no es obligatoria; si añades analítica o video incrustado, conviene activarla y enlazar la política.

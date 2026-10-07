@@ -473,3 +473,29 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-row-actions { flex-wrap: wrap; }
 .ad-theme-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
 .ad-theme img { cursor: zoom-in; }
+/* Estadísticas (1.40) */
+.ad-stat-head .ad-tabs a { border: 1px solid transparent; padding: 7px 13px; border-radius: 999px; color: var(--grey); text-decoration: none; font-weight: 500; }
+.ad-stat-head .ad-tabs a:hover { background: #fff; border-color: var(--line); color: var(--ink); }
+.ad-stat-head .ad-tabs a.on { background: #000; color: #fff; }
+div.ad-card { cursor: default; }
+.ad-chart { width: 100%; height: auto; display: block; }
+.ad-chart-grid { stroke: var(--line); stroke-width: 1; }
+.ad-chart-axis { font-size: 12px; fill: var(--grey); }
+.ad-chart-v { fill: #d9d9de; }
+.ad-chart-u { fill: #111; }
+.ad-chart g:hover .ad-chart-v { fill: #bdbdc4; }
+.ad-chart g:hover .ad-chart-u { fill: #4f46e5; }
+.ad-chart-legend { margin: 8px 0 0; font-size: 13px; color: var(--grey); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ad-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-left: 8px; }
+.ad-dot-u { background: #111; margin-left: 0; }
+.ad-dot-v { background: #d9d9de; }
+.ad-stat-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ad-stat-list li { position: relative; display: flex; align-items: baseline; gap: 10px; padding: 7px 10px; border-radius: 8px; overflow: hidden; }
+.ad-stat-bar { position: absolute; left: 0; top: 0; bottom: 0; background: #f0f0f3; border-radius: 8px; z-index: 0; }
+.ad-stat-k { position: relative; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ad-stat-k a { text-decoration: none; }
+.ad-stat-k a:hover { text-decoration: underline; }
+.ad-stat-k small { color: var(--grey); margin-left: 4px; }
+.ad-stat-edit { color: var(--grey); }
+.ad-stat-list b { position: relative; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ad-pre { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 12px; overflow-x: auto; white-space: pre; color: var(--ink); margin: 10px 0 0; }

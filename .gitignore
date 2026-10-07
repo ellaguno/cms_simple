@@ -16,3 +16,5 @@ data/import-tmp/
 data/index/
 # Tokens de la API (solo hashes, pero son de cada instalación)
 data/api-tokens.json
+# Estadísticas de uso de cada instalación
+data/stats/

@@ -86,6 +86,11 @@ if (admin_is_post()) {
         admin_flash(implode(' ', $msgs), $ok ? 'ok' : 'err');
         admin_redirect($ok ? $url(['tab' => 'cursos']) : $url(['tab' => 'importar', 'dir' => admin_post('dir')]));
     }
+    if ($action === 'unblock') {   // quitar bloqueos por intentos fallidos: de un correo o todos
+        $em = admin_post('email');
+        admin_flash(lms_unblock($em) ? ($em !== '' ? 'Desbloqueado: ' . $em . '. Ya puede volver a intentar.' : 'Bloqueos quitados: todos pueden volver a intentar.') : 'No se pudo escribir data/lms/attempts.json.', 'ok');
+        admin_redirect(admin_post('back') === 'id' && ($x = lms_user_by_email($em)) ? $url(['id' => $x['id']]) : $url());
+    }
     if ($action === 'add') {
         $pass = (string) ($_POST['pass'] ?? '');
         if ($pass === '') $pass = lms_password_gen();
@@ -123,6 +128,7 @@ if (admin_is_post()) {
         if ($pass === '') $pass = lms_password_gen();
         if (strlen($pass) < 8) admin_flash('La contraseña debe tener al menos 8 caracteres.', 'err');
         elseif (lms_user_update($u['id'], ['pass' => $pass])) {
+            lms_unblock((string) $u['email']);   // con contraseña nueva, que pueda entrar ya
             $mailed = !empty($_POST['send']) && $sendAccess(lms_user_get($u['id']), $pass, []);
             admin_flash('Contraseña nueva: ' . $pass . ($mailed ? ' (enviada por correo).' : ' — compártela con el alumno; sus sesiones abiertas se cerraron.'));
         } else admin_flash('No se pudo guardar.', 'err');
@@ -166,6 +172,10 @@ admin_header('Aula: alumnos y avance', $self);
 <?php if ($id !== '' && ($u = lms_user_get($id))): /* ============================== ficha del alumno */
     $mine = $stats[$id] ?? []; unset($mine['_seen']); ?>
 <p><a href="<?= cms_e($url()) ?>">← Alumnos</a></p>
+<?php foreach (lms_blocks() as $b) if ($b['email'] === $u['email']): ?>
+<div class="ad-flash err" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">Bloqueado por intentos fallidos: puede volver a intentar en <?= (int) $b['mins'] ?> min.
+  <form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="unblock"><input type="hidden" name="back" value="id"><input type="hidden" name="email" value="<?= cms_e($u['email']) ?>"><button class="ad-btn ad-btn-sm" type="submit">Desbloquear</button></form></div>
+<?php break; endif; ?>
 <div class="ad-grid2">
   <section class="ad-box">
     <h2><?= cms_e($u['name']) ?> <?= empty($u['active']) ? '<span class="ad-pill warn">Inactivo</span>' : '' ?></h2>
@@ -350,6 +360,24 @@ admin_header('Aula: alumnos y avance', $self);
 </section>
 
 <?php else: /* ============================== alumnos */
+    $blocks = lms_blocks();
+    if ($blocks): ?>
+<section class="ad-box">
+  <h2>Bloqueados por intentos fallidos</h2>
+  <p class="ad-help">Tras 5 contraseñas equivocadas, ese correo no puede entrar desde esa conexión durante 15 minutos (y tras 30 intentos, la conexión entera). Si es alguien de confianza, desbloquéalo aquí; si olvidó su contraseña, ponle una nueva en su ficha (eso también lo desbloquea).</p>
+  <table class="ad-table">
+    <thead><tr><th>Correo</th><th>Espera</th><th></th></tr></thead>
+    <tbody>
+<?php foreach ($blocks as $b): $bu = $b['email'] !== '' ? lms_user_by_email($b['email']) : null; ?>
+      <tr><td><?= $b['email'] !== '' ? ($bu ? '<a href="' . cms_e($url(['id' => $bu['id']])) . '">' . cms_e($b['email']) . '</a>' : cms_e($b['email']) . ' <small class="ad-help">(no es alumno)</small>') : '<em>Toda una conexión (muchos correos distintos)</em>' ?></td><td><?= (int) $b['mins'] ?> min</td>
+        <td class="ad-row-actions"><?php if ($b['email'] !== ''): ?><form method="post" class="ad-inline"><?= admin_csrf_field() ?><input type="hidden" name="action" value="unblock"><input type="hidden" name="email" value="<?= cms_e($b['email']) ?>"><button class="ad-btn ad-btn-sm" type="submit">Desbloquear</button></form><?php endif; ?></td></tr>
+<?php endforeach; ?>
+    </tbody>
+  </table>
+  <form method="post" class="ad-inline" style="margin-top:8px"><?= admin_csrf_field() ?><input type="hidden" name="action" value="unblock"><input type="hidden" name="email" value=""><button class="ad-btn ad-btn-sm ad-btn-light" type="submit">Quitar todos los bloqueos</button></form>
+</section>
+<?php endif; ?>
+<?php /* lista de alumnos */
     $q = mb_strtolower(trim((string) ($_GET['q'] ?? '')));
     $list = $q === '' ? $users : array_filter($users, fn($u) => strpos(mb_strtolower($u['name'] . ' ' . $u['email'] . ' ' . ($u['notes'] ?? '')), $q) !== false); ?>
 <div class="ad-grid2">

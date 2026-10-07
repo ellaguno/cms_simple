@@ -30,7 +30,7 @@ foreach (cms_items(lms_course_type()) as $c) {
 <?php if (!$mine): ?>
     <p class="lead"><?= cms_e(lms_tx('no_courses')) ?></p>
 <?php else: ?>
-    <div class="grid g3 lms-grid">
+    <div class="lms-grid-c">
 <?php foreach ($mine as $c) echo lms_course_card($c, $lang, $user); ?>
     </div>
 <?php endif; ?>
@@ -40,7 +40,7 @@ foreach (cms_items(lms_course_type()) as $c) {
 <section class="sec sec-alt">
   <div class="wrap">
     <div class="sec-head"><h2 style="font-size:1.5rem"><?= cms_e(lms_tx('other_courses')) ?></h2></div>
-    <div class="grid g3 lms-grid">
+    <div class="lms-grid-c">
 <?php foreach ($others as $c) echo lms_course_card($c, $lang, $user); ?>
     </div>
   </div>

@@ -342,6 +342,26 @@ espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con 
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
 
+## Aula: cursos en línea con alumnos y avance (1.41)
+
+Paquete **lms** (`cms/packs/lms`), que se activa en Sistema → Temas y paquetes. Convierte el sitio en un LMS sencillo, sin base de datos:
+
+- **Cursos y lecciones** son dos colecciones nuevas (grupo **Aula** del menú) que declara el propio paquete y se editan como cualquier otra. Curso: nombre, resumen, descripción, "lo que se aprende", imagen, nivel, duración, orden y **acceso**. Lección: curso (selector), módulo, orden, video (YouTube, Vimeo o MP4 de Medios), contenido, materiales ("Texto | ruta") y la casilla **lección de muestra** (visible para todos). Si el tema ya declara `cursos` o `lecciones`, gana la suya.
+- **Acceso por curso**: *abierto* (cualquiera ve las lecciones; el avance se guarda solo con cuenta), *con cuenta* (cualquier alumno que entre) o *solo inscritos* (los que inscribe el administrador). El predeterminado está en Ajustes → Aula.
+- **Alumnos**: cuentas propias, separadas de los usuarios del panel, en `data/lms/users.json`. Las da de alta el administrador (contraseña generada y aviso por correo opcional) o, si Ajustes lo permite, el propio alumno en `/aula/registro` (con código de invitación opcional). La sesión es una cookie firmada con `data/.secret`: no depende de las sesiones de PHP del hosting, y cambiar la contraseña o desactivar al alumno la cierra. 5 intentos fallidos bloquean la IP 15 minutos.
+- **Avance**: "Terminada: siguiente lección" marca la lección y pasa a la que sigue; el temario lateral muestra lo hecho, lo pendiente y lo bloqueado, y el curso su porcentaje. Al 100 % queda fechado como terminado. Un archivo por alumno en `data/lms/progress/<id>.json`.
+- **Páginas del alumno**: `/aula` (sus cursos con el avance y "Continuar"), `/aula/entrar`, `/aula/registro`, `/aula/cuenta`. Añade "/aula" al Menú.
+- **Panel → Aula → Alumnos y avance**: buscador, ficha con el avance lección por lección, inscribir o quitar, borrar avance, cambiar contraseña, desactivar; vista por curso (inscritos, terminados, avance promedio, inscribir por lista de correos) y exportación CSV.
+- **Aspecto**: las plantillas usan `site_header()`/`site_footer()` del tema y sus clases (`.phead`, `.sec`, `.card`, `.btn`, `.form`, `.tag`); `assets/lms.css` solo añade avance, temario y reproductor con los colores del tema (`--cyan`, `--line`…) o `--lms-accent`. El tema puede dar sus plantillas `templates/cursos.php`, `curso.php`, `leccion.php` o `templates/lms/<vista>.php`.
+- Quien tiene sesión en el panel ve todas las lecciones ("Vista de administración") para revisarlas.
+- **Videos protegidos** (Ajustes → Aula, encendido de serie): un video o material que esté en una carpeta propia de Archivos y carpetas (p. ej. `capacitacion/arbitraje/videos/01.mp4`) se sirve por `/aula/video?l=<lección>` solo a quien puede ver la lección, con soporte de Range para adelantar; al guardar la lección, el aula le pone a esa carpeta un `.htaccess` que corta el acceso directo. Los de `uploads/` se sirven directo (no se pueden proteger sin moverlos).
+- **Importar cursos hechos a mano** (Aula → Alumnos y avance → Importar): una carpeta con un `index.html` que trae la lista JS `MODULOS` (archivo, duración, título, para, texto) se convierte en un curso con una lección por video, sin mover los videos; del catálogo de la carpeta de arriba (`CURSOS`) toma temas, "para", color y duración, y puede crear los cursos "pronto" como **Próximamente**. Opcionalmente cambia los `index.html` viejos por una redirección al aula (copia en `data/backups/lms-import/`).
+- Cursos con **Próximamente**, **color** (tarjeta con tapa de color si no hay imagen), **temas** y **para quién**; lecciones con **resumen**, **para quién** y **portada del video**. La dirección del listado (`/cursos`) se cambia en Ajustes → Aula; no uses el nombre de una carpeta de Archivos y carpetas, porque el servidor la sirve antes que el aula.
+
+Núcleo, para este y otros paquetes: manifiesto `'types'` (colecciones de un paquete), ganchos `route` (rutas propias, con POST y redirección) y `template` (plantilla de respaldo cuando el tema no tiene una), `'options_from' => 'tipo'` en los selectores, y `'admin' => ['group' => 'Aula']` pone la página del paquete junto a sus colecciones.
+
+**Siguiente paso previsto: exámenes y calificaciones.** El avance de cada alumno ya reserva `courses.<curso>.exams.<examen>` (intentos y mejor calificación).
+
 ## Estadísticas de uso (1.40)
 
 El panel tiene una página **Estadísticas** (y una tarjeta en Inicio) con visitas, páginas vistas, descargas, procedencia,

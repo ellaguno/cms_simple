@@ -12,7 +12,7 @@
  */
 declare(strict_types=1);
 
-const CMS_VERSION = '1.40.0';
+const CMS_VERSION = '1.41.0';
 
 define('CMS_DIR', __DIR__);
 define('CMS_ROOT', dirname(__DIR__));
@@ -125,7 +125,7 @@ function cms_parent_config(): array
 /** Configuración del sitio (site/config.php) con valores por defecto. */
 function cms_config(?string $key = null, $default = null)
 {
-    static $cfg = null;
+    $cfg = &$GLOBALS['cms_config_cache'];   // global y no static: cms_config_add_type() añade los tipos de los paquetes
     if ($cfg === null) {
         $user = is_file(CMS_SITE . '/config.php') ? (array) require CMS_SITE . '/config.php' : [];
         $cfg = array_replace([
@@ -149,6 +149,17 @@ function cms_config(?string $key = null, $default = null)
     }
     if ($key === null) return $cfg;
     return array_key_exists($key, $cfg) ? $cfg[$key] : $default;
+}
+
+/**
+ * Añade una colección que aporta un paquete (manifiesto 'types', 1.41), si el tema no declara ya una con esa clave:
+ * la del tema gana siempre, así un sitio puede cambiar los campos o las rutas de la colección de un paquete.
+ */
+function cms_config_add_type(string $key, array $def): void
+{
+    cms_config();
+    if (!preg_match('/^[a-z0-9_-]+$/i', $key) || isset($GLOBALS['cms_config_cache']['types'][$key])) return;
+    $GLOBALS['cms_config_cache']['types'][$key] = $def;
 }
 
 /** Definición de la colección interna "Cabeceras y pies" (Diseño → Cabeceras y pies; ver lib/layouts.php). */
@@ -199,6 +210,9 @@ require_once CMS_DIR . '/lib/update.php';
 require_once CMS_DIR . '/lib/stats.php';
 if (CMS_SITE_PARENT !== '' && is_file(CMS_SITE_PARENT . '/inc/functions.php')) require_once CMS_SITE_PARENT . '/inc/functions.php';   // tema padre primero
 if (is_file(CMS_SITE . '/inc/functions.php')) require_once CMS_SITE . '/inc/functions.php';
+// colecciones de los paquetes (manifiesto 'types'): antes de su código, para que inc.php ya las encuentre
+foreach (cms_packs() as $cms_pack) foreach ((array) ($cms_pack['types'] ?? []) as $cms_k => $cms_d) cms_config_add_type((string) $cms_k, (array) $cms_d + ['pack' => $cms_pack['name']]);
+unset($cms_k, $cms_d);
 // paquetes con código: <paquete>/inc.php se carga una vez por petición si el paquete está activo (ganchos y helpers)
 foreach (cms_packs() as $cms_pack) if (is_file($cms_pack['dir'] . '/inc.php')) require_once $cms_pack['dir'] . '/inc.php';
 unset($cms_pack);

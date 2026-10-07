@@ -11,6 +11,7 @@
  *   /feed.xml  /{segmento-tipo}/feed.xml  /{segmento-tipo}/{categoría}/feed.xml   → RSS 2.0 (lib/feed.php; también /feed)
  *   /admin/api/…               → API del contenido con token (cms/admin/api.php)
  *   /_cms/dl/{archivo}         → descarga contada de uploads/ (el .htaccess manda aquí PDF, MP3, ZIP…; lib/stats.php)
+ *   lo demás                   → rutas de los paquetes (gancho 'route'), y si no, 404
  */
 declare(strict_types=1);
 
@@ -216,6 +217,24 @@ if ($template === null && $seg !== []) {
     }
 }
 
+// rutas propias de los paquetes (gancho 'route', 1.41): lo que nada de lo anterior atendió. La función recibe los
+// segmentos (sin el prefijo de idioma) y el idioma; puede atender un POST y redirigir (aún no hay salida) o devolver
+// ['file' => plantilla absoluta, 'page' => [title, desc, alt, noindex…], 'type' => …, 'item' => …] para dibujarla
+// entre site_header() y site_footer() del tema. null = no es suya.
+$tplFile = '';
+if ($template === null && $seg !== [] && cms_has_hook('route')) {
+    $r = cms_apply('route', null, $seg, $lang);
+    if (is_array($r) && is_file((string) ($r['file'] ?? ''))) {
+        $tplFile = (string) $r['file'];
+        $template = 'route';
+        $type = isset($r['type']) ? (string) $r['type'] : null; $def = $type ? cms_type($type) : null;
+        $item = is_array($r['item'] ?? null) ? $r['item'] : null;
+        $page = array_replace($page, (array) ($r['page'] ?? []));
+        $page += ['title' => $site, 'desc' => '', 'alt' => [$lang => CMS_BASE . '/' . ($lang === cms_default_lang() ? '' : $lang . '/') . $path]];
+        $page['route'] = (string) ($r['page']['route'] ?? 'route');
+    }
+}
+
 if ($template === '_layout') {
     $page['canonical'] = cms_abs_url(cms_url('home', $lang));
     $page['sections'] = (array) ($item['sections'] ?? []);
@@ -223,9 +242,12 @@ if ($template === '_layout') {
     cms_layout_preview_page($page);
     exit;
 }
-if ($template === null || !is_file(cms_theme_file('templates/' . $template . '.php'))) {
+// plantilla: la del tema; un paquete puede dar la suya cuando el tema no la trae (gancho 'template', 1.41)
+if ($template !== null && $tplFile === '') $tplFile = (string) cms_apply('template', cms_theme_file('templates/' . $template . '.php'), $template, is_string($type) ? $type : '', $page['route']);
+if ($template === null || !is_file($tplFile)) {
     http_response_code(404);
     $template = '404';
+    $tplFile = cms_theme_file('templates/404.php');
     $page += ['title' => $t('not_found_title', '404') . ' · ' . $site, 'desc' => '', 'alt' => $alt('home'), 'noindex' => true];
 }
 if ($template !== '404') cms_lang_negotiate($lang, $page, is_string($type ?? null) ? $type : '', is_array($item ?? null) ? (string) ($item['slug'] ?? '') : '');   // Ajustes → idioma según el visitante
@@ -240,5 +262,5 @@ $GLOBALS['cms_current']['page'] = $page;
 if ($template !== '404') register_shutdown_function('cms_stats_page', $page, is_string($type ?? null) ? $type : '', is_array($item ?? null) ? (string) ($item['slug'] ?? '') : '');
 
 site_header($page);
-require cms_theme_file('templates/' . $template . '.php');
+require $tplFile;
 site_footer($page);

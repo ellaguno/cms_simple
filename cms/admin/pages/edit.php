@@ -158,4 +158,5 @@ $titleInputName = !empty($fields[$titleField]['i18n']) ? $titleField . '[' . $dl
 <?php if (!$is_new) foreach (cms_item_versions($type, $item['slug']) as $v): ?>
 <form method="post" id="restore-<?= cms_e($v['name']) ?>" class="ad-inline" data-confirm="¿Restaurar la versión del <?= cms_e($v['when']) ?>? La versión actual quedará guardada."><?= admin_csrf_field() ?><input type="hidden" name="action" value="restore"><input type="hidden" name="version" value="<?= cms_e($v['name']) ?>"></form>
 <?php endforeach; ?>
+<?php if (!$is_new) cms_do('admin.item.after', $type, $item); ?>
 <?php admin_footer();

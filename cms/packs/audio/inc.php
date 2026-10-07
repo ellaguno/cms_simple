@@ -336,25 +336,36 @@ if (!function_exists('au_settings')) {
         foreach (cms_active_langs() as $l) if (au_path($item, $l) === '') au_generate($type, (string) $item['slug'], $l);
     });
 
-    // botones en la barra lateral del editor
+    // botones en la barra lateral del editor. La barra está dentro del <form> del editor y los formularios anidados no
+    // existen en HTML (el navegador ignora el interior y el botón enviaba el editor: "guardado" y nada más), así que
+    // aquí solo van botones con form="…" y los formularios se imprimen después del editor (gancho admin.item.after).
     cms_on('admin.item.sidebar', function (string $type, array $item): void {
         if (!au_type_ok($type)) return;
         $o = au_settings();
-        $back = admin_url('edit', ['type' => $type, 'slug' => $item['slug']]);
         echo '<div class="ad-field au-box"><label>Audio · ' . cms_e(au_provider_label($o['provider'])) . '</label>';
         foreach (cms_active_langs() as $l) {
             $path = au_path($item, $l);
             $tag = count(cms_langs()) > 1 ? strtoupper($l) . ': ' : '';
             echo '<div class="au-row">';
             if ($path !== '') echo '<audio controls preload="none" src="' . cms_e(cms_img($path)) . '" style="width:100%;height:32px"></audio>';
-            echo '<form method="post" action="' . admin_url('pack:audio') . '" class="ad-inline">' . admin_csrf_field()
-                . '<input type="hidden" name="action" value="generate"><input type="hidden" name="type" value="' . cms_e($type) . '"><input type="hidden" name="slug" value="' . cms_e($item['slug']) . '"><input type="hidden" name="lang" value="' . cms_e($l) . '"><input type="hidden" name="back" value="' . cms_e($back) . '">'
-                . '<button class="ad-btn ad-btn-sm' . ($path !== '' ? ' ad-btn-light' : '') . '" type="submit" title="Convierte el texto guardado; guarda antes tus cambios">' . $tag . ($path !== '' ? 'Volver a generar' : 'Generar audio') . '</button></form> ';
-            if ($path !== '') echo '<form method="post" action="' . admin_url('pack:audio') . '" class="ad-inline" data-confirm="¿Quitar el audio' . ($tag ? ' ' . strtoupper($l) : '') . '?">' . admin_csrf_field()
-                . '<input type="hidden" name="action" value="remove"><input type="hidden" name="type" value="' . cms_e($type) . '"><input type="hidden" name="slug" value="' . cms_e($item['slug']) . '"><input type="hidden" name="lang" value="' . cms_e($l) . '"><input type="hidden" name="back" value="' . cms_e($back) . '">'
-                . '<button class="ad-btn ad-btn-sm ad-btn-light" type="submit">Quitar</button></form>';
+            echo '<button class="ad-btn ad-btn-sm' . ($path !== '' ? ' ad-btn-light' : '') . '" type="submit" form="au-generate-' . cms_e($l) . '" title="Convierte el texto guardado; guarda antes tus cambios">' . $tag . ($path !== '' ? 'Volver a generar' : 'Generar audio') . '</button> ';
+            if ($path !== '') echo '<button class="ad-btn ad-btn-sm ad-btn-light" type="submit" form="au-remove-' . cms_e($l) . '">Quitar</button>';
             echo '</div>';
         }
         echo '<p class="ad-help">Convierte el texto tal como está guardado. Tarda unos segundos por cada 4,000 caracteres.</p></div>';
+    });
+
+    // formularios de esos botones, fuera del <form> del editor
+    cms_on('admin.item.after', function (string $type, array $item): void {
+        if (!au_type_ok($type)) return;
+        $back = admin_url('edit', ['type' => $type, 'slug' => $item['slug']]);
+        foreach (cms_active_langs() as $l) {
+            $tag = count(cms_langs()) > 1 ? ' ' . strtoupper($l) : '';
+            foreach (['generate' => '', 'remove' => ' data-confirm="¿Quitar el audio' . $tag . '?"'] as $action => $extra) {
+                if ($action === 'remove' && au_path($item, $l) === '') continue;
+                echo '<form method="post" id="au-' . $action . '-' . cms_e($l) . '" action="' . admin_url('pack:audio') . '" class="ad-inline"' . $extra . '>' . admin_csrf_field()
+                    . '<input type="hidden" name="action" value="' . $action . '"><input type="hidden" name="type" value="' . cms_e($type) . '"><input type="hidden" name="slug" value="' . cms_e($item['slug']) . '"><input type="hidden" name="lang" value="' . cms_e($l) . '"><input type="hidden" name="back" value="' . cms_e($back) . '"></form>' . "\n";
+            }
+        }
     });
 }

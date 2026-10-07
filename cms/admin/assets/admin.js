@@ -650,12 +650,15 @@
   /* blindaje contra mod_security: los campos con etiquetas (<script>, <?php…) viajan codificados (=?rb64?= = base64 con
      la cadena invertida) y auth.php los decodifica; si no, el firewall del hosting corta el POST con "Not Acceptable".
      Se invierte el base64 para que un firewall que lo decodifique obtenga bytes revueltos, no las etiquetas. Va en
-     document (burbuja) para correr después de que Quill, CodeMirror y el constructor hayan volcado su contenido. */
+     document (burbuja) para correr después de que Quill, CodeMirror y el constructor hayan volcado su contenido.
+     Con data-armor-all (Ajustes) viaja codificado todo campo de texto con valor: claves de API (sk-…, AIza…), URL y
+     textos libres también disparan reglas del firewall, y no hay forma de saber cuál de antemano. */
   document.addEventListener("submit", function (e) {
     var f = e.target; if (e.defaultPrevented || !f || f.hasAttribute("data-no-armor")) return;
-    var undo = [];
-    f.querySelectorAll("textarea, input[type=hidden]").forEach(function (el) {
-      if (el.disabled || !el.name || el.value.indexOf("<") === -1) return;
+    var all = f.hasAttribute("data-armor-all"), undo = [];
+    f.querySelectorAll(all ? "textarea, input[type=hidden], input[type=text], input[type=password], input[type=url], input[type=email], input[type=tel], input[type=search], input:not([type])" : "textarea, input[type=hidden]").forEach(function (el) {
+      if (el.disabled || !el.name || el.name === "_csrf" || el.value === "" || el.value.indexOf("=?rb64?=") === 0) return;
+      if (!all && el.value.indexOf("<") === -1) return;
       var v = el.value;
       try { el.value = "=?rb64?=" + btoa(unescape(encodeURIComponent(v))).split("").reverse().join(""); undo.push([el, v]); } catch (err) {}
     });

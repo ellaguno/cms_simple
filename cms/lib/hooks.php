@@ -12,7 +12,9 @@
  *   head       acción  ($page)           al final de cms_head(): para emitir <style>, <script> o <meta> propios.
  *   item.save  acción  ($type, $item)    tras guardar un elemento desde el panel (o con cms_item_save()).
  *   admin.item.sidebar  acción ($type, $item)  en la barra lateral del editor de un elemento ya guardado (1.28):
- *                                        para botones o información propios del paquete (echo HTML).
+ *                                        para botones o información propios del paquete (echo HTML). Está dentro del
+ *                                        <form> del editor: sin <form> propios (no se anidan); botones con form="id".
+ *   admin.item.after    acción ($type, $item)  después del <form> del editor (1.39.1): para los <form> de esos botones.
  *   cron       acción  ($log)            cuando el cron del hosting llama a /_cms/cron?token=… (o php cms/cron.php).
  *                                        $log es una función ($mensaje) para dejar constancia en data/cron.json.
  *

@@ -72,7 +72,7 @@ if (admin_is_post()) {
 $anyI18n = count(cms_langs()) > 1 && (bool) array_filter($declared, fn($d) => !empty($d['i18n']));
 admin_header('Ajustes', 'settings');
 ?>
-<form method="post" class="ad-form" data-dirty-warn>
+<form method="post" class="ad-form" data-dirty-warn data-armor-all>
   <?= admin_csrf_field() ?><input type="hidden" name="tab" value="<?= cms_e($tab) ?>">
   <nav class="ad-tabs" data-tabs aria-label="Secciones de ajustes">
 <?php foreach ($tabs as $k => $t): ?>    <button type="button" data-tab="<?= cms_e($k) ?>"<?= $k === $tab ? ' class="on"' : '' ?>><?= cms_e($t['label']) ?></button>

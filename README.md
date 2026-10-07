@@ -533,7 +533,7 @@ Para ellos el núcleo ganó cuatro piezas, cada una pedida por un paquete real:
 
 - **Página propia en el panel**: `'admin' => ['label' => 'Audio', 'file' => 'admin.php']` en `pack.php`. Aparece en el
   menú lateral y responde en `admin/?p=pack:<nombre>`, con `$pack` (el manifiesto) y todos los helpers del panel.
-- **Gancho `admin.item.sidebar`** (acción `$type, $item`): la barra lateral del editor de un elemento ya guardado.
+- **Gancho `admin.item.sidebar`** (acción `$type, $item`): la barra lateral del editor de un elemento ya guardado. Va dentro del `<form>` del editor: los botones propios apuntan con `form="id"` a formularios impresos en **`admin.item.after`** (1.39.1), después del editor.
 - **Cron del hosting**: `/_cms/cron?token=…` (o `php cms/cron.php`) ejecuta el gancho `cron` de los paquetes activos con
   una función `$log`; el token sale de `cms_cron_token()` (derivado de `data/.secret`), un bloqueo evita solapes y el
   resumen queda en `data/cron.json`. Se programa cada 15 o 30 minutos; cada paquete decide si le toca algo.

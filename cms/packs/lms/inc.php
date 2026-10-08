@@ -30,6 +30,7 @@ if (!function_exists('lms_settings')) {
     require_once __DIR__ . '/quiz.php';
     require_once __DIR__ . '/cert.php';
     require_once __DIR__ . '/moodle.php';
+    require_once __DIR__ . '/scorm.php';
 
     /* ================================================================== ajustes y textos */
 
@@ -211,6 +212,40 @@ if (!function_exists('lms_settings')) {
             'video_auto'     => ['es' => 'La lección se marca sola al ver el video.', 'en' => 'The lesson is marked complete when you watch the video.'],
             'err_video'      => ['es' => 'Primero ve el video de la lección.', 'en' => 'Watch the lesson video first.'],
             'staff_learner'  => ['es' => 'Tienes sesión en el panel y también como alumno (%s): tu avance se guarda como alumno.', 'en' => 'You are signed in to the admin and as a student (%s): progress is saved as the student.'],
+            'scorm_new'      => ['es' => 'Sin empezar', 'en' => 'Not started'],
+            'scorm_incomplete' => ['es' => 'En curso', 'en' => 'In progress'],
+            'scorm_completed' => ['es' => 'Completado', 'en' => 'Completed'],
+            'scorm_passed'   => ['es' => 'Aprobado', 'en' => 'Passed'],
+            'scorm_failed'   => ['es' => 'No aprobado', 'en' => 'Failed'],
+            'scorm_score'    => ['es' => 'Calificación: %s %%', 'en' => 'Score: %s%%'],
+            'scorm_not_saved' => ['es' => 'sin guardar (entra como alumno para guardar tu avance)', 'en' => 'not saved (sign in as a student to save your progress)'],
+            'scorm_full'     => ['es' => 'Pantalla completa', 'en' => 'Full screen'],
+            'scorm_contents' => ['es' => 'Partes de la lección', 'en' => 'Parts of the lesson'],
+            'scorm_missing'  => ['es' => 'El paquete de esta lección no está disponible.', 'en' => 'This lesson package is not available.'],
+            'sx_start'       => ['es' => 'Empezar', 'en' => 'Start'],
+            'sx_next'        => ['es' => 'Siguiente', 'en' => 'Next'],
+            'sx_prev'        => ['es' => 'Anterior', 'en' => 'Previous'],
+            'sx_done'        => ['es' => 'Terminada', 'en' => 'Completed'],
+            'sx_mark'        => ['es' => 'Marcar como terminada', 'en' => 'Mark as complete'],
+            'sx_submit'      => ['es' => 'Enviar respuestas', 'en' => 'Submit answers'],
+            'sx_retry'       => ['es' => 'Intentar de nuevo', 'en' => 'Try again'],
+            'sx_score'       => ['es' => 'Calificación', 'en' => 'Score'],
+            'sx_passed'      => ['es' => 'Aprobada', 'en' => 'Passed'],
+            'sx_failed'      => ['es' => 'No aprobada', 'en' => 'Not passed'],
+            'sx_materials'   => ['es' => 'Materiales', 'en' => 'Materials'],
+            'sx_contents'    => ['es' => 'Contenido del curso', 'en' => 'Course content'],
+            'sx_quiz'        => ['es' => 'Evaluación', 'en' => 'Quiz'],
+            'sx_correct'     => ['es' => 'Correcta', 'en' => 'Correct'],
+            'sx_wrong'       => ['es' => 'Incorrecta', 'en' => 'Incorrect'],
+            'sx_your'        => ['es' => 'Tu respuesta', 'en' => 'Your answer'],
+            'sx_right_answer' => ['es' => 'Respuesta correcta', 'en' => 'Correct answer'],
+            'sx_complete'    => ['es' => '¡Terminaste el curso!', 'en' => 'You completed the course!'],
+            'sx_resume'      => ['es' => 'Continuar', 'en' => 'Continue'],
+            'sx_true'        => ['es' => 'Verdadero', 'en' => 'True'],
+            'sx_false'       => ['es' => 'Falso', 'en' => 'False'],
+            'sx_unanswered'  => ['es' => 'Hay preguntas sin contestar. ¿Enviar de todos modos?', 'en' => 'Some questions are unanswered. Submit anyway?'],
+            'sx_open_note'   => ['es' => 'Pregunta abierta: no cuenta para la calificación.', 'en' => 'Open question: it does not count toward the score.'],
+            'sx_multi'       => ['es' => 'Marca todas las que correspondan.', 'en' => 'Select all that apply.'],
             'cert'           => ['es' => 'Constancia', 'en' => 'Certificate'],
             'my_certs'       => ['es' => 'Mis constancias', 'en' => 'My certificates'],
             'cert_get'       => ['es' => 'Ver mi constancia', 'en' => 'View my certificate'],
@@ -763,7 +798,7 @@ if (!function_exists('lms_settings')) {
     /* ---- archivos de las lecciones: videos y materiales en uploads/ o en una carpeta propia (Archivos y carpetas) */
 
     /** Carpetas raíz que no son "propias": sus archivos no se protegen ni se sirven por el aula. */
-    function lms_core_dirs(): array { return ['cms', 'site', 'themes', 'packs', 'data', 'admin', 'uploads', 'tools']; }
+    function lms_core_dirs(): array { return ['cms', 'site', 'themes', 'packs', 'data', 'admin', 'uploads', 'tools', 'scorm']; }
 
     /** Ruta relativa limpia de un archivo local ("capacitacion/x/v.mp4", "/uploads/…" → sin barra inicial) o '' si es externo. */
     function lms_rel(string $path): string
@@ -815,18 +850,22 @@ if (!function_exists('lms_settings')) {
     }
 
     /** Envía un archivo con soporte de Range (para adelantar el video) y termina. */
-    function lms_send_file(string $file): void
+    function lms_send_file(string $file, bool $web = false): void
     {
         $size = (int) filesize($file);
-        $mime = ['mp4' => 'video/mp4', 'm4v' => 'video/mp4', 'webm' => 'video/webm', 'mov' => 'video/quicktime', 'mp3' => 'audio/mpeg', 'pdf' => 'application/pdf',
-                 'vtt' => 'text/vtt', 'html' => 'text/html; charset=utf-8', 'htm' => 'text/html; charset=utf-8', 'txt' => 'text/plain; charset=utf-8', 'md' => 'text/plain; charset=utf-8', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'zip' => 'application/zip'][strtolower(pathinfo($file, PATHINFO_EXTENSION))] ?? 'application/octet-stream';
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        $webMime = ['js' => 'text/javascript; charset=utf-8', 'mjs' => 'text/javascript; charset=utf-8', 'css' => 'text/css; charset=utf-8', 'json' => 'application/json', 'xml' => 'application/xml',
+                    'svg' => 'image/svg+xml', 'gif' => 'image/gif', 'ico' => 'image/x-icon', 'woff' => 'font/woff', 'woff2' => 'font/woff2', 'ttf' => 'font/ttf', 'otf' => 'font/otf', 'eot' => 'application/vnd.ms-fontobject',
+                    'wav' => 'audio/wav', 'ogg' => 'audio/ogg', 'm4a' => 'audio/mp4', 'swf' => 'application/x-shockwave-flash', 'wasm' => 'application/wasm', 'csv' => 'text/csv; charset=utf-8'];
+        $mime = ($web ? ($webMime[$ext] ?? null) : null) ?? ['mp4' => 'video/mp4', 'm4v' => 'video/mp4', 'webm' => 'video/webm', 'mov' => 'video/quicktime', 'mp3' => 'audio/mpeg', 'pdf' => 'application/pdf',
+                 'vtt' => 'text/vtt', 'html' => 'text/html; charset=utf-8', 'htm' => 'text/html; charset=utf-8', 'txt' => 'text/plain; charset=utf-8', 'md' => 'text/plain; charset=utf-8', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'zip' => 'application/zip'][$ext] ?? 'application/octet-stream';
         $start = 0; $end = $size - 1;
         while (ob_get_level()) ob_end_clean();
         header('Content-Type: ' . $mime);
         header('Accept-Ranges: bytes');
         header('Cache-Control: private, max-age=3600');
         header('X-Content-Type-Options: nosniff');
-        if (!preg_match('#^(video|audio|image|text)/|pdf$#', $mime)) header('Content-Disposition: attachment; filename="' . str_replace('"', '', basename($file)) . '"');
+        if (!$web && !preg_match('#^(video|audio|image|text)/|pdf$#', $mime)) header('Content-Disposition: attachment; filename="' . str_replace('"', '', basename($file)) . '"');
         if (preg_match('/^bytes=(\d*)-(\d*)$/', (string) ($_SERVER['HTTP_RANGE'] ?? ''), $m) && ($m[1] !== '' || $m[2] !== '')) {
             if ($m[1] === '') { $start = max(0, $size - (int) $m[2]); }
             else { $start = (int) $m[1]; if ($m[2] !== '') $end = min($end, (int) $m[2]); }
@@ -1117,7 +1156,22 @@ if (!function_exists('lms_settings')) {
 
     function lms_route(array $seg, string $lang): ?array
     {
-        if (($seg[0] ?? '') !== lms_settings()['route'] || count($seg) > 2) return null;
+        if (($seg[0] ?? '') !== lms_settings()['route']) return null;
+        // /aula/sco/<lección>/<archivo…>: un archivo de un paquete SCORM, a quien puede ver la lección
+        if (($seg[1] ?? '') === 'sco' && count($seg) >= 4) {
+            lms_staff();
+            $lesson = cms_type(lms_lesson_type()) ? (cms_item(lms_lesson_type(), cms_slugify((string) $seg[2])) ?? (lms_staff() ? cms_item(lms_lesson_type(), cms_slugify((string) $seg[2]), false) : null)) : null;
+            $course = $lesson ? (lms_course(lms_lesson_course($lesson)) ?? (lms_staff() ? lms_course(lms_lesson_course($lesson), false) : null)) : null;
+            $pkg = $lesson ? lms_scorm_rel((string) ($lesson['scorm'] ?? '')) : '';
+            $relf = implode('/', array_map('rawurldecode', array_slice($seg, 3)));
+            $file = $pkg !== '' && strpos($relf, '..') === false ? realpath(CMS_ROOT . '/' . $pkg . '/' . $relf) : false;
+            $base = $pkg !== '' ? realpath(CMS_ROOT . '/' . $pkg) : false;
+            if (!$file || !$base || strpos($file, $base . DIRECTORY_SEPARATOR) !== 0 || !is_file($file) || preg_match('/\.(php\d?|phtml|phar|htaccess)$/i', $file)) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); echo 'No encontrado.'; exit; }
+            if (!$course || !lms_can_view($course, $lesson)) { http_response_code(403); header('Content-Type: text/plain; charset=utf-8'); echo 'Sin acceso.'; exit; }
+            header('X-Robots-Tag: noindex');
+            lms_send_file($file, true);
+        }
+        if (count($seg) > 2) return null;
         $sub = (string) ($seg[1] ?? '');
         $post = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
         header('Cache-Control: no-store, private');
@@ -1242,6 +1296,17 @@ if (!function_exists('lms_settings')) {
                 $course = $lesson ? lms_course(lms_lesson_course($lesson)) : null;
                 if (!$user || !lms_csrf_ok() || !$lesson || !$course || !lms_can_view($course, $lesson)) { http_response_code(403); echo '{"ok":false}'; exit; }
                 $r = lms_watch($user['id'], (string) $course['slug'], (string) $lesson['slug'], (int) ($_POST['pct'] ?? 0));
+                echo json_encode(['ok' => true] + $r);
+                exit;
+
+            case 'scorm':   // POST del reproductor SCORM: {lesson, sco, data: JSON con los cmi.*}; responde JSON
+                header('Content-Type: application/json; charset=utf-8');
+                $slug = cms_slugify((string) ($_POST['lesson'] ?? ''));
+                $lesson = $post && $slug !== '' && cms_type(lms_lesson_type()) ? cms_item(lms_lesson_type(), $slug) : null;
+                $course = $lesson ? lms_course(lms_lesson_course($lesson)) : null;
+                $cmi = json_decode((string) ($_POST['data'] ?? ''), true);
+                if (!$user || !lms_csrf_ok() || !$lesson || !$course || !is_array($cmi) || !lms_can_view($course, $lesson)) { http_response_code(403); echo '{"ok":false}'; exit; }
+                $r = lms_scorm_save($user['id'], (string) $course['slug'], $lesson, (string) ($_POST['sco'] ?? ''), $cmi);
                 echo json_encode(['ok' => true] + $r);
                 exit;
 

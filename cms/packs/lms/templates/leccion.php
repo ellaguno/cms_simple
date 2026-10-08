@@ -31,6 +31,10 @@ $S = lms_settings();
 $track = $user && $can && $course && lms_has_video($item);
 $watched = $track ? lms_watched($user['id'], (string) $course['slug'], (string) $item['slug']) : 0;
 $needVideo = $track && !$done && $S['video_mode'] === 'exigir' && $watched < $S['video_pct'];
+// paquete SCORM: se reproduce en lugar del video y marca la lección solo
+$pkg = lms_scorm_rel((string) ($item['scorm'] ?? ''));
+$man = $pkg !== '' && $can ? lms_scorm_manifest($pkg) : null;
+if ($pkg !== '') $track = false;
 ?>
 <section class="phead lms-head lms-head-lesson">
   <div class="wrap phead-in">
@@ -63,7 +67,33 @@ $needVideo = $track && !$done && $S['video_mode'] === 'exigir' && $watched < $S[
 <?php endif; ?>
         </div>
 <?php else: ?>
-<?php if ($track): ?>
+<?php if ($pkg !== '' && $man && !isset($man['error'])):
+    $sdata = $user && $course ? lms_scorm_data($user['id'], (string) $course['slug'], (string) $item['slug']) : [];
+    $start = 0;
+    foreach ($man['scos'] as $i => $sc) if (!in_array((string) ($sdata[$sc['id']]['cmi.core.lesson_status'] ?? ''), ['completed', 'passed'], true)) { $start = $i; break; }
+    $nameParts = $user ? explode(' ', (string) $user['name'], 2) : ['', ''];
+    $scfg = ['url' => lms_url('scorm'), 'csrf' => lms_csrf(), 'lesson' => (string) $item['slug'], 'save' => (bool) $user, 'start' => $start, 'data' => (object) $sdata,
+             'student' => ['id' => $user['id'] ?? 'invitado', 'name' => $user ? trim(($nameParts[1] ?? '') . ', ' . $nameParts[0], ', ') : 'Invitado'],
+             'scos' => array_map(fn($sc) => ['id' => $sc['id'], 'title' => $sc['title'], 'mastery' => $sc['mastery'], 'url' => lms_url('sco') . '/' . rawurlencode((string) $item['slug']) . '/' . implode('/', array_map('rawurlencode', explode('/', $sc['href'])))], $man['scos']),
+             't' => ['not attempted' => lms_tx('scorm_new'), 'incomplete' => lms_tx('scorm_incomplete'), 'browsed' => lms_tx('scorm_incomplete'), 'completed' => lms_tx('scorm_completed'),
+                     'passed' => lms_tx('scorm_passed'), 'failed' => lms_tx('scorm_failed'), 'score' => lms_tx('scorm_score', '%s'), 'lesson_done' => lms_tx('done'), 'not_saved' => lms_tx('scorm_not_saved')]];
+    // la URL de cada SCO lleva la consulta del manifiesto (parameters) tal cual
+    foreach ($man['scos'] as $i => $sc) if (strpos($sc['href'], '?') !== false || strpos($sc['href'], '#') !== false) { [$path, $rest] = preg_split('/(?=[?#])/', $sc['href'], 2); $scfg['scos'][$i]['url'] = lms_url('sco') . '/' . rawurlencode((string) $item['slug']) . '/' . implode('/', array_map('rawurlencode', explode('/', $path))) . $rest; } ?>
+        <div class="lms-scorm<?= $done ? ' is-done' : '' ?>" data-lms-scorm>
+          <script type="application/json"><?= json_encode($scfg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+<?php if (count($man['scos']) > 1): ?>
+          <nav class="lms-scorm-toc" aria-label="<?= cms_e(lms_tx('scorm_contents')) ?>">
+<?php foreach ($man['scos'] as $sc): $sst = (string) ($sdata[$sc['id']]['cmi.core.lesson_status'] ?? ''); ?>            <button type="button" data-sco="<?= cms_e($sc['id']) ?>"><?= lms_icon(in_array($sst, ['completed', 'passed'], true) ? 'done' : 'todo') ?> <span><?= cms_e($sc['title']) ?></span></button>
+<?php endforeach; ?>
+          </nav>
+<?php endif; ?>
+          <div class="lms-scorm-stage"><iframe title="<?= cms_e($title) ?>" allow="fullscreen; autoplay; encrypted-media" allowfullscreen></iframe></div>
+          <p class="lms-scorm-bar"><span data-scorm-status></span><button type="button" class="btn btn-ghost btn-sm" data-scorm-full><?= cms_e(lms_tx('scorm_full')) ?></button></p>
+        </div>
+        <script src="<?= cms_e(cms_pack_asset(lms_pack(), 'assets/lms-scorm.js')) ?>" defer></script>
+<?php elseif ($pkg !== ''): ?>
+        <p class="form-msg err lms-msg"><?= cms_e(lms_tx('scorm_missing')) ?><?= $staff && $man ? ' (' . cms_e((string) $man['error']) . ')' : '' ?></p>
+<?php elseif ($track): ?>
         <div data-lms-watch data-url="<?= cms_e(lms_url('visto')) ?>" data-lesson="<?= cms_e($item['slug']) ?>" data-csrf="<?= cms_e(lms_csrf()) ?>" data-pct="<?= $watched ?>" data-need="<?= $S['video_pct'] ?>" data-done="<?= $done ? '1' : '0' ?>" data-key="<?= cms_e(substr(hash('sha256', $user['id'] . '|' . $item['slug']), 0, 16)) ?>" data-kind="<?= cms_e(preg_match('~vimeo~i', (string) $item['video']) ? 'vimeo' : (preg_match('~youtu~i', (string) $item['video']) ? 'youtube' : 'file')) ?>">
           <?= lms_video($item, $title) ?>
         </div>
@@ -94,7 +124,8 @@ $needVideo = $track && !$done && $S['video_mode'] === 'exigir' && $watched < $S[
         </div>
 <?php endif; ?>
         <div class="lms-actions">
-<?php if ($user): ?>
+<?php if ($user && $pkg !== ''): ?>
+<?php elseif ($user): ?>
           <form method="post" action="<?= cms_e(lms_url('avance')) ?>" class="lms-mark">
             <?= lms_csrf_field() ?><input type="hidden" name="lesson" value="<?= cms_e($item['slug']) ?>">
 <?php if ($done): ?>

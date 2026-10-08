@@ -9,6 +9,8 @@
  *   &quiz=<evaluación>  resultados de una evaluación por alumno; &id=<alumno>[&n=<intento>] revisa y califica un intento
  *   &csv=alumnos|<curso>|quiz:<evaluación>  exportación CSV (UTF-8 con BOM, para Excel)
  *   &tab=importar[&dir=<carpeta>]  importar un curso hecho a mano en Archivos y carpetas (import.php)
+ *   &tab=scorm          paquetes SCORM 1.2: subir, crear la lección que lo usa, borrar (scorm.php)
+ *   &scorm_export=<curso>[&videos=1&files=1]  descargar el curso como paquete SCORM 1.2
  */
 declare(strict_types=1);
 require_once __DIR__ . '/import.php';
@@ -45,6 +47,22 @@ $pendingList = function () use ($users, $quizzes): array {
     usort($out, fn($a, $b) => strcmp($a['end'], $b['end']));
     return $out;
 };
+
+// ------------------------------------------------------------------ exportar un curso como SCORM 1.2
+if (isset($_GET['scorm_export']) && isset($courses[cms_slugify((string) $_GET['scorm_export'])])) {
+    $cs = cms_slugify((string) $_GET['scorm_export']);
+    @set_time_limit(300);
+    [$zip, $warn] = lms_scorm_export($cs, $lang, ['videos' => !empty($_GET['videos']), 'files' => !empty($_GET['files'])]);
+    if (!$zip) { admin_flash(implode(' ', $warn), 'err'); admin_redirect($url(['course' => $cs])); }
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/zip');
+    header('Content-Disposition: attachment; filename="' . $cs . '-scorm12-' . date('Ymd') . '.zip"');
+    header('Content-Length: ' . filesize($zip));
+    admin_flash('Paquete SCORM 1.2 de «' . $courseTitle($cs) . '» descargado.' . ($warn ? ' Avisos: ' . implode(' ', $warn) : ''), $warn ? 'err' : 'ok');   // se ve al volver al panel
+    readfile($zip);
+    @unlink($zip);
+    exit;
+}
 
 // ------------------------------------------------------------------ preguntas en formatos de Moodle
 if (isset($_GET['export'], $_GET['quiz']) && ($qz = $quizFull(cms_slugify((string) $_GET['quiz'])))) {
@@ -124,6 +142,49 @@ if (admin_is_post()) {
         [$ok, $msgs] = $action === 'import' ? lms_import_run(admin_post('dir'), $io) : lms_import_complete(admin_post('dir'), $io);
         admin_flash(implode(' ', $msgs), $ok ? 'ok' : 'err');
         admin_redirect($ok ? $url(['tab' => 'cursos']) : $url(['tab' => 'importar', 'dir' => admin_post('dir')]));
+    }
+    if ($action === 'scorm_upload') {   // subir un paquete SCORM (.zip)
+        $f = $_FILES['file'] ?? null;
+        if (!is_array($f) || ($f['error'] ?? 1) !== UPLOAD_ERR_OK) admin_flash('No llegó el archivo' . (is_array($f) && in_array($f['error'] ?? 0, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true) ? ': pasa del tamaño máximo de subida del servidor (' . ini_get('upload_max_filesize') . '). Súbelo por FTP o en Archivos y carpetas y escribe su ruta abajo.' : '.'), 'err');
+        else {
+            $name = admin_post('name') !== '' ? admin_post('name') : pathinfo((string) $f['name'], PATHINFO_FILENAME);
+            [$ok, $r, $w] = lms_scorm_install((string) $f['tmp_name'], $name, !empty($_POST['replace']));
+            admin_flash($ok ? 'Paquete instalado en /' . $r . '/.' . ($w ? ' ' . implode(' ', $w) : '') : $r, $ok && !$w ? 'ok' : 'err');
+        }
+        admin_redirect($url(['tab' => 'scorm']));
+    }
+    if ($action === 'scorm_from_path') {   // un .zip que ya está en el sitio (subido por FTP o en Archivos y carpetas)
+        $src = lms_local_file(admin_post('path'));
+        if (!$src || strtolower(pathinfo($src, PATHINFO_EXTENSION)) !== 'zip') admin_flash('No encontré ese .zip en el sitio.', 'err');
+        else {
+            [$ok, $r, $w] = lms_scorm_install($src, admin_post('name') !== '' ? admin_post('name') : pathinfo($src, PATHINFO_FILENAME), !empty($_POST['replace']));
+            admin_flash($ok ? 'Paquete instalado en /' . $r . '/.' . ($w ? ' ' . implode(' ', $w) : '') : $r, $ok && !$w ? 'ok' : 'err');
+        }
+        admin_redirect($url(['tab' => 'scorm']));
+    }
+    if ($action === 'scorm_lesson') {   // crear la lección que usa un paquete
+        $pkg = lms_scorm_rel(admin_post('pkg'));
+        $man = $pkg !== '' ? lms_scorm_manifest($pkg) : ['error' => 'Paquete no válido.'];
+        $cs = cms_slugify(admin_post('course'));
+        if (isset($man['error']) || !isset($courses[$cs])) { admin_flash($man['error'] ?? 'Elige el curso.', 'err'); admin_redirect($url(['tab' => 'scorm'])); }
+        $title = admin_post('title') !== '' ? admin_post('title') : (string) $man['title'];
+        $slug = cms_slugify($cs . '-' . $title) ?: $cs . '-scorm';
+        $base = $slug; $k = 2;
+        while (cms_item(lms_lesson_type(), $slug, false)) $slug = $base . '-' . $k++;
+        $es = cms_default_lang(); $now = date('Y-m-d');
+        $order = admin_post('order');
+        if (!is_numeric($order)) { $order = 0; foreach (lms_lessons($cs, false) as $l) $order = max($order, (float) ($l['order'] ?? 0)); $order++; }
+        $ok = cms_item_save(lms_lesson_type(), ['slug' => $slug, 'status' => 'published', 'title' => [$es => $title], 'summary' => [$es => ''], 'course' => $cs, 'order' => $order + 0,
+            'module' => [$es => admin_post('module')], 'scorm' => $pkg, 'video' => '', 'body' => [$es => ''], 'files' => [], 'preview' => false, 'created' => $now, 'updated' => $now]);
+        admin_flash($ok ? 'Lección «' . $title . '» creada en «' . $courseTitle($cs) . '» con el paquete.' : 'No se pudo guardar la lección.', $ok ? 'ok' : 'err');
+        admin_redirect($ok ? admin_url('edit', ['type' => lms_lesson_type(), 'slug' => $slug]) : $url(['tab' => 'scorm']));
+    }
+    if ($action === 'scorm_delete') {
+        $pkg = lms_scorm_rel(admin_post('pkg'));
+        $used = array_filter(cms_items(lms_lesson_type(), false), fn($l) => ($l['scorm'] ?? '') === $pkg);
+        if ($pkg === '' || $used) admin_flash($used ? 'Lo usan ' . count($used) . ' lección(es); quítalo de ellas primero.' : 'Paquete no válido.', 'err');
+        else { lms_scorm_rmdir(CMS_ROOT . '/' . $pkg); admin_flash('Paquete /' . $pkg . '/ borrado.'); }
+        admin_redirect($url(['tab' => 'scorm']));
     }
     if ($action === 'quiz_import') {   // preguntas desde un archivo Moodle XML, GIFT o de texto
         $qs = cms_slugify(admin_post('quiz'));
@@ -230,7 +291,7 @@ if (admin_is_post()) {
 $id = preg_replace('/[^a-f0-9]/', '', (string) ($_GET['id'] ?? ''));
 $course = cms_slugify((string) ($_GET['course'] ?? ''));
 $quiz = cms_slugify((string) ($_GET['quiz'] ?? ''));
-$tab = $course !== '' ? 'cursos' : ($quiz !== '' ? 'evaluaciones' : (in_array((string) ($_GET['tab'] ?? ''), ['cursos', 'importar', 'evaluaciones'], true) ? (string) $_GET['tab'] : 'alumnos'));
+$tab = $course !== '' ? 'cursos' : ($quiz !== '' ? 'evaluaciones' : (in_array((string) ($_GET['tab'] ?? ''), ['cursos', 'importar', 'evaluaciones', 'scorm'], true) ? (string) $_GET['tab'] : 'alumnos'));
 $pending = $quizzes ? $pendingList() : [];
 $stats = $allStats();
 $accessLabel = ['abierto' => 'Abierto', 'cuenta' => 'Con cuenta', 'inscritos' => 'Solo inscritos'];
@@ -245,6 +306,7 @@ admin_header('Aula: alumnos y avance', $self);
     <a href="<?= cms_e($url()) ?>"<?= $tab === 'alumnos' && $id === '' ? ' style="background:#000;color:#fff"' : '' ?>>Alumnos (<?= count($users) ?>)</a>
     <a href="<?= cms_e($url(['tab' => 'cursos'])) ?>"<?= $tab === 'cursos' ? ' style="background:#000;color:#fff"' : '' ?>>Cursos (<?= count($courses) ?>)</a>
     <a href="<?= cms_e($url(['tab' => 'evaluaciones'])) ?>"<?= $tab === 'evaluaciones' ? ' style="background:#000;color:#fff"' : '' ?>>Evaluaciones (<?= count($quizzes) ?>)<?= $pending ? ' <span class="ad-pill warn">' . count($pending) . ' por calificar</span>' : '' ?></a>
+    <a href="<?= cms_e($url(['tab' => 'scorm'])) ?>"<?= $tab === 'scorm' ? ' style="background:#000;color:#fff"' : '' ?>>SCORM</a>
     <a href="<?= cms_e($url(['tab' => 'importar'])) ?>"<?= $tab === 'importar' ? ' style="background:#000;color:#fff"' : '' ?>>Importar</a>
   </nav>
   <p class="ad-help" style="margin:0">Público: <a href="<?= cms_e(lms_url('', $lang)) ?>" target="_blank" rel="noopener"><?= cms_e(lms_url('', $lang)) ?></a> · <a href="<?= cms_e(cms_url('list:' . $ct, $lang)) ?>" target="_blank" rel="noopener"><?= cms_e(cms_url('list:' . $ct, $lang)) ?></a> · <a href="<?= admin_url('settings') ?>">Ajustes del aula</a></p>
@@ -491,7 +553,7 @@ admin_header('Aula: alumnos y avance', $self);
       <tr><td><?= $i + 1 ?></td><td><span class="ad-pill">Evaluación</span> <a href="<?= cms_e($url(['quiz' => $l['slug']])) ?>"><?= cms_e((string) cms_f($l, 'title', $lang)) ?></a></td><td><?= cms_e((string) cms_f($l, 'module', $lang)) ?></td>
         <td><?php if (!$ea): ?>—<?php else: ?><a href="<?= cms_e($url(['quiz' => $l['slug'], 'id' => $id, 'n' => $last['n']])) ?>"><?= isset($e['best']) ? 'Mejor: ' . (int) $e['best'] . ' %' : 'Por calificar' ?></a> · <?= count($ea) ?> intento<?= count($ea) === 1 ? '' : 's' ?><?= !empty($e['passed']) ? ' · <span class="ad-pill on">Aprobada</span>' : '' ?><?= array_filter($ea, fn($a) => $a['status'] === 'pending') ? ' <span class="ad-pill warn">Por calificar</span>' : '' ?><?php endif; ?><?= !empty($e['open']) ? ' <span class="ad-pill warn">Presentándola ahora</span>' : '' ?></td></tr>
 <?php else: $d = (string) ($s['lessons'][$l['slug']] ?? ''); $wv = (int) ($watch[$cs][$l['slug']] ?? 0); ?>
-      <tr><td><?= $i + 1 ?></td><td><a href="<?= admin_url('edit', ['type' => lms_lesson_type(), 'slug' => $l['slug']]) ?>"><?= cms_e((string) cms_f($l, 'title', $lang)) ?></a></td><td><?= cms_e((string) cms_f($l, 'module', $lang)) ?></td><td><?= $d !== '' ? '✓ ' . $ago($d) : '—' ?><?= $wv > 0 ? ' <small class="ad-help" style="display:inline">· video visto ' . $wv . ' %</small>' : '' ?></td></tr>
+      <tr><td><?= $i + 1 ?></td><td><a href="<?= admin_url('edit', ['type' => lms_lesson_type(), 'slug' => $l['slug']]) ?>"><?= cms_e((string) cms_f($l, 'title', $lang)) ?></a></td><td><?= cms_e((string) cms_f($l, 'module', $lang)) ?></td><td><?= $d !== '' ? '✓ ' . $ago($d) : '—' ?><?= $wv > 0 ? ' <small class="ad-help" style="display:inline">· video visto ' . $wv . ' %</small>' : '' ?><?php if (($l['scorm'] ?? '') !== '' && ($sd = lms_scorm_data($id, $cs, (string) $l['slug']))): $sm = lms_scorm_summary($sd); ?> <small class="ad-help" style="display:inline">· SCORM: <?= cms_e(lms_scorm_status_text($sm['status'])) ?><?= $sm['score'] !== null ? ' · ' . $sm['score'] . ' %' : '' ?><?= $sm['time'] ? ' · ' . cms_e(lms_minutes_text($sm['time'] / 60)) : '' ?></small><?php endif; ?></td></tr>
 <?php endif; endforeach; ?>
     </tbody>
   </table>
@@ -526,6 +588,13 @@ admin_header('Aula: alumnos y avance', $self);
 <section class="ad-box">
   <h2><?= cms_e($courseTitle($course)) ?> <span class="ad-pill"><?= cms_e($accessLabel[lms_course_access($c)]) ?></span><?= cms_item_is_live($c) ? '' : ' <span class="ad-pill warn">No publicado</span>' ?></h2>
   <p class="ad-actions"><a class="ad-btn ad-btn-sm ad-btn-light" href="<?= admin_url('edit', ['type' => $ct, 'slug' => $course]) ?>">Editar curso</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= admin_url('content', ['type' => lms_lesson_type()]) ?>">Lecciones</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e(cms_url('item:' . $ct, $lang, $course)) ?>" target="_blank" rel="noopener">Ver en el sitio</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e($url(['csv' => $course])) ?>">Exportar CSV</a></p>
+  <form method="get" class="ad-inline-form" style="margin:4px 0 12px">
+    <input type="hidden" name="p" value="<?= cms_e($self) ?>"><input type="hidden" name="scorm_export" value="<?= cms_e($course) ?>">
+    <span class="ad-help" style="display:inline">Paquete SCORM 1.2 para el LMS de un cliente (Moodle, Canvas…):</span>
+    <label class="ad-check" style="display:inline-flex"><input type="checkbox" name="videos" value="1" checked> incluir los videos</label>
+    <label class="ad-check" style="display:inline-flex"><input type="checkbox" name="files" value="1" checked> y los materiales</label>
+    <button class="ad-btn ad-btn-sm" type="submit">Exportar SCORM 1.2</button>
+  </form>
 <?php if (!$rows): ?>
   <p class="ad-help">Nadie ha empezado este curso todavía.</p>
 <?php else: ?>
@@ -554,6 +623,57 @@ admin_header('Aula: alumnos y avance', $self);
     <p><button class="ad-btn" type="submit">Inscribir</button></p>
   </form>
 </section>
+
+<?php elseif ($tab === 'scorm'): /* ============================== paquetes SCORM */
+    $pkgs = lms_scorm_packages();
+    $usedBy = [];
+    foreach (cms_type(lms_lesson_type()) ? cms_items(lms_lesson_type(), false) : [] as $l) if (($l['scorm'] ?? '') !== '') $usedBy[(string) $l['scorm']][] = $l; ?>
+<section class="ad-box">
+  <h2>Paquetes SCORM 1.2</h2>
+  <p class="ad-help">Sube un paquete SCORM (el .zip que exportan Articulate Storyline/Rise, iSpring, Adobe Captivate, H5P, Moodle…). Se descomprime en <code>/scorm/&lt;nombre&gt;/</code> sin archivos que el servidor pudiera ejecutar, y la carpeta queda sin acceso directo: el aula lo sirve solo a quien puede ver la lección. Después crea la lección que lo usa (o escribe <code>scorm/&lt;nombre&gt;</code> en el campo «Paquete SCORM» de una lección). El paquete guarda su avance, su calificación y dónde se quedó el alumno; la lección se marca terminada cuando lo completa.</p>
+  <form method="post" enctype="multipart/form-data" class="ad-form">
+    <?= admin_csrf_field() ?><input type="hidden" name="action" value="scorm_upload">
+    <div class="ad-two">
+      <div class="ad-field"><label>Archivo .zip (máximo del servidor: <?= cms_e((string) ini_get('upload_max_filesize')) ?>)</label><input type="file" name="file" accept=".zip" required></div>
+      <div class="ad-field"><label>Nombre de la carpeta (opcional)</label><input type="text" name="name" placeholder="vacío = el nombre del archivo"></div>
+    </div>
+    <label class="ad-check"><input type="checkbox" name="replace" value="1"> Reemplazar si ya existe (el avance de los alumnos se conserva)</label>
+    <p><button class="ad-btn" type="submit">Subir paquete</button></p>
+  </form>
+  <form method="post" class="ad-inline-form" style="margin-top:6px">
+    <?= admin_csrf_field() ?><input type="hidden" name="action" value="scorm_from_path">
+    <span class="ad-help" style="display:inline">¿Muy grande para subirlo aquí? Súbelo por FTP o en Archivos y carpetas y escribe su ruta:</span>
+    <input type="text" name="path" placeholder="capacitacion/paquete.zip" required> <input type="text" name="name" placeholder="nombre (opcional)" style="width:150px">
+    <label class="ad-check" style="display:inline-flex"><input type="checkbox" name="replace" value="1"> reemplazar</label>
+    <button class="ad-btn ad-btn-sm" type="submit">Instalar</button>
+  </form>
+</section>
+<?php if ($pkgs): ?>
+<section class="ad-box">
+  <h2>Instalados</h2>
+  <table class="ad-table">
+    <thead><tr><th>Paquete</th><th>Partes (SCO)</th><th>Lecciones que lo usan</th><th></th></tr></thead>
+    <tbody>
+<?php foreach ($pkgs as $rel => $m): ?>
+      <tr>
+        <td><strong><?= cms_e((string) ($m['title'] ?? $rel)) ?></strong><small class="ad-help"><code><?= cms_e($rel) ?></code><?= !empty($m['version']) ? ' · SCORM ' . cms_e((string) $m['version']) : '' ?></small><?php if (isset($m['error'])): ?><small class="ad-help" style="color:#b45309"><?= cms_e($m['error']) ?></small><?php endif; ?><?php foreach ((array) ($m['warn'] ?? []) as $w): ?><small class="ad-help" style="color:#b45309"><?= cms_e($w) ?></small><?php endforeach; ?></td>
+        <td><?= isset($m['scos']) ? cms_e(implode(', ', array_map(fn($x) => $x['title'], $m['scos']))) : '—' ?></td>
+        <td><?php foreach ($usedBy[$rel] ?? [] as $l): ?><div><a href="<?= admin_url('edit', ['type' => lms_lesson_type(), 'slug' => $l['slug']]) ?>"><?= cms_e((string) cms_f($l, 'title', $lang)) ?></a> <small class="ad-help" style="display:inline">· <?= cms_e($courseTitle((string) ($l['course'] ?? ''))) ?></small></div><?php endforeach; ?>
+<?php if (!isset($m['error']) && $courses): ?>
+          <form method="post" class="ad-inline-form" style="margin-top:6px">
+            <?= admin_csrf_field() ?><input type="hidden" name="action" value="scorm_lesson"><input type="hidden" name="pkg" value="<?= cms_e($rel) ?>">
+            <select name="course" required><option value="">— curso —</option><?php foreach ($courses as $cs => $c): ?><option value="<?= cms_e($cs) ?>"><?= cms_e($courseTitle($cs)) ?></option><?php endforeach; ?></select>
+            <input type="text" name="title" placeholder="<?= cms_e((string) $m['title']) ?>" style="width:180px"> <input type="number" name="order" step="any" placeholder="orden" style="width:80px"> <input type="text" name="module" placeholder="módulo" style="width:120px">
+            <button class="ad-btn ad-btn-sm" type="submit">Crear lección</button>
+          </form>
+<?php endif; ?></td>
+        <td class="ad-row-actions"><?php if (empty($usedBy[$rel])): ?><form method="post" class="ad-inline" data-confirm="¿Borrar el paquete /<?= cms_e($rel) ?>/?"><?= admin_csrf_field() ?><input type="hidden" name="action" value="scorm_delete"><input type="hidden" name="pkg" value="<?= cms_e($rel) ?>"><button class="ad-btn ad-btn-sm ad-btn-danger" type="submit">Borrar</button></form><?php endif; ?></td>
+      </tr>
+<?php endforeach; ?>
+    </tbody>
+  </table>
+</section>
+<?php endif; ?>
 
 <?php elseif ($tab === 'importar'): /* ============================== importar de Archivos y carpetas */
     $cands = lms_import_candidates();

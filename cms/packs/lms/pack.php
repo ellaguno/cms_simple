@@ -19,8 +19,8 @@ $lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Pri
     . "En el texto de la pregunta: **negritas** y `código`. La vista de la evaluación con sesión en el panel muestra las respuestas correctas y los avisos del formato.";
 return [
     'label' => 'Aula: cursos en línea (LMS)',
-    'version' => '1.4.0',
-    'desc' => 'Cursos con lecciones y evaluaciones, alumnos con cuenta propia, inscripciones y avance. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada, presentan cuestionarios y exámenes (opción única o múltiple, verdadero/falso, respuesta corta, numérica y abiertas que califica el instructor) y siguen con lo siguiente. El avance de los videos se sigue solo (YouTube, Vimeo o MP4: cuenta lo que de verdad se vio) y puede exigirse antes de marcar la lección. Al terminar un curso, el alumno recibe por correo su constancia para imprimir o guardar en PDF, con código de verificación público. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance y calificaciones de cada alumno, revisión de intentos, preguntas por calificar y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos.',
+    'version' => '1.5.0',
+    'desc' => 'Cursos con lecciones y evaluaciones, alumnos con cuenta propia, inscripciones y avance. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada, presentan cuestionarios y exámenes (opción única o múltiple, verdadero/falso, respuesta corta, numérica y abiertas que califica el instructor) y siguen con lo siguiente. El avance de los videos se sigue solo (YouTube, Vimeo o MP4: cuenta lo que de verdad se vio) y puede exigirse antes de marcar la lección. Al terminar un curso, el alumno recibe por correo su constancia para imprimir o guardar en PDF, con código de verificación público. Reproduce paquetes SCORM 1.2 (Articulate, iSpring, Captivate, H5P…) con su avance y calificación, y exporta cada curso como paquete SCORM 1.2 para el LMS de un cliente. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance y calificaciones de cada alumno, revisión de intentos, preguntas por calificar y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos.',
     'assets' => [],
     'effects' => [],
     'admin' => ['label' => 'Alumnos y avance', 'file' => 'admin.php', 'group' => 'Aula'],
@@ -73,6 +73,8 @@ return [
                 'summary'  => ['type' => 'textarea', 'label' => 'De qué trata (se ve bajo el título)', 'i18n' => true, 'rows' => 2],
                 'video'    => ['type' => 'text', 'label' => 'Video (opcional)', 'placeholder' => 'https://youtu.be/…, capacitacion/arbitraje/videos/01.mp4, uploads/2026/10/clase.mp4',
                                'help' => 'YouTube, Vimeo o un MP4/WebM: de Medios o de una carpeta de Archivos y carpetas. Los de una carpeta propia quedan protegidos: solo los ve quien tiene acceso a la lección (Ajustes → Aula).'],
+                'scorm'    => ['type' => 'text', 'label' => 'Paquete SCORM (opcional)', 'placeholder' => 'scorm/nombre-del-paquete',
+                               'help' => 'Un paquete SCORM 1.2 subido en Aula → Alumnos y avance → SCORM. Se reproduce en la lección en lugar del video, guarda su avance y calificación, y la lección se marca sola al completarlo.'],
                 'body'     => ['type' => 'html', 'label' => 'Contenido', 'i18n' => true, 'size' => 'lg'],
                 'files'    => ['type' => 'lines', 'label' => 'Materiales para descargar (uno por línea: "Texto | ruta o URL")', 'rows' => 4,
                                'placeholder' => "Presentación | uploads/2026/10/presentacion.pdf\nEjercicio | uploads/2026/10/ejercicio.xlsx"],

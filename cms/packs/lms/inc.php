@@ -246,6 +246,9 @@ if (!function_exists('lms_settings')) {
             'sx_unanswered'  => ['es' => 'Hay preguntas sin contestar. ¿Enviar de todos modos?', 'en' => 'Some questions are unanswered. Submit anyway?'],
             'sx_open_note'   => ['es' => 'Pregunta abierta: no cuenta para la calificación.', 'en' => 'Open question: it does not count toward the score.'],
             'sx_multi'       => ['es' => 'Marca todas las que correspondan.', 'en' => 'Select all that apply.'],
+            'private_title'  => ['es' => 'Curso privado', 'en' => 'Private course'],
+            'private_text'   => ['es' => 'Este curso es solo para un grupo o una organización. Si crees que deberías verlo, escríbenos.', 'en' => 'This course is only for a group or an organization. If you think you should see it, write to us.'],
+            'private_login'  => ['es' => 'Este curso es solo para un grupo o una organización. Entra con tu cuenta para verlo.', 'en' => 'This course is only for a group or an organization. Sign in to see it.'],
             'cert'           => ['es' => 'Constancia', 'en' => 'Certificate'],
             'my_certs'       => ['es' => 'Mis constancias', 'en' => 'My certificates'],
             'cert_get'       => ['es' => 'Ver mi constancia', 'en' => 'View my certificate'],
@@ -530,10 +533,40 @@ if (!function_exists('lms_settings')) {
         return in_array($a, ['abierto', 'cuenta', 'inscritos'], true) ? $a : lms_settings()['access'];
     }
 
+    /* ---- grupos (1.47): un curso con grupos solo existe para los alumnos de esos grupos */
+
+    /** Normaliza una lista de grupos: minúsculas, sin acentos ni espacios raros, sin repetidos. */
+    function lms_groups_clean($g): array
+    {
+        $out = [];
+        foreach (is_array($g) ? $g : explode(',', (string) $g) as $x) { $x = cms_slugify(trim((string) $x)); if ($x !== '') $out[$x] = $x; }
+        return array_values($out);
+    }
+
+    function lms_course_groups(array $course): array { return lms_groups_clean($course['groups'] ?? []); }
+
+    function lms_user_groups(?array $u): array { return $u ? lms_groups_clean($u['groups'] ?? []) : []; }
+
+    /** ¿El curso existe para quien lo ve? (sin grupos: para todos; con grupos: alumnos de esos grupos y el panel) */
+    function lms_course_visible(array $course, ?array $user = null): bool
+    {
+        $g = lms_course_groups($course);
+        if (!$g || lms_staff()) return true;
+        $user = $user ?? lms_user();
+        return (bool) array_intersect($g, lms_user_groups($user));
+    }
+
+    /** Cursos publicados que puede ver quien está viendo (los de grupos ajenos no aparecen). */
+    function lms_visible_courses(?array $user = null): array
+    {
+        return array_filter(cms_items(lms_course_type()), fn($c) => lms_course_visible($c, $user));
+    }
+
     /** ¿Quien está viendo puede abrir esta lección? */
     function lms_can_view(array $course, array $lesson): bool
     {
         if (lms_staff()) return true;
+        if (!lms_course_visible($course)) return false;
         if (!empty($course['soon'])) return false;   // "Próximamente": se anuncia, no se abre
         if (!empty($lesson['preview'])) return true;
         $a = lms_course_access($course);

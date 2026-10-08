@@ -6,7 +6,7 @@
  * Disponibles: $lang, $page, $type, $def, $t (textos), $S (ajustes).
  */
 $user = lms_user();
-$courses = array_values(cms_items($type));
+$courses = array_values(lms_visible_courses());
 $S0 = cms_settings();
 $kicker = lms_setting_text('lms_hero_kicker', 'hero_kicker');
 $title = lms_setting_text('lms_hero_title', 'hero_title');

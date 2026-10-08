@@ -81,15 +81,15 @@ if (isset($_GET['csv'])) {
     $stats = $allStats();
     $rows = [];
     if ($which === 'alumnos') {
-        $rows[] = ['Nombre', 'Correo', 'Activo', 'Alta', 'Última visita', 'Curso', 'Inscrito', 'Lecciones terminadas', 'Lecciones del curso', 'Avance %', 'Terminado'];
+        $rows[] = ['Nombre', 'Correo', 'Grupos', 'Activo', 'Alta', 'Última visita', 'Curso', 'Inscrito', 'Lecciones terminadas', 'Lecciones del curso', 'Avance %', 'Terminado'];
         foreach ($users as $id => $u) {
             $any = false;
             foreach ($stats[$id] ?? [] as $cs => $s) {
                 if ($cs === '_seen') continue;
                 $any = true;
-                $rows[] = [$u['name'], $u['email'], !empty($u['active']) ? 'sí' : 'no', $u['created'] ?? '', $stats[$id]['_seen'] ?? '', $courseTitle($cs), $s['since'], $s['done'], $s['total'], $s['pct'], $s['completed']];
+                $rows[] = [$u['name'], $u['email'], implode(', ', lms_user_groups($u)), !empty($u['active']) ? 'sí' : 'no', $u['created'] ?? '', $stats[$id]['_seen'] ?? '', $courseTitle($cs), $s['since'], $s['done'], $s['total'], $s['pct'], $s['completed']];
             }
-            if (!$any) $rows[] = [$u['name'], $u['email'], !empty($u['active']) ? 'sí' : 'no', $u['created'] ?? '', $stats[$id]['_seen'] ?? '', '', '', '', '', '', ''];
+            if (!$any) $rows[] = [$u['name'], $u['email'], implode(', ', lms_user_groups($u)), !empty($u['active']) ? 'sí' : 'no', $u['created'] ?? '', $stats[$id]['_seen'] ?? '', '', '', '', '', '', ''];
         }
         $name = 'alumnos';
     } elseif (isset($courses[$which])) {
@@ -211,6 +211,7 @@ if (admin_is_post()) {
         $pass = (string) ($_POST['pass'] ?? '');
         if ($pass === '') $pass = lms_password_gen();
         [$ok, $r] = lms_user_create(admin_post('name'), admin_post('email'), $pass, admin_post('notes'));
+        if ($ok && ($gs = lms_groups_clean(admin_post('groups')))) lms_user_update($r, ['groups' => $gs]);
         if (!$ok) { admin_flash(['err_name' => 'Falta el nombre.', 'err_email' => 'El correo no es válido.', 'err_exists' => 'Ya hay un alumno con ese correo.', 'err_pass' => 'La contraseña debe tener al menos 8 caracteres.'][$r] ?? 'No se pudo guardar data/lms/users.json.', 'err'); admin_redirect($url()); }
         $names = [];
         foreach ((array) ($_POST['courses'] ?? []) as $cs) { $cs = cms_slugify((string) $cs); if (isset($courses[$cs])) { lms_enroll($r, $cs, 'admin'); $names[] = $courseTitle($cs); } }
@@ -264,7 +265,7 @@ if (admin_is_post()) {
         if (admin_post('name') === '') admin_flash('Falta el nombre.', 'err');
         elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) admin_flash('El correo no es válido.', 'err');
         elseif ($other && $other['id'] !== $u['id']) admin_flash('Ese correo ya es de otro alumno.', 'err');
-        else admin_flash(lms_user_update($u['id'], ['name' => admin_post('name'), 'email' => $email, 'notes' => admin_post('notes'), 'active' => !empty($_POST['active'])]) ? 'Datos guardados.' : 'No se pudo guardar.', 'ok');
+        else admin_flash(lms_user_update($u['id'], ['name' => admin_post('name'), 'email' => $email, 'notes' => admin_post('notes'), 'active' => !empty($_POST['active']), 'groups' => lms_groups_clean(admin_post('groups'))]) ? 'Datos guardados.' : 'No se pudo guardar.', 'ok');
     } elseif ($action === 'password') {
         $pass = (string) ($_POST['pass'] ?? '');
         if ($pass === '') $pass = lms_password_gen();
@@ -510,12 +511,14 @@ admin_header('Aula: alumnos y avance', $self);
   <section class="ad-box">
     <h2><?= cms_e($u['name']) ?> <?= empty($u['active']) ? '<span class="ad-pill warn">Inactivo</span>' : '' ?></h2>
     <p class="ad-help">Alta: <?= $ago((string) ($u['created'] ?? '')) ?> · Última visita: <?= $ago((string) ($stats[$id]['_seen'] ?? '')) ?></p>
+    <?php cms_do('lms.admin.user', $u); /* los paquetes muestran aquí lo suyo (p. ej. la organización con la que entra) */ ?>
     <form method="post" class="ad-form">
       <?= admin_csrf_field() ?><input type="hidden" name="action" value="update"><input type="hidden" name="id" value="<?= cms_e($id) ?>">
       <div class="ad-two">
         <div class="ad-field"><label>Nombre</label><input type="text" name="name" required value="<?= cms_e($u['name']) ?>"></div>
         <div class="ad-field"><label>Correo (para entrar)</label><input type="email" name="email" required value="<?= cms_e($u['email']) ?>"></div>
       </div>
+      <div class="ad-field"><label>Grupos (separados por coma)</label><input type="text" name="groups" value="<?= cms_e(implode(', ', lms_user_groups($u))) ?>" placeholder="despacho-perez, ventas"><p class="ad-help">Los cursos marcados «Solo para los grupos» solo los ven los alumnos de esos grupos.</p></div>
       <div class="ad-field"><label>Notas internas</label><textarea name="notes" rows="2" placeholder="Empresa, grupo, factura…"><?= cms_e((string) ($u['notes'] ?? '')) ?></textarea></div>
       <label class="ad-check"><input type="checkbox" name="active" value="1"<?= !empty($u['active']) ? ' checked' : '' ?>> Activo (si lo desmarcas no puede entrar; su avance se conserva)</label>
       <p><button class="ad-btn" type="submit">Guardar</button></p>
@@ -586,7 +589,7 @@ admin_header('Aula: alumnos y avance', $self);
   <div class="ad-card"><strong><?= count(array_filter($rows, fn($u) => lms_cert_get($u['id'], $course) !== null)) ?></strong><span>Constancias emitidas<?= lms_cert_on($c) ? '' : ' (este curso no da)' ?></span></div>
 </div>
 <section class="ad-box">
-  <h2><?= cms_e($courseTitle($course)) ?> <span class="ad-pill"><?= cms_e($accessLabel[lms_course_access($c)]) ?></span><?= cms_item_is_live($c) ? '' : ' <span class="ad-pill warn">No publicado</span>' ?></h2>
+  <h2><?= cms_e($courseTitle($course)) ?> <span class="ad-pill"><?= cms_e($accessLabel[lms_course_access($c)]) ?></span><?php foreach (lms_course_groups($c) as $gg): ?> <span class="ad-pill warn">solo <?= cms_e($gg) ?></span><?php endforeach; ?><?= cms_item_is_live($c) ? '' : ' <span class="ad-pill warn">No publicado</span>' ?></h2>
   <p class="ad-actions"><a class="ad-btn ad-btn-sm ad-btn-light" href="<?= admin_url('edit', ['type' => $ct, 'slug' => $course]) ?>">Editar curso</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= admin_url('content', ['type' => lms_lesson_type()]) ?>">Lecciones</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e(cms_url('item:' . $ct, $lang, $course)) ?>" target="_blank" rel="noopener">Ver en el sitio</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e($url(['csv' => $course])) ?>">Exportar CSV</a></p>
   <form method="get" class="ad-inline-form" style="margin:4px 0 12px">
     <input type="hidden" name="p" value="<?= cms_e($self) ?>"><input type="hidden" name="scorm_export" value="<?= cms_e($course) ?>">
@@ -793,7 +796,7 @@ admin_header('Aula: alumnos y avance', $self);
     $rows = array_filter($users, fn($u) => isset($stats[$u['id']][$cs]));
     $avg = $rows ? (int) round(array_sum(array_map(fn($u) => $stats[$u['id']][$cs]['pct'], $rows)) / count($rows)) : 0; ?>
       <tr>
-        <td><a href="<?= cms_e($url(['course' => $cs])) ?>"><strong><?= cms_e($courseTitle($cs)) ?></strong></a><?= cms_item_is_live($c) ? '' : ' <span class="ad-pill warn">No publicado</span>' ?></td>
+        <td><a href="<?= cms_e($url(['course' => $cs])) ?>"><strong><?= cms_e($courseTitle($cs)) ?></strong></a><?= cms_item_is_live($c) ? '' : ' <span class="ad-pill warn">No publicado</span>' ?><?php foreach (lms_course_groups($c) as $gg): ?> <span class="ad-pill warn">solo <?= cms_e($gg) ?></span><?php endforeach; ?></td>
         <td><?= cms_e($accessLabel[lms_course_access($c)]) ?></td>
         <td><?= count(lms_lessons($cs)) ?></td>
         <td><?= count($rows) ?></td>
@@ -826,13 +829,20 @@ admin_header('Aula: alumnos y avance', $self);
 <?php endif; ?>
 <?php /* lista de alumnos */
     $q = mb_strtolower(trim((string) ($_GET['q'] ?? '')));
-    $list = $q === '' ? $users : array_filter($users, fn($u) => strpos(mb_strtolower($u['name'] . ' ' . $u['email'] . ' ' . ($u['notes'] ?? '')), $q) !== false); ?>
+    $g = cms_slugify((string) ($_GET['g'] ?? ''));
+    $allGroups = [];
+    foreach ($users as $x) foreach (lms_user_groups($x) as $gg) $allGroups[$gg] = ($allGroups[$gg] ?? 0) + 1;
+    ksort($allGroups);
+    $list = $q === '' ? $users : array_filter($users, fn($u) => strpos(mb_strtolower($u['name'] . ' ' . $u['email'] . ' ' . ($u['notes'] ?? '') . ' ' . implode(' ', lms_user_groups($u))), $q) !== false);
+    if ($g !== '') $list = array_filter($list, fn($u) => in_array($g, lms_user_groups($u), true)); ?>
 <div class="ad-grid2">
   <section class="ad-box">
     <h2>Alumnos</h2>
     <form method="get" class="ad-filter" role="search" style="margin-bottom:12px">
       <input type="hidden" name="p" value="<?= cms_e($self) ?>">
-      <input type="search" name="q" value="<?= cms_e($q) ?>" placeholder="Buscar por nombre, correo o notas">
+      <input type="search" name="q" value="<?= cms_e($q) ?>" placeholder="Buscar por nombre, correo, notas o grupo">
+<?php if ($allGroups): ?>      <select name="g"><option value="">Todos los grupos</option><?php foreach ($allGroups as $gg => $gn): ?><option value="<?= cms_e($gg) ?>"<?= $gg === $g ? ' selected' : '' ?>><?= cms_e($gg) ?> (<?= $gn ?>)</option><?php endforeach; ?></select>
+<?php endif; ?>
       <button class="ad-btn ad-btn-sm" type="submit">Buscar</button>
       <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e($url(['csv' => 'alumnos'])) ?>">Exportar CSV</a>
     </form>
@@ -844,7 +854,7 @@ admin_header('Aula: alumnos y avance', $self);
       <tbody>
 <?php foreach ($list as $id2 => $u): $mine = $stats[$id2] ?? []; unset($mine['_seen']); ?>
         <tr>
-          <td><a href="<?= cms_e($url(['id' => $id2])) ?>"><strong><?= cms_e($u['name']) ?></strong></a><?= empty($u['active']) ? ' <span class="ad-pill warn">Inactivo</span>' : '' ?><small class="ad-help"><?= cms_e($u['email']) ?></small></td>
+          <td><a href="<?= cms_e($url(['id' => $id2])) ?>"><strong><?= cms_e($u['name']) ?></strong></a><?= empty($u['active']) ? ' <span class="ad-pill warn">Inactivo</span>' : '' ?><?php foreach (lms_user_groups($u) as $gg): ?> <a class="ad-pill" href="<?= cms_e($url(['g' => $gg])) ?>"><?= cms_e($gg) ?></a><?php endforeach; ?><small class="ad-help"><?= cms_e($u['email']) ?></small></td>
           <td><?php foreach ($mine as $cs => $s): ?><div><?= cms_e($courseTitle($cs)) ?> <?= $pill($s) ?></div><?php endforeach; ?><?= $mine ? '' : '—' ?></td>
           <td><?= $ago((string) ($stats[$id2]['_seen'] ?? '')) ?></td>
         </tr>
@@ -866,6 +876,7 @@ admin_header('Aula: alumnos y avance', $self);
 <?php endforeach; ?>
       </div>
 <?php endif; ?>
+      <div class="ad-field"><label>Grupos (opcional, separados por coma)</label><input type="text" name="groups" placeholder="despacho-perez, ventas"></div>
       <div class="ad-field"><label>Notas internas</label><input type="text" name="notes" placeholder="Empresa, grupo…"></div>
       <label class="ad-check"><input type="checkbox" name="send" value="1" checked> Enviarle sus datos de acceso por correo (dirección del aula, su correo y su contraseña)</label>
       <p><button class="ad-btn" type="submit">Dar de alta</button></p>

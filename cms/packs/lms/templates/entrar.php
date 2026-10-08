@@ -24,5 +24,6 @@ $back = lms_back((string) ($_REQUEST['r'] ?? ''), '');
 <?php if (lms_settings()['signup']): ?> <a href="<?= cms_e(lms_url('registro')) ?>"><?= cms_e(lms_tx('signup')) ?></a>
 <?php else: ?> <?= cms_e(lms_tx('ask_account')) ?><?php endif; ?></p>
     </div>
+    <?php cms_do('lms.login.extra', $back); /* otras formas de entrar que añaden los paquetes (p. ej. con la cuenta de una organización) */ ?>
   </div>
 </section>

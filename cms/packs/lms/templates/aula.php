@@ -6,7 +6,7 @@
 $user = lms_user();
 $mine = []; $others = [];
 $prog = lms_progress($user['id'])['courses'];
-foreach (cms_items(lms_course_type()) as $c) {
+foreach (lms_visible_courses($user) as $c) {
     $s = (string) $c['slug'];
     if (!empty($prog[$s]['enrolled']) || !empty($prog[$s]['lessons'])) $mine[] = $c;
     elseif (lms_course_access($c) !== 'inscritos') $others[] = $c;

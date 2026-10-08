@@ -19,7 +19,7 @@ $lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Pri
     . "En el texto de la pregunta: **negritas** y `código`. La vista de la evaluación con sesión en el panel muestra las respuestas correctas y los avisos del formato.";
 return [
     'label' => 'Aula: cursos en línea (LMS)',
-    'version' => '1.5.0',
+    'version' => '1.6.0',
     'desc' => 'Cursos con lecciones y evaluaciones, alumnos con cuenta propia, inscripciones y avance. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada, presentan cuestionarios y exámenes (opción única o múltiple, verdadero/falso, respuesta corta, numérica y abiertas que califica el instructor) y siguen con lo siguiente. El avance de los videos se sigue solo (YouTube, Vimeo o MP4: cuenta lo que de verdad se vio) y puede exigirse antes de marcar la lección. Al terminar un curso, el alumno recibe por correo su constancia para imprimir o guardar en PDF, con código de verificación público. Reproduce paquetes SCORM 1.2 (Articulate, iSpring, Captivate, H5P…) con su avance y calificación, y exporta cada curso como paquete SCORM 1.2 para el LMS de un cliente. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance y calificaciones de cada alumno, revisión de intentos, preguntas por calificar y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos.',
     'assets' => [],
     'effects' => [],
@@ -50,6 +50,8 @@ return [
                 'access'   => ['type' => 'select', 'label' => 'Acceso a las lecciones', 'sidebar' => true,
                                'options' => ['' => 'El de Ajustes → Aula', 'abierto' => 'Abierto: cualquiera las ve', 'cuenta' => 'Con cuenta: cualquier alumno que entre', 'inscritos' => 'Solo inscritos por el administrador'],
                                'help' => 'Las lecciones marcadas "de muestra" se ven siempre.'],
+                'groups'   => ['type' => 'tags', 'label' => 'Solo para los grupos', 'sidebar' => true, 'placeholder' => 'vacío = para todos',
+                               'help' => 'Si pones grupos, el curso solo lo ven y lo toman los alumnos de esos grupos (y el panel); para los demás no aparece. Los grupos se ponen en la ficha de cada alumno; los alumnos que entran desde una organización (p. ej. su instancia de Iurefficient) quedan en el grupo de su organización.'],
                 'level'    => ['type' => 'text', 'label' => 'Nivel', 'i18n' => true, 'sidebar' => true, 'placeholder' => 'Básico, Intermedio…'],
                 'duration' => ['type' => 'text', 'label' => 'Duración', 'i18n' => true, 'sidebar' => true, 'placeholder' => '6 horas'],
                 'order'    => ['type' => 'number', 'label' => 'Orden en el listado', 'sidebar' => true],

@@ -20,6 +20,14 @@ $listTitle = $t($type . '_title', $def['label'] ?? lms_tx('courses'));
 $goals = (array) cms_f($item, 'goals', $lang, []);
 $S_contact = cms_url('home', $lang);
 foreach (cms_config('pages') as $pk => $pd) if (($pd['schema'] ?? '') === 'ContactPage') { $S_contact = cms_url('page:' . $pk, $lang); break; }
+if (!lms_course_visible($item)):   // curso de un grupo al que no pertenece quien lo ve
+    ?>
+<section class="phead lms-head"><div class="wrap phead-in">
+  <h1><?= cms_e(lms_tx('private_title')) ?></h1>
+  <p class="lead"><?= cms_e($user ? lms_tx('private_text') : lms_tx('private_login')) ?></p>
+  <div class="btnrow"><?php if (!$user): ?><a class="btn" href="<?= cms_e(lms_url('entrar', null, ['r' => lms_here()])) ?>"><?= cms_e(lms_tx('login')) ?></a><?php endif; ?><a class="btn btn-ghost" href="<?= cms_e(cms_url('list:' . $type, $lang)) ?>"><?= cms_e(lms_tx('all_courses')) ?></a></div>
+</div></section>
+<?php return; endif;
 ?>
 <section class="phead lms-head">
   <div class="wrap phead-in">

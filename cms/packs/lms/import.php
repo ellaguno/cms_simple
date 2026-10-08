@@ -8,6 +8,14 @@
  * titulo, texto, temas: [...], minutos, para }, … ]), los datos de la tarjeta del curso. Crea el curso y una lección
  * por video, que apunta al MP4 en su sitio (no copia nada); la portada sale de portadas/<video>.jpg si existe.
  * Los cursos del catálogo en estado "pronto" pueden crearse como "Próximamente".
+ *
+ * Además (1.44) trae lo que acompaña al curso, en la carpeta del curso o en aula/<carpeta>/ (como lo entrega
+ * publicar_curso.py): contenido/leccion-NN.html (campo Contenido de la lección NN), materiales/* (materiales del
+ * curso), evaluaciones/*.txt|.gift|.xml (una evaluación por archivo; *-L03 va después de la lección 3, *final al
+ * final) y un curso.json opcional con acceso, nivel, icono, color, modulo, constancia, materiales y evaluaciones
+ * ([{archivo, titulo, despues, aprobar, intentos, tiempo, preguntas, mezclar, revelar, requisito}]). Cada archivo
+ * de preguntas puede llevar esas mismas opciones en una cabecera entre líneas "---". Un curso ya importado se puede
+ * completar con lms_import_complete().
  */
 declare(strict_types=1);
 
@@ -67,7 +75,7 @@ function lms_import_candidates(): array
 }
 
 /** Lo que se crearía al importar la carpeta $rel: ['course' => elemento, 'lessons' => [...], 'soon' => [...], 'warn' => [...]]. */
-function lms_import_plan(string $rel): array
+function lms_import_plan(string $rel, array $opt = []): array
 {
     $rel = trim(str_replace('\\', '/', $rel), '/');
     if ($rel === '' || strpos($rel, '..') !== false || !isset(lms_import_candidates()[$rel])) return ['error' => 'No es una carpeta de curso (index.html con la lista MODULOS).'];
@@ -124,7 +132,10 @@ function lms_import_plan(string $rel): array
             'course' => $slug, 'order' => $i + 1, 'module' => [$es => ''], 'body' => [$es => ''], 'files' => [], 'preview' => false,
         ];
     }
-    return ['course' => $course, 'lessons' => $lessons, 'soon' => $soon, 'series' => $series, 'warn' => $warn, 'rel' => $rel, 'catalog' => $catalog ? $parent : ''];
+    // lo que acompaña: contra las lecciones que ya existen si el curso ya se importó, o contra las del plan
+    $existing = cms_item(lms_course_type(), $slug, false) ? lms_lessons($slug, false) : [];
+    $extras = lms_import_extras($rel, $slug, $existing ?: $lessons, $opt);
+    return ['course' => $course, 'lessons' => $lessons, 'soon' => $soon, 'series' => $series, 'warn' => $warn, 'rel' => $rel, 'catalog' => $catalog ? $parent : '', 'extras' => $extras];
 }
 
 /** Página que reemplaza a una vieja: lleva a la nueva dirección (meta refresh + enlace; sin PHP, sirve en carpetas estáticas). */
@@ -144,7 +155,7 @@ function lms_import_redirect_html(string $to, string $title): string
  */
 function lms_import_run(string $rel, array $opt): array
 {
-    $plan = lms_import_plan($rel);
+    $plan = lms_import_plan($rel, $opt);
     if (isset($plan['error'])) return [false, [$plan['error']]];
     $ct = lms_course_type(); $lt = lms_lesson_type();
     if (!cms_type($ct) || !cms_type($lt)) return [false, ['Faltan las colecciones de cursos y lecciones (Ajustes → Aula).']];
@@ -187,6 +198,230 @@ function lms_import_run(string $rel, array $opt): array
             else $msgs[] = 'No se pudo cambiar /' . $d . '/index.html.';
         }
     }
-    foreach ($plan['warn'] as $w) $msgs[] = 'Aviso: ' . $w;
+    $msgs = array_merge($msgs, lms_import_apply_extras($c['slug'], $plan['extras'], array_replace($opt, ['publish_quiz' => !empty($opt['publish'])])));
+    foreach (array_merge($plan['warn'], $plan['extras']['warn']) as $w) $msgs[] = 'Aviso: ' . $w;
     return [true, $msgs];
+}
+
+/* ================================================================== lo que acompaña al curso: contenido, materiales, evaluaciones */
+
+/**
+ * Carpeta con lo que acompaña al curso: contenido/leccion-NN.html, materiales/*, evaluaciones/*.txt|.gift|.xml y un
+ * curso.json opcional. Se busca en la carpeta del curso y en aula/<carpeta>/ (como lo entrega publicar_curso.py).
+ * Devuelve la ruta relativa o ''.
+ */
+function lms_import_extras_dirs(string $rel, string $slug): array
+{
+    $out = [];
+    foreach (array_unique([$rel, $rel . '/aula', 'aula/' . basename($rel), 'aula/' . $slug]) as $d) {
+        $abs = CMS_ROOT . '/' . $d;
+        if (is_dir($abs) && (is_dir($abs . '/contenido') || is_dir($abs . '/evaluaciones') || is_dir($abs . '/materiales') || is_file($abs . '/curso.json'))) $out[] = $d;
+    }
+    return $out;
+}
+
+/** Primera de esas carpetas que tiene $part (contenido, evaluaciones, materiales o curso.json), o ''. */
+function lms_import_part(array $dirs, string $part): string
+{
+    foreach ($dirs as $d) if (file_exists(CMS_ROOT . '/' . $d . '/' . $part) && (is_file(CMS_ROOT . '/' . $d . '/' . $part) || glob(CMS_ROOT . '/' . $d . '/' . $part . '/*'))) return $d;
+    return '';
+}
+
+/**
+ * Cabecera opcional de un archivo de preguntas, entre dos líneas "---":
+ *   titulo: Lección 1 · …    despues: 1 | final    aprobar: 80    intentos: 2    tiempo: 20 (min)
+ *   preguntas: 10 (por intento)    mezclar: si    revelar: siempre|aciertos|nada    requisito: si    modulo: …
+ * Devuelve [opciones, resto del texto].
+ */
+function lms_import_front(string $raw): array
+{
+    $raw = preg_replace('/^\xEF\xBB\xBF/', '', str_replace(["\r\n", "\r"], "\n", $raw)) ?? $raw;
+    if (!preg_match('/^---\n(.*?)\n---\n/s', $raw, $m)) return [[], $raw];
+    $o = [];
+    foreach (explode("\n", $m[1]) as $l) if (preg_match('/^\s*([a-záéíóúñ_]+)\s*:\s*(.*?)\s*$/iu', $l, $kv)) $o[lms_quiz_norm($kv[1])] = $kv[2];
+    return [$o, substr($raw, strlen($m[0]))];
+}
+
+/** "si", "sí", "true", "1" → true. */
+function lms_import_bool($v): bool { return in_array(lms_quiz_norm((string) $v), ['si', 'yes', 'true', '1'], true); }
+
+/**
+ * Plan de lo que acompaña al curso (para lms_import_plan). $lessons: las lecciones del plan (o las del curso que ya
+ * existe), en orden. $opt: valores por omisión del formulario (pass, attempts, final_attempts, shuffle, reveal, module).
+ */
+function lms_import_extras(string $rel, string $slug, array $lessons, array $opt = []): array
+{
+    $out = ['dir' => '', 'manifest' => [], 'bodies' => [], 'materials' => [], 'quizzes' => [], 'course' => [], 'module' => '', 'warn' => []];
+    $dirs = lms_import_extras_dirs($rel, $slug);
+    if (!$dirs) return $out;
+    $out['dir'] = implode(' y /', $dirs);
+    $es = cms_default_lang();
+    foreach ($dirs as $d) if (explode('/', $d)[0] === lms_settings()['route'])
+        $out['warn'][] = 'La carpeta /' . explode('/', $d)[0] . '/ de la raíz tiene el mismo nombre que la dirección del aula: mientras exista, /' . lms_settings()['route'] . ' puede dejar de abrir. Al importar, los materiales se copian a /' . $rel . '/materiales/; después borra esa carpeta en Archivos y carpetas.';
+    $md = lms_import_part($dirs, 'curso.json');
+    $man = $md !== '' ? json_decode((string) file_get_contents(CMS_ROOT . '/' . $md . '/curso.json'), true) : [];
+    if ($md !== '' && !is_array($man)) { $out['warn'][] = 'curso.json no es JSON válido; se ignoró.'; $man = []; }
+    $out['manifest'] = $man = (array) $man;
+
+    // datos del curso que el catálogo no trae
+    $access = lms_quiz_norm((string) ($man['acceso'] ?? ''));
+    if (in_array($access, ['abierto', 'cuenta', 'inscritos'], true)) $out['course']['access'] = $access;
+    if (!empty($man['nivel'])) $out['course']['level'] = [$es => (string) $man['nivel']];
+    if (!empty($man['icono']) && lms_imp_icon((string) $man['icono']) !== '') $out['course']['icon'] = (string) $man['icono'];
+    if (preg_match('/^#[0-9a-f]{6}$/i', (string) ($man['color'] ?? ''))) $out['course']['color'] = strtolower((string) $man['color']);
+    if (isset($man['constancia'])) $out['course']['certificate'] = lms_import_bool($man['constancia']) ? 'si' : 'no';
+    $out['module'] = trim((string) ($man['modulo'] ?? ($opt['module'] ?? '')));
+
+    // lecciones por número (1, 2, …): la NN de contenido/leccion-NN.html y de *-LNN.txt
+    $byNum = [];
+    foreach (array_values($lessons) as $i => $l) {
+        $num = preg_match('/-(\d+)$/', (string) $l['slug'], $m) ? (int) $m[1] : $i + 1;
+        $byNum[$num] = $l;
+    }
+    $abs = CMS_ROOT . '/' . (lms_import_part($dirs, 'contenido') ?: $dirs[0]);
+    foreach (glob($abs . '/contenido/*.html') ?: [] as $f) {
+        if (!preg_match('/(\d+)\.html$/', $f, $m) || !isset($byNum[(int) $m[1]])) { $out['warn'][] = 'contenido/' . basename($f) . ': no hay lección con ese número.'; continue; }
+        $html = (string) file_get_contents($f);
+        if (preg_match('#<body[^>]*>(.*)</body>#is', $html, $b)) $html = $b[1];
+        $out['bodies'][(string) $byNum[(int) $m[1]]['slug']] = trim($html);
+    }
+
+    // materiales: los de curso.json o todos los de materiales/
+    $dir = $md !== '' && !empty($man['materiales']) ? $md : (lms_import_part($dirs, 'materiales') ?: $dirs[0]);
+    $abs = CMS_ROOT . '/' . $dir;
+    $mats = [];
+    foreach ((array) ($man['materiales'] ?? []) as $mm) if (is_array($mm) && !empty($mm['archivo'])) $mats[] = [(string) ($mm['texto'] ?? basename((string) $mm['archivo'])), ltrim((string) $mm['archivo'], '/')];
+    if (!$mats) foreach (glob($abs . '/materiales/*') ?: [] as $f) if (is_file($f)) {
+        $base = pathinfo($f, PATHINFO_FILENAME);
+        $label = ucfirst(str_replace(['-', '_'], ' ', preg_replace('/-' . preg_quote($slug, '/') . '$/i', '', $base) ?? $base));
+        if (preg_match('/\.html?$/i', $f) && preg_match('#<title[^>]*>(.*?)</title>#is', (string) file_get_contents($f, false, null, 0, 20000), $tm)) $label = trim(preg_replace('/^.*?·\s*/u', '', lms_imp_text($tm[1])) ?? $label) ?: $label;   // "IU-102 · Cuaderno del alumno" → "Cuaderno del alumno"
+        $mats[] = [$label, 'materiales/' . basename($f)];
+    }
+    foreach ($mats as [$label, $src]) {
+        $from = $dir . '/' . $src;
+        if (!is_file(CMS_ROOT . '/' . $from)) { $out['warn'][] = 'Material no encontrado: ' . $from; continue; }
+        $to = strpos($from . '/', $rel . '/') === 0 ? $from : $rel . '/materiales/' . basename($src);   // fuera de la carpeta del curso: se copia adentro
+        $out['materials'][] = ['label' => $label, 'from' => $from, 'to' => $to];
+    }
+
+    // evaluaciones: las de curso.json o todos los archivos de evaluaciones/
+    $dir = $md !== '' && !empty($man['evaluaciones']) ? $md : (lms_import_part($dirs, 'evaluaciones') ?: $dirs[0]);
+    $abs = CMS_ROOT . '/' . $dir;
+    $defs = [];
+    foreach ((array) ($man['evaluaciones'] ?? []) as $q) if (is_array($q) && !empty($q['archivo'])) $defs[ltrim((string) $q['archivo'], '/')] = $q;
+    if (!$defs) foreach (glob($abs . '/evaluaciones/*.{txt,gift,xml}', GLOB_BRACE) ?: [] as $f) $defs['evaluaciones/' . basename($f)] = [];
+    ksort($defs, SORT_NATURAL);
+    $code = strtoupper($slug);
+    foreach ($defs as $file => $m) {
+        if (!is_file($abs . '/' . $file)) { $out['warn'][] = 'Evaluación no encontrada: ' . $dir . '/' . $file; continue; }
+        [$front, $body] = lms_import_front((string) file_get_contents($abs . '/' . $file));
+        $m = array_replace(array_change_key_case(array_map(fn($v) => is_bool($v) ? ($v ? 'si' : 'no') : $v, $front)), array_change_key_case(array_map(fn($v) => is_bool($v) ? ($v ? 'si' : 'no') : $v, $m)));
+        [$text, $qwarn, $fmt] = lms_quiz_import_text($body, $file);
+        $base = pathinfo($file, PATHINFO_FILENAME);
+        $after = (string) ($m['despues'] ?? '');
+        if ($after === '') $after = preg_match('/final/i', $base) ? 'final' : (preg_match('/-?L(\d+)$/i', $base, $lm) ? (string) (int) $lm[1] : '');
+        $final = lms_quiz_norm($after) === 'final';
+        $lesson = !$final && ctype_digit($after) ? ($byNum[(int) $after] ?? null) : null;
+        if (!$final && $after !== '' && !$lesson) $out['warn'][] = $file . ': «después de la lección ' . $after . '» no existe; se pone al final.';
+        $title = trim((string) ($m['titulo'] ?? ''));
+        if ($title === '') $title = $final || !$lesson ? 'Cuestionario final · ' . $code : 'Lección ' . (int) $after . ' · ' . (string) cms_f($lesson, 'title', $es);
+        $qslug = cms_slugify(stripos($base, $slug) === 0 ? $base : $slug . '-' . $base);
+        $num = fn(string $k, $d) => isset($m[$k]) && is_numeric($m[$k]) ? (int) $m[$k] : $d;
+        $parsed = lms_quiz_parse($text);
+        $out['quizzes'][] = [
+            'file' => $file, 'format' => $fmt, 'count' => count($parsed['questions']), 'warn' => array_merge($qwarn, $fmt === 'texto del aula' ? [] : $parsed['warnings']),
+            'final' => $final || !$lesson,
+            'item' => [
+                'slug' => $qslug, 'title' => [$es => $title], 'questions' => [$es => $text], 'course' => $slug,
+                'after' => $lesson ? (string) $lesson['slug'] : '', 'order' => $lesson ? '' : 999, 'module' => [$es => (string) ($m['modulo'] ?? '')],
+                'pass' => $num('aprobar', (int) ($opt['pass'] ?? 80)),
+                'attempts' => $num('intentos', $final || !$lesson ? (int) ($opt['final_attempts'] ?? 2) : (int) ($opt['attempts'] ?? 0)) ?: '',
+                'time' => $num('tiempo', 0) ?: '', 'pick' => $num('preguntas', 0) ?: '',
+                'shuffle' => isset($m['mezclar']) ? lms_import_bool($m['mezclar']) : !empty($opt['shuffle']),
+                'reveal' => in_array($m['revelar'] ?? '', ['siempre', 'aciertos', 'nada', ''], true) ? (string) ($m['revelar'] ?? ($opt['reveal'] ?? '')) : '',
+                'gate' => isset($m['requisito']) ? lms_import_bool($m['requisito']) : ($final || !$lesson) && !empty($opt['gate_final']),
+                'intro' => [$es => ''],
+            ],
+        ];
+    }
+    return $out;
+}
+
+/**
+ * Aplica lo que acompaña al curso: contenido de las lecciones, materiales (copiándolos dentro de la carpeta del curso
+ * si vienen de fuera), módulo, datos del curso y evaluaciones. $opt: replace_body, replace_quiz, publish_quiz.
+ */
+function lms_import_apply_extras(string $courseSlug, array $ex, array $opt): array
+{
+    $msgs = [];
+    if ($ex['dir'] === '') return $msgs;
+    $ct = lms_course_type(); $lt = lms_lesson_type(); $qt = lms_quiz_type(); $es = cms_default_lang(); $now = date('Y-m-d');
+    $course = cms_item($ct, $courseSlug, false);
+    if (!$course) return ['No se encontró el curso «' . $courseSlug . '».'];
+
+    // materiales
+    $files = lms_file_list($course);
+    $have = array_column($files, 1);
+    $nm = 0;
+    foreach ($ex['materials'] as $mt) {
+        if ($mt['to'] !== $mt['from']) {
+            $dst = CMS_ROOT . '/' . $mt['to'];
+            if (!is_dir(dirname($dst))) @mkdir(dirname($dst), 0755, true);
+            if (!@copy(CMS_ROOT . '/' . $mt['from'], $dst)) { $msgs[] = 'No se pudo copiar ' . $mt['from'] . ' a ' . $mt['to'] . '.'; continue; }
+        }
+        if (!in_array($mt['to'], $have, true)) { $files[] = [$mt['label'], $mt['to']]; $have[] = $mt['to']; $nm++; }
+    }
+    $course = array_replace($course, $ex['course'], ['files' => array_map(fn($f) => $f[0] . ' | ' . $f[1], $files), 'updated' => $now]);
+    if ($ex['course'] || $nm) { cms_item_save($ct, $course); }
+    if ($nm) $msgs[] = $nm . ' material(es) del curso agregados' . (lms_settings()['protect'] ? ' (protegidos: solo los abre quien puede tomar el curso)' : '') . '.';
+    if ($ex['course']) $msgs[] = 'Datos del curso de curso.json: ' . implode(', ', array_keys($ex['course'])) . '.';
+
+    // contenido y módulo de las lecciones
+    $nb = 0; $kept = 0; $nmod = 0;
+    foreach (lms_lessons($courseSlug, false) as $l) {
+        $full = cms_item($lt, (string) $l['slug'], false);
+        if (!$full) continue;
+        $ch = false;
+        if (isset($ex['bodies'][$l['slug']])) {
+            if (trim((string) cms_f($full, 'body', $es)) === '' || !empty($opt['replace_body'])) { $full['body'] = array_replace((array) ($full['body'] ?? []), [$es => $ex['bodies'][$l['slug']]]); $ch = true; $nb++; }
+            else $kept++;
+        }
+        if ($ex['module'] !== '' && (trim((string) cms_f($full, 'module', $es)) === '' || !empty($opt['replace_body']))) { $full['module'] = [$es => $ex['module']]; $ch = true; $nmod++; }
+        if ($ch) cms_item_save($lt, $full + ['updated' => $now]);
+    }
+    if ($nb) $msgs[] = 'Contenido puesto en ' . $nb . ' lección(es).';
+    if ($kept) $msgs[] = $kept . ' lección(es) ya tenían contenido y no se tocaron (marca «Reemplazar» para sobrescribirlo).';
+    if ($nmod) $msgs[] = 'Módulo «' . $ex['module'] . '» en ' . $nmod . ' lección(es).';
+
+    // evaluaciones
+    if (!cms_type($qt)) $msgs[] = 'No existe la colección de evaluaciones (Ajustes → Aula); no se importaron.';
+    else {
+        $nq = 0; $nu = 0; $ns = 0;
+        foreach ($ex['quizzes'] as $q) {
+            $it = $q['item'];
+            $old = cms_item($qt, $it['slug'], false);
+            if ($old && empty($opt['replace_quiz'])) { $ns++; continue; }
+            $it = ($old ? array_replace($old, $it) : $it) + ['status' => 'draft', 'created' => $now];
+            if (!empty($opt['publish_quiz'])) $it['status'] = 'published';
+            $it['updated'] = $now;
+            if (cms_item_save($qt, $it)) { if ($old) $nu++; else $nq++; }
+        }
+        if ($nq) $msgs[] = $nq . ' evaluación(es) creadas' . (!empty($opt['publish_quiz']) ? ' y publicadas' : ' en borrador') . '.';
+        if ($nu) $msgs[] = $nu . ' evaluación(es) actualizadas.';
+        if ($ns) $msgs[] = $ns . ' evaluación(es) ya existían y no se tocaron (marca «Reemplazar» para actualizarlas).';
+    }
+    return $msgs;
+}
+
+/** Completa un curso que ya existe con lo que acompaña a su carpeta. Devuelve [ok, mensajes]. */
+function lms_import_complete(string $rel, array $opt): array
+{
+    $plan = lms_import_plan($rel, $opt);
+    if (isset($plan['error'])) return [false, [$plan['error']]];
+    $slug = $plan['course']['slug'];
+    if (!cms_item(lms_course_type(), $slug, false)) return [false, ['El curso «' . $slug . '» no existe: impórtalo primero.']];
+    if ($plan['extras']['dir'] === '') return [false, ['No hay contenido/, materiales/, evaluaciones/ ni curso.json junto a ' . $rel . '.']];
+    $msgs = lms_import_apply_extras($slug, $plan['extras'], $opt);
+    foreach ($plan['extras']['warn'] as $w) $msgs[] = 'Aviso: ' . $w;
+    return [true, $msgs ?: ['No había nada nuevo que agregar.']];
 }

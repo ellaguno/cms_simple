@@ -29,6 +29,7 @@ declare(strict_types=1);
 if (!function_exists('lms_settings')) {
     require_once __DIR__ . '/quiz.php';
     require_once __DIR__ . '/cert.php';
+    require_once __DIR__ . '/moodle.php';
 
     /* ================================================================== ajustes y textos */
 
@@ -133,6 +134,7 @@ if (!function_exists('lms_settings')) {
             'prev'           => ['es' => 'Anterior', 'en' => 'Previous'],
             'next'           => ['es' => 'Siguiente', 'en' => 'Next'],
             'back_course'    => ['es' => 'Volver al curso', 'en' => 'Back to the course'],
+            'course_materials' => ['es' => 'Materiales del curso', 'en' => 'Course materials'],
             'materials'      => ['es' => 'Materiales', 'en' => 'Materials'],
             'locked'         => ['es' => 'Esta lección es parte del curso «%s».', 'en' => 'This lesson is part of the course “%s”.'],
             'locked_login'   => ['es' => 'Entra con tu cuenta para verla.', 'en' => 'Sign in with your account to see it.'],
@@ -817,14 +819,14 @@ if (!function_exists('lms_settings')) {
     {
         $size = (int) filesize($file);
         $mime = ['mp4' => 'video/mp4', 'm4v' => 'video/mp4', 'webm' => 'video/webm', 'mov' => 'video/quicktime', 'mp3' => 'audio/mpeg', 'pdf' => 'application/pdf',
-                 'vtt' => 'text/vtt', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'zip' => 'application/zip'][strtolower(pathinfo($file, PATHINFO_EXTENSION))] ?? 'application/octet-stream';
+                 'vtt' => 'text/vtt', 'html' => 'text/html; charset=utf-8', 'htm' => 'text/html; charset=utf-8', 'txt' => 'text/plain; charset=utf-8', 'md' => 'text/plain; charset=utf-8', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'zip' => 'application/zip'][strtolower(pathinfo($file, PATHINFO_EXTENSION))] ?? 'application/octet-stream';
         $start = 0; $end = $size - 1;
         while (ob_get_level()) ob_end_clean();
         header('Content-Type: ' . $mime);
         header('Accept-Ranges: bytes');
         header('Cache-Control: private, max-age=3600');
         header('X-Content-Type-Options: nosniff');
-        if (!preg_match('#^(video|audio|image)/|pdf$#', $mime)) header('Content-Disposition: attachment; filename="' . str_replace('"', '', basename($file)) . '"');
+        if (!preg_match('#^(video|audio|image|text)/|pdf$#', $mime)) header('Content-Disposition: attachment; filename="' . str_replace('"', '', basename($file)) . '"');
         if (preg_match('/^bytes=(\d*)-(\d*)$/', (string) ($_SERVER['HTTP_RANGE'] ?? ''), $m) && ($m[1] !== '' || $m[2] !== '')) {
             if ($m[1] === '') { $start = max(0, $size - (int) $m[2]); }
             else { $start = (int) $m[1]; if ($m[2] !== '') $end = min($end, (int) $m[2]); }
@@ -888,6 +890,14 @@ if (!function_exists('lms_settings')) {
     {
         $out = [];
         foreach (lms_file_list($lesson) as $i => [$label, $path]) $out[] = [$label, lms_protected($path) ? lms_url('archivo', null, ['l' => $lesson['slug'], 'n' => $i]) : lms_media_url($path)];
+        return $out;
+    }
+
+    /** Materiales del curso con su URL (protegida por el aula cuando toca): [[texto, url], …]. */
+    function lms_course_files(array $course): array
+    {
+        $out = [];
+        foreach (lms_file_list($course) as $i => [$label, $path]) $out[] = [$label, lms_protected($path) ? lms_url('archivo', null, ['c' => $course['slug'], 'n' => $i]) : lms_media_url($path)];
         return $out;
     }
 
@@ -1188,8 +1198,15 @@ if (!function_exists('lms_settings')) {
                 break;
 
             case 'video':     // ?l=<lección>: el video protegido, a quien puede ver la lección
-            case 'archivo':   // ?l=<lección>&n=<n>: un material protegido
+            case 'archivo':   // ?l=<lección>&n=<n>: un material protegido; ?c=<curso>&n=<n>: un material del curso
                 lms_staff();
+                if ($sub === 'archivo' && isset($_GET['c'])) {
+                    $course = lms_course(cms_slugify((string) $_GET['c'])) ?? (lms_staff() ? lms_course(cms_slugify((string) $_GET['c']), false) : null);
+                    $path = $course ? (string) (lms_file_list($course)[(int) ($_GET['n'] ?? -1)][1] ?? '') : '';
+                    $file = $path !== '' ? lms_local_file($path) : null;
+                    if (!$file || !lms_can_take($course)) { http_response_code($file ? 403 : 404); header('Content-Type: text/plain; charset=utf-8'); echo $file ? 'Sin acceso.' : 'No encontrado.'; exit; }
+                    lms_send_file($file);
+                }
                 $lesson = cms_type(lms_lesson_type()) ? cms_item(lms_lesson_type(), cms_slugify((string) ($_GET['l'] ?? ''))) : null;
                 $course = $lesson ? lms_course(lms_lesson_course($lesson)) : null;
                 if (!$lesson && lms_staff() && cms_type(lms_lesson_type())) { $lesson = cms_item(lms_lesson_type(), cms_slugify((string) ($_GET['l'] ?? '')), false); $course = $lesson ? lms_course(lms_lesson_course($lesson), false) : null; }
@@ -1305,7 +1322,9 @@ if (!function_exists('lms_settings')) {
 
     // al guardar una lección, su video y sus materiales de carpeta propia quedan sin acceso directo
     cms_on('item.save', function (string $type, array $item) {
-        if ($type !== lms_lesson_type() || !lms_settings()['protect']) return;
+        if (!lms_settings()['protect']) return;
+        if ($type === lms_course_type()) { foreach (lms_file_list($item) as [, $path]) lms_protect_dir($path); return; }
+        if ($type !== lms_lesson_type()) return;
         lms_protect_dir((string) ($item['video'] ?? ''));
         foreach (lms_file_list($item) as [, $path]) lms_protect_dir($path);
     });

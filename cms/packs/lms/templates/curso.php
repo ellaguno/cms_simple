@@ -66,6 +66,15 @@ foreach (cms_config('pages') as $pk => $pd) if (($pd['schema'] ?? '') === 'Conta
         <figure class="lms-cover"><?= cms_picture((string) $item['image'], $title, '', true) ?></figure>
 <?php endif; ?>
         <div class="rte"><?= cms_content((string) cms_f($item, 'body', $lang)) ?></div>
+<?php if ($canTake && ($cfiles = lms_course_files($item))): ?>
+        <div class="lms-files">
+          <h2 class="lms-h3"><?= cms_e(lms_tx('course_materials')) ?></h2>
+          <ul>
+<?php foreach ($cfiles as [$fl, $fu]): ?>            <li><a href="<?= cms_e($fu) ?>" target="_blank" rel="noopener"><?= lms_icon('file') ?><span><?= cms_e($fl) ?></span></a></li>
+<?php endforeach; ?>
+          </ul>
+        </div>
+<?php endif; ?>
 <?php if ($goals): ?>
         <h2 class="lms-h2"><?= cms_e(lms_tx('you_learn')) ?></h2>
         <ul class="lms-goals">

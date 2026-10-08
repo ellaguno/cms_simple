@@ -24,7 +24,11 @@ function admin_select_options(array $def): array
 {
     $opts = (array) ($def['options'] ?? []);
     if (!empty($def['options_from']) && ($fd = cms_type((string) $def['options_from']))) {
-        foreach (cms_items((string) $def['options_from'], false) as $it) $opts[(string) $it['slug']] = (string) (cms_f($it, $fd['title_field'] ?? 'title', cms_default_lang()) ?: $it['slug']);
+        // 'options_suffix' => 'campo' (1.44): añade ese campo a la etiqueta ("Lección 3 · iu-102"), para distinguir títulos repetidos
+        $sfx = (string) ($def['options_suffix'] ?? '');
+        $items = cms_items((string) $def['options_from'], false);
+        if ($sfx !== '') uasort($items, fn($a, $b) => strcmp((string) ($a[$sfx] ?? ''), (string) ($b[$sfx] ?? '')) ?: ((float) ($a['order'] ?? 0) <=> (float) ($b['order'] ?? 0)));
+        foreach ($items as $it) $opts[(string) $it['slug']] = (string) (cms_f($it, $fd['title_field'] ?? 'title', cms_default_lang()) ?: $it['slug']) . ($sfx !== '' && (string) ($it[$sfx] ?? '') !== '' ? ' · ' . $it[$sfx] : '');
     }
     return $opts;
 }

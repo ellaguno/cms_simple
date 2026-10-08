@@ -84,6 +84,15 @@ $needVideo = $track && !$done && $S['video_mode'] === 'exigir' && $watched < $S[
           </ul>
         </div>
 <?php endif; ?>
+<?php if ($course && lms_can_take($course) && ($cfiles = lms_course_files($course))): ?>
+        <div class="lms-files">
+          <h2 class="lms-h3"><?= cms_e(lms_tx('course_materials')) ?></h2>
+          <ul>
+<?php foreach ($cfiles as [$fl, $fu]): ?>            <li><a href="<?= cms_e($fu) ?>" target="_blank" rel="noopener"><?= lms_icon('file') ?><span><?= cms_e($fl) ?></span></a></li>
+<?php endforeach; ?>
+          </ul>
+        </div>
+<?php endif; ?>
         <div class="lms-actions">
 <?php if ($user): ?>
           <form method="post" action="<?= cms_e(lms_url('avance')) ?>" class="lms-mark">

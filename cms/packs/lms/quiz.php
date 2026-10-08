@@ -40,7 +40,20 @@ function lms_quizzes(string $course, bool $published = true): array
     if (!cms_type(lms_quiz_type())) return [];
     $f = lms_settings()['lesson_field'];
     $out = [];
-    foreach (cms_items(lms_quiz_type(), $published) as $q) if ((string) ($q[$f] ?? $q['course'] ?? '') === $course) $out[] = $q + ['_q' => true];
+    $lessons = null;
+    foreach (cms_items(lms_quiz_type(), $published) as $q) {
+        if ((string) ($q[$f] ?? $q['course'] ?? '') !== $course) continue;
+        // "Va después de la lección": toma el orden de esa lección (+0.5) y, si no tiene módulo propio, el suyo
+        if (($after = (string) ($q['after'] ?? '')) !== '') {
+            $lessons = $lessons ?? array_column(lms_lessons($course, $published), null, 'slug');
+            if (isset($lessons[$after])) {
+                $l = $lessons[$after];
+                $q['order'] = (is_numeric($l['order'] ?? null) ? (float) $l['order'] : 1e9) + 0.5;
+                if (trim((string) cms_f($q, 'module', cms_default_lang())) === '') $q['module'] = $l['module'] ?? '';
+            }
+        }
+        $out[] = $q + ['_q' => true];
+    }
     return $cache[$key] = lms_steps_sort($out);
 }
 

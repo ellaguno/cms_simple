@@ -46,6 +46,17 @@ $pendingList = function () use ($users, $quizzes): array {
     return $out;
 };
 
+// ------------------------------------------------------------------ preguntas en formatos de Moodle
+if (isset($_GET['export'], $_GET['quiz']) && ($qz = $quizFull(cms_slugify((string) $_GET['quiz'])))) {
+    $fmt = (string) $_GET['export'] === 'xml' ? 'xml' : 'gift';
+    $qs = lms_quiz_questions($qz, $lang)['questions'];
+    $tt = (string) cms_f($qz, 'title', $lang);
+    header('Content-Type: ' . ($fmt === 'xml' ? 'application/xml' : 'text/plain') . '; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $qz['slug'] . ($fmt === 'xml' ? '-moodle.xml' : '.gift.txt') . '"');
+    echo $fmt === 'xml' ? lms_quiz_to_moodle_xml($qs, $tt) : lms_quiz_to_gift($qs, $tt);
+    exit;
+}
+
 // ------------------------------------------------------------------ CSV
 if (isset($_GET['csv'])) {
     $which = (string) $_GET['csv'];
@@ -104,10 +115,31 @@ if (admin_is_post()) {
     $sendAccess = fn(array $u, string $pass, array $cs): bool => lms_welcome_mail($u, $pass, $cs);
     $mailFail = ' — el correo NO salió (el servidor no pudo enviarlo): compártela tú y revisa «Correos enviados» al pie de la lista de alumnos.';
 
-    if ($action === 'import') {
-        [$ok, $msgs] = lms_import_run(admin_post('dir'), ['publish' => !empty($_POST['publish']), 'soon' => !empty($_POST['soon']), 'redirect' => !empty($_POST['redirect'])]);
+    if ($action === 'import' || $action === 'import_complete') {
+        $io = ['publish' => !empty($_POST['publish']), 'soon' => !empty($_POST['soon']), 'redirect' => !empty($_POST['redirect']),
+               'module' => admin_post('module'), 'pass' => max(0, min(100, (int) admin_post('pass'))), 'attempts' => max(0, (int) admin_post('attempts')),
+               'final_attempts' => max(0, (int) admin_post('final_attempts')), 'shuffle' => !empty($_POST['shuffle']), 'gate_final' => !empty($_POST['gate_final']),
+               'reveal' => in_array(admin_post('reveal'), ['', 'siempre', 'aciertos', 'nada'], true) ? admin_post('reveal') : '',
+               'replace_body' => !empty($_POST['replace_body']), 'replace_quiz' => !empty($_POST['replace_quiz']), 'publish_quiz' => !empty($_POST['publish_quiz'])];
+        [$ok, $msgs] = $action === 'import' ? lms_import_run(admin_post('dir'), $io) : lms_import_complete(admin_post('dir'), $io);
         admin_flash(implode(' ', $msgs), $ok ? 'ok' : 'err');
         admin_redirect($ok ? $url(['tab' => 'cursos']) : $url(['tab' => 'importar', 'dir' => admin_post('dir')]));
+    }
+    if ($action === 'quiz_import') {   // preguntas desde un archivo Moodle XML, GIFT o de texto
+        $qs = cms_slugify(admin_post('quiz'));
+        $qz = $qs !== '' ? $quizFull($qs) : null;
+        $f = $_FILES['file'] ?? null;
+        if (!$qz || !is_array($f) || ($f['error'] ?? 1) !== UPLOAD_ERR_OK || ($f['size'] ?? 0) > 5 * 1024 * 1024) { admin_flash('Elige un archivo de preguntas (máximo 5 MB).', 'err'); admin_redirect($url(['quiz' => $qs])); }
+        [$text, $warn, $fmt] = lms_quiz_import_text((string) file_get_contents((string) $f['tmp_name']), (string) $f['name']);
+        $n = count(lms_quiz_parse($text)['questions']);
+        if (!$n) { admin_flash('No se encontró ninguna pregunta que el aula pueda usar en el archivo (' . $fmt . '). ' . implode(' ', array_slice($warn, 0, 5)), 'err'); admin_redirect($url(['quiz' => $qs])); }
+        $cur = trim((string) cms_f($qz, 'questions', $lang));
+        $new = admin_post('mode') === 'append' && $cur !== '' ? $cur . "\n\n" . $text : $text;
+        $qz['questions'] = array_replace((array) ($qz['questions'] ?? []), [$lang => $new]);
+        $qz['updated'] = date('Y-m-d');
+        $ok = cms_item_save($qt, $qz);
+        admin_flash($ok ? $n . ' pregunta(s) importadas de ' . $fmt . (admin_post('mode') === 'append' ? ' (agregadas a las que había)' : ' (reemplazan a las que había)') . '.' . ($warn ? ' Avisos: ' . implode(' ', array_slice($warn, 0, 8)) . (count($warn) > 8 ? ' …' : '') : '') : 'No se pudo guardar la evaluación.', $ok ? ($warn ? 'err' : 'ok') : 'err');
+        admin_redirect($url(['quiz' => $qs]));
     }
     if ($action === 'unblock') {   // quitar bloqueos por intentos fallidos: de un correo o todos
         $em = admin_post('email');
@@ -310,7 +342,15 @@ admin_header('Aula: alumnos y avance', $self);
 <section class="ad-box">
   <h2><?= cms_e($quizTitle($quiz)) ?> <span class="ad-pill"><?= cms_e($courseTitle($cs)) ?></span><?= cms_item_is_live($qz) ? '' : ' <span class="ad-pill warn">No publicada</span>' ?></h2>
   <p class="ad-help"><?= $cfg['pass'] ? 'Aprueba con ' . $cfg['pass'] . ' %' : 'De práctica' ?> · <?= $cfg['attempts'] ? $cfg['attempts'] . ' intento' . ($cfg['attempts'] === 1 ? '' : 's') : 'intentos sin límite' ?><?= $cfg['time'] ? ' · ' . $cfg['time'] . ' min' : '' ?><?= $cfg['shuffle'] ? ' · mezcla preguntas y opciones' : '' ?><?= $cfg['gate'] ? ' · se abre al terminar lo anterior' : '' ?></p>
-  <p class="ad-actions"><a class="ad-btn ad-btn-sm ad-btn-light" href="<?= admin_url('edit', ['type' => $qt, 'slug' => $quiz]) ?>">Editar evaluación</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e(cms_url('item:' . $qt, $lang, $quiz)) ?>" target="_blank" rel="noopener">Ver con las respuestas</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e($url(['csv' => 'quiz:' . $quiz])) ?>">Exportar CSV</a></p>
+  <p class="ad-actions"><a class="ad-btn ad-btn-sm ad-btn-light" href="<?= admin_url('edit', ['type' => $qt, 'slug' => $quiz]) ?>">Editar evaluación</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e(cms_url('item:' . $qt, $lang, $quiz)) ?>" target="_blank" rel="noopener">Ver con las respuestas</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e($url(['csv' => 'quiz:' . $quiz])) ?>">Resultados en CSV</a></p>
+  <p class="ad-actions"><span class="ad-help" style="display:inline">Preguntas para Moodle:</span> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e($url(['export' => 'xml', 'quiz' => $quiz])) ?>">Moodle XML</a> <a class="ad-btn ad-btn-sm ad-btn-light" href="<?= cms_e($url(['export' => 'gift', 'quiz' => $quiz])) ?>">GIFT</a></p>
+  <form method="post" enctype="multipart/form-data" class="ad-inline-form" style="margin:6px 0 12px">
+    <?= admin_csrf_field() ?><input type="hidden" name="action" value="quiz_import"><input type="hidden" name="quiz" value="<?= cms_e($quiz) ?>">
+    <span class="ad-help" style="display:inline">Importar preguntas (Moodle XML, GIFT o texto del aula):</span>
+    <input type="file" name="file" accept=".xml,.gift,.txt" required>
+    <select name="mode"><option value="replace">Reemplazar las actuales</option><option value="append">Agregarlas al final</option></select>
+    <button class="ad-btn ad-btn-sm" type="submit">Importar</button>
+  </form>
 <?php foreach ($parsed['warnings'] as $w): ?>  <p class="ad-flash err"><?= cms_e($w) ?></p>
 <?php endforeach; ?>
 <?php if (!$rows): ?>
@@ -518,10 +558,11 @@ admin_header('Aula: alumnos y avance', $self);
 <?php elseif ($tab === 'importar'): /* ============================== importar de Archivos y carpetas */
     $cands = lms_import_candidates();
     $dir = trim((string) ($_GET['dir'] ?? ''), '/');
-    $plan = $dir !== '' ? lms_import_plan($dir) : null; ?>
+    $impDef = ['pass' => 80, 'attempts' => 0, 'final_attempts' => 2, 'shuffle' => true, 'reveal' => '', 'gate_final' => true, 'module' => ''];
+    $plan = $dir !== '' ? lms_import_plan($dir, $impDef) : null; ?>
 <section class="ad-box">
   <h2>Importar un curso hecho a mano</h2>
-  <p class="ad-help">Para los cursos subidos como carpetas en <a href="<?= admin_url('archivos') ?>">Archivos y carpetas</a> (un <code>index.html</code> con la lista <code>MODULOS</code> de videos, como <code>/capacitacion/arbitraje/</code>). Se crea el curso con una lección por video; los videos se quedan donde están<?= lms_settings()['protect'] ? ' y su carpeta queda protegida: solo se ven desde el aula, a quien tenga acceso' : '' ?>. Los datos de la tarjeta (temas, para quién, color, duración) se toman del catálogo de la carpeta de arriba si lo hay.</p>
+  <p class="ad-help">Para los cursos subidos como carpetas en <a href="<?= admin_url('archivos') ?>">Archivos y carpetas</a> (un <code>index.html</code> con la lista <code>MODULOS</code> de videos, como <code>/capacitacion/arbitraje/</code>). Se crea el curso con una lección por video; los videos se quedan donde están. También trae el contenido de cada lección, los materiales y las evaluaciones si vienen junto (carpetas <code>contenido/</code>, <code>materiales/</code>, <code>evaluaciones/</code> y un <code>curso.json</code> opcional, en la carpeta del curso o en <code>aula/&lt;curso&gt;/</code>); un curso ya importado se puede completar después<?= lms_settings()['protect'] ? ' y su carpeta queda protegida: solo se ven desde el aula, a quien tenga acceso' : '' ?>. Los datos de la tarjeta (temas, para quién, color, duración) se toman del catálogo de la carpeta de arriba si lo hay.</p>
 <?php if (!$cands): ?>
   <p class="ad-help">No encontré carpetas con cursos de ese formato.</p>
 <?php else: ?>
@@ -552,10 +593,60 @@ admin_header('Aula: alumnos y avance', $self);
   </table>
 <?php foreach ($plan['warn'] as $w): ?>  <p class="ad-flash err"><?= cms_e($w) ?></p>
 <?php endforeach; ?>
+<?php $ex = $plan['extras']; if ($ex['dir'] !== ''): ?>
+  <h3 style="margin:22px 0 6px">Lo que acompaña al curso <small class="ad-help" style="display:inline">en <code>/<?= cms_e($ex['dir']) ?>/</code><?= $ex['manifest'] ? ' · con curso.json' : '' ?></small></h3>
+  <ul class="ad-help" style="margin:0 0 10px 18px">
+    <li>Contenido de <?= count($ex['bodies']) ?> lección(es) (objetivos, ejercicios…)<?= $ex['module'] !== '' ? ' · módulo «' . cms_e($ex['module']) . '»' : '' ?></li>
+    <li>Materiales del curso: <?= $ex['materials'] ? cms_e(implode(', ', array_map(fn($m) => $m['label'] . ($m['to'] !== $m['from'] ? ' (se copia a /' . $m['to'] . ')' : ''), $ex['materials']))) : 'ninguno' ?></li>
+    <?php if ($ex['course']): ?><li>Del curso: <?= cms_e(implode(', ', array_map(fn($k, $v) => $k . ' = ' . (is_array($v) ? reset($v) : $v), array_keys($ex['course']), $ex['course']))) ?></li><?php endif; ?>
+  </ul>
+<?php if ($ex['quizzes']): ?>
+  <table class="ad-table">
+    <thead><tr><th>Archivo</th><th>Evaluación</th><th>Va</th><th>Preguntas</th><th>Aprobar · intentos</th></tr></thead>
+    <tbody>
+<?php foreach ($ex['quizzes'] as $q): $qi = $q['item']; ?>
+      <tr><td><code><?= cms_e(basename($q['file'])) ?></code><small class="ad-help"><?= cms_e($q['format']) ?></small></td><td><strong><?= cms_e($qi['title'][$dl]) ?></strong><?= cms_item($qt, $qi['slug'], false) ? ' <span class="ad-pill warn">ya existe</span>' : '' ?><?php foreach ($q['warn'] as $w): ?><small class="ad-help" style="color:#b45309"><?= cms_e($w) ?></small><?php endforeach; ?></td>
+        <td><?= $qi['after'] !== '' ? 'después de ' . cms_e($qi['after']) : 'al final' . ($qi['gate'] ? ' (requisito)' : '') ?></td><td><?= (int) $q['count'] ?></td><td><?= (int) $qi['pass'] ?> % · <?= $qi['attempts'] ? (int) $qi['attempts'] : 'sin límite' ?></td></tr>
+<?php endforeach; ?>
+    </tbody>
+  </table>
+<?php endif; ?>
+<?php foreach ($ex['warn'] as $w): ?>  <p class="ad-flash err"><?= cms_e($w) ?></p>
+<?php endforeach; ?>
+<?php endif; ?>
+<?php $impOpts = function (bool $complete) use ($ex): void { if ($ex['dir'] === '') return; ?>
+    <fieldset style="border:1px solid #e3e3e3;border-radius:10px;padding:10px 14px;margin:10px 0">
+      <legend class="ad-help" style="padding:0 6px">Evaluaciones y lecciones (curso.json o la cabecera de cada archivo mandan sobre esto)</legend>
+      <div class="ad-two">
+        <div class="ad-field"><label>Calificación para aprobar (%)</label><input type="number" name="pass" min="0" max="100" value="80"></div>
+        <div class="ad-field"><label>Intentos por lección (0 = sin límite) / del final</label><span style="display:flex;gap:8px"><input type="number" name="attempts" min="0" value="0"><input type="number" name="final_attempts" min="0" value="2"></span></div>
+      </div>
+      <div class="ad-two">
+        <div class="ad-field"><label>Al terminar, el alumno ve</label><select name="reveal"><option value="">Aciertos; correctas y explicaciones al aprobar o agotar intentos</option><option value="siempre">Correctas y explicaciones siempre</option><option value="aciertos">Solo aciertos</option><option value="nada">Solo la calificación</option></select></div>
+        <div class="ad-field"><label>Módulo de todas las lecciones (opcional)</label><input type="text" name="module" value="<?= cms_e($ex['module']) ?>" placeholder="Fundamentos · IU-102"></div>
+      </div>
+      <label class="ad-check"><input type="checkbox" name="shuffle" value="1" checked> Mezclar preguntas y opciones</label>
+      <label class="ad-check"><input type="checkbox" name="gate_final" value="1" checked> La evaluación final se abre solo al terminar todo lo anterior</label>
+<?php if ($complete): ?>
+      <label class="ad-check"><input type="checkbox" name="publish_quiz" value="1" checked> Publicar las evaluaciones nuevas</label>
+      <label class="ad-check"><input type="checkbox" name="replace_body" value="1"> Reemplazar el contenido y el módulo de las lecciones que ya tienen (si no, solo se llenan las vacías)</label>
+      <label class="ad-check"><input type="checkbox" name="replace_quiz" value="1"> Reemplazar las evaluaciones que ya existen (preguntas y opciones; los intentos de los alumnos se conservan)</label>
+<?php endif; ?>
+    </fieldset>
+<?php }; ?>
+<?php if ($exists && $ex['dir'] !== ''): ?>
+  <form method="post" class="ad-form" style="margin-top:14px">
+    <?= admin_csrf_field() ?><input type="hidden" name="action" value="import_complete"><input type="hidden" name="dir" value="<?= cms_e($plan['rel']) ?>">
+    <p class="ad-help">El curso ya existe: puedes completarlo con su contenido, materiales y evaluaciones sin tocar las lecciones ni el avance de los alumnos.</p>
+    <?php $impOpts(true); ?>
+    <p><button class="ad-btn" type="submit">Completar el curso</button></p>
+  </form>
+<?php endif; ?>
 <?php if (!$exists): ?>
   <form method="post" class="ad-form" style="margin-top:14px">
     <?= admin_csrf_field() ?><input type="hidden" name="action" value="import"><input type="hidden" name="dir" value="<?= cms_e($plan['rel']) ?>">
-    <label class="ad-check"><input type="checkbox" name="publish" value="1"> Publicar el curso ya (si no, queda en borrador para revisarlo; en borrador solo lo ves tú desde el panel)</label>
+    <?php $impOpts(false); ?>
+    <label class="ad-check"><input type="checkbox" name="publish" value="1"> Publicar el curso y sus evaluaciones ya (si no, quedan en borrador para revisarlos; en borrador solo los ves tú desde el panel)</label>
 <?php if ($plan['soon']): ?>
     <label class="ad-check"><input type="checkbox" name="soon" value="1" checked> Crear también como «Próximamente» los cursos en preparación del catálogo: <?= cms_e(implode(', ', array_map(fn($x) => (string) ($x['titulo'] ?? $x['clave']), $plan['soon']))) ?></label>
 <?php endif; ?>

@@ -7,13 +7,15 @@ $user = lms_user();
 $staff = lms_staff();
 $slug = (string) $item['slug'];
 $lessons = lms_lessons($slug);
+$steps = lms_steps($slug);
+$nq = count($steps) - count($lessons);
 $st = lms_stats($slug, $user);
 $access = lms_course_access($item);
 $canTake = lms_can_take($item);
 $title = (string) cms_f($item, 'title', $lang);
 $lt = lms_lesson_type();
-$lurl = fn(array $l) => cms_url('item:' . $lt, $lang, $l['slug']);
-$first = $lessons[0] ?? null;
+$lurl = fn(array $l) => lms_step_url($l, $lang);
+$first = $steps[0] ?? null;
 $listTitle = $t($type . '_title', $def['label'] ?? lms_tx('courses'));
 $goals = (array) cms_f($item, 'goals', $lang, []);
 $S_contact = cms_url('home', $lang);
@@ -29,12 +31,13 @@ foreach (cms_config('pages') as $pk => $pd) if (($pd['schema'] ?? '') === 'Conta
       <?php if (($du = (string) cms_f($item, 'duration', $lang)) !== ''): ?><span class="tag tag-steel"><?= cms_e($du) ?></span><?php endif; ?>
       <?php if (!empty($item['soon'])): ?><span class="tag tag-warn"><?= cms_e(lms_tx('soon')) ?></span><?php endif; ?>
       <span class="tag tag-steel"><?= cms_e(count($lessons) === 1 ? lms_tx('lesson_1') : lms_tx('lessons_n', count($lessons))) ?></span>
+      <?php if ($nq): ?><span class="tag tag-steel"><?= cms_e($nq === 1 ? lms_tx('quiz_1') : lms_tx('quizzes_n', $nq)) ?></span><?php endif; ?>
       <?php if ($st['completed'] !== ''): ?><span class="tag tag-ok"><?= cms_e(lms_tx('completed')) ?></span><?php endif; ?>
     </p>
     <?php if (($au = (string) cms_f($item, 'audience', $lang)) !== ''): ?><p class="lms-for"><strong><?= cms_e(lms_tx('for')) ?></strong> <?= cms_e($au) ?></p><?php endif; ?>
     <?php if ($topics = array_filter((array) cms_f($item, 'topics', $lang, []))): ?><p class="lms-topics"><?php foreach ($topics as $tp): ?><span><?= cms_e((string) $tp) ?></span><?php endforeach; ?></p><?php endif; ?>
 <?php if ($user && $st['started'] && $st['total'] > 0): ?>
-    <div class="lms-progress"><?= lms_bar($st['pct'], lms_tx('progress', $st['done'], $st['total'], $st['pct'])) ?><small><?= cms_e(lms_tx('progress', $st['done'], $st['total'], $st['pct'])) ?></small></div>
+    <div class="lms-progress"><?= lms_bar($st['pct'], lms_progress_text($st)) ?><small><?= cms_e(lms_progress_text($st)) ?></small></div>
 <?php endif; ?>
     <?= lms_notice() ?>
     <div class="btnrow">
@@ -51,7 +54,8 @@ foreach (cms_config('pages') as $pk => $pd) if (($pd['schema'] ?? '') === 'Conta
     <?php if (!empty($item['soon'])): ?><p class="note lms-note"><?= cms_e(lms_tx('soon_text')) ?></p><?php endif; ?>
     <?php if ($first && !$canTake && $access === 'inscritos' && empty($item['soon'])): ?><p class="note lms-note"><?= cms_e(lms_tx('only_enrolled')) ?></p><?php endif; ?>
     <?php if ($st['completed'] !== ''): ?><p class="note lms-note"><?= cms_e(lms_tx('completed_on', lms_date($st['completed']))) ?></p><?php endif; ?>
-    <?php if ($staff): ?><p class="note lms-note"><?= cms_e(lms_tx('staff_view')) ?></p><?php endif; ?>
+    <?php if ($user && $st['completed'] !== '' && lms_cert_on($item)): ?><div class="btnrow lms-cert-row"><a class="btn" href="<?= cms_e(lms_cert_url($slug)) ?>" target="_blank" rel="noopener"><?= lms_icon('cert') ?> <?= cms_e(lms_tx('cert_get')) ?></a></div><?php endif; ?>
+    <?php if ($staff): ?><p class="note lms-note"><?= cms_e($user ? lms_tx('staff_learner', (string) $user['name']) : lms_tx('staff_view')) ?></p><?php endif; ?>
   </div>
 </section>
 <section class="sec">
@@ -73,7 +77,7 @@ foreach (cms_config('pages') as $pk => $pd) if (($pd['schema'] ?? '') === 'Conta
       <aside class="lms-course-side">
         <div class="card lms-syllabus">
           <h2 class="lms-h3"><?= cms_e(lms_tx('contents')) ?></h2>
-          <?= lms_syllabus($item, $lessons, $st, $lang) ?>
+          <?= lms_syllabus($item, $steps, $st, $lang) ?>
         </div>
       </aside>
     </div>

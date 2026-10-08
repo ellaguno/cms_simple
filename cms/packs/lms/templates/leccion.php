@@ -13,16 +13,24 @@ $title = (string) cms_f($item, 'title', $lang);
 $courseTitle = $course ? (string) cms_f($course, 'title', $lang) : '';
 $courseUrl = $course ? cms_url('item:' . $ct, $lang, $course['slug']) : cms_url('list:' . $ct, $lang);
 $lessons = $course ? lms_lessons((string) $course['slug']) : [];
+$steps = $course ? lms_steps((string) $course['slug']) : [];
 $st = $course ? lms_stats((string) $course['slug'], $user) : lms_stats_from([], []);
 $can = $course && lms_can_view($course, $item);
-$pos = 0;
+$pos = 0;   // número de lección (sin contar evaluaciones)
 foreach ($lessons as $i => $l) if ($l['slug'] === $item['slug']) { $pos = $i + 1; break; }
-$prev = $pos > 1 ? $lessons[$pos - 2] : null;
-$next = $pos && $pos < count($lessons) ? $lessons[$pos] : null;
-$lurl = fn(array $l) => cms_url('item:' . $lt, $lang, $l['slug']);
+$sp = null;   // lugar entre los pasos: anterior y siguiente pueden ser evaluaciones
+foreach ($steps as $i => $l) if (!lms_is_quiz($l) && $l['slug'] === $item['slug']) { $sp = $i; break; }
+$prev = $sp !== null && $sp > 0 ? $steps[$sp - 1] : null;
+$next = $sp !== null && $sp + 1 < count($steps) ? $steps[$sp + 1] : null;
+$lurl = fn(array $l) => lms_step_url($l, $lang);
 $done = !empty($st['lessons'][$item['slug']]);
 $module = (string) cms_f($item, 'module', $lang);
 $listTitle = $t($ct . '_title', lms_tx('courses'));
+// avance del video: quien entró como alumno (aunque también tenga sesión en el panel)
+$S = lms_settings();
+$track = $user && $can && $course && lms_has_video($item);
+$watched = $track ? lms_watched($user['id'], (string) $course['slug'], (string) $item['slug']) : 0;
+$needVideo = $track && !$done && $S['video_mode'] === 'exigir' && $watched < $S['video_pct'];
 ?>
 <section class="phead lms-head lms-head-lesson">
   <div class="wrap phead-in">
@@ -31,7 +39,8 @@ $listTitle = $t($ct . '_title', lms_tx('courses'));
     <h1 class="lms-lesson-title"><?= cms_e($title) ?><?php if ($done): ?> <span class="tag tag-ok"><?= cms_e(lms_tx('done')) ?></span><?php endif; ?></h1>
     <?php if (($sm = (string) cms_f($item, 'summary', $lang)) !== ''): ?><p class="lead"><?= cms_e($sm) ?></p><?php endif; ?>
     <?php if (($au = (string) cms_f($item, 'audience', $lang)) !== ''): ?><p class="lms-for"><strong><?= cms_e(lms_tx('for')) ?></strong> <?= cms_e($au) ?></p><?php endif; ?>
-    <?php if ($staff): ?><p class="note lms-note"><?= cms_e(lms_tx('staff_view')) ?></p><?php endif; ?>
+    <?= lms_notice() ?>
+    <?php if ($staff): ?><p class="note lms-note"><?= cms_e($user ? lms_tx('staff_learner', (string) $user['name']) : lms_tx('staff_view')) ?></p><?php endif; ?>
   </div>
 </section>
 <section class="sec lms-sec">
@@ -54,7 +63,17 @@ $listTitle = $t($ct . '_title', lms_tx('courses'));
 <?php endif; ?>
         </div>
 <?php else: ?>
+<?php if ($track): ?>
+        <div data-lms-watch data-url="<?= cms_e(lms_url('visto')) ?>" data-lesson="<?= cms_e($item['slug']) ?>" data-csrf="<?= cms_e(lms_csrf()) ?>" data-pct="<?= $watched ?>" data-need="<?= $S['video_pct'] ?>" data-done="<?= $done ? '1' : '0' ?>" data-key="<?= cms_e(substr(hash('sha256', $user['id'] . '|' . $item['slug']), 0, 16)) ?>" data-kind="<?= cms_e(preg_match('~vimeo~i', (string) $item['video']) ? 'vimeo' : (preg_match('~youtu~i', (string) $item['video']) ? 'youtube' : 'file')) ?>">
+          <?= lms_video($item, $title) ?>
+        </div>
+<?php if ($S['video_mode'] !== 'manual' || $watched > 0): ?>
+        <p class="lms-watch-note<?= $done ? ' is-done' : '' ?>" data-lms-watch-note data-tpl="<?= cms_e(str_replace('999', '%d', lms_tx('video_watched', 999))) ?>" data-done="<?= cms_e(lms_tx('done')) ?>"><?= cms_e($done ? lms_tx('done') : lms_tx('video_watched', $watched)) ?></p>
+<?php endif; ?>
+        <script src="<?= cms_e(cms_pack_asset(lms_pack(), 'assets/lms-watch.js')) ?>" defer></script>
+<?php else: ?>
         <?= lms_video($item, $title) ?>
+<?php endif; ?>
         <div class="rte lms-body"><?= cms_content((string) cms_f($item, 'body', $lang)) ?></div>
 <?php if ($files = lms_files($item)): ?>
         <div class="lms-files">
@@ -66,7 +85,7 @@ $listTitle = $t($ct . '_title', lms_tx('courses'));
         </div>
 <?php endif; ?>
         <div class="lms-actions">
-<?php if ($user && !$staff): ?>
+<?php if ($user): ?>
           <form method="post" action="<?= cms_e(lms_url('avance')) ?>" class="lms-mark">
             <?= lms_csrf_field() ?><input type="hidden" name="lesson" value="<?= cms_e($item['slug']) ?>">
 <?php if ($done): ?>
@@ -76,9 +95,10 @@ $listTitle = $t($ct . '_title', lms_tx('courses'));
 <?php else: ?>
             <input type="hidden" name="done" value="1">
             <?php if ($next && lms_can_view($course, $next)): ?><input type="hidden" name="next" value="<?= cms_e($lurl($next)) ?>"><?php endif; ?>
-            <button class="btn" type="submit"><?= lms_icon('done') ?> <?= cms_e($next && lms_can_view($course, $next) ? lms_tx('mark_next') : lms_tx('mark_done')) ?></button>
+            <button class="btn" type="submit"<?= $needVideo ? ' disabled aria-disabled="true" data-lms-need-video' : '' ?>><?= lms_icon('done') ?> <?= cms_e($next && lms_can_view($course, $next) ? lms_tx(lms_is_quiz($next) ? 'mark_next_q' : 'mark_next') : lms_tx('mark_done')) ?></button>
 <?php endif; ?>
           </form>
+<?php if ($needVideo): ?>          <p class="note lms-need" data-lms-need-note><?= cms_e(lms_tx('video_need', $S['video_pct'])) ?></p><?php endif; ?>
 <?php elseif (!$user && !$staff): ?>
           <p class="note"><a href="<?= cms_e(lms_url('entrar', null, ['r' => lms_here()])) ?>"><?= cms_e(lms_tx('login_to_save')) ?></a></p>
 <?php endif; ?>
@@ -93,9 +113,9 @@ $listTitle = $t($ct . '_title', lms_tx('courses'));
         <div class="card lms-syllabus">
           <h2 class="lms-h3"><a href="<?= cms_e($courseUrl) ?>"><?= cms_e($courseTitle) ?></a></h2>
 <?php if ($user && $st['total'] > 0): ?>
-          <div class="lms-progress"><?= lms_bar($st['pct']) ?><small><?= cms_e(lms_tx('progress', $st['done'], $st['total'], $st['pct'])) ?></small></div>
+          <div class="lms-progress"><?= lms_bar($st['pct']) ?><small><?= cms_e(lms_progress_text($st)) ?></small></div>
 <?php endif; ?>
-          <?= $course ? lms_syllabus($course, $lessons, $st, $lang, (string) $item['slug']) : '' ?>
+          <?= $course ? lms_syllabus($course, $steps, $st, $lang, (string) $item['slug']) : '' ?>
         </div>
       </aside>
     </div>

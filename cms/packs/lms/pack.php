@@ -9,10 +9,18 @@
 // dirección del listado de cursos (Ajustes → Aula); el manifiesto se lee después de cargar los ajustes
 $lmsS = function_exists('cms_settings') ? cms_settings() : [];
 $lmsRoute = cms_slugify((string) ($lmsS['lms_courses_route'] ?? '')) ?: 'cursos';
+$lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Primera línea: la pregunta (el número del principio es opcional; {2} al final = vale 2 puntos). Debajo:\n"
+    . "  * opción correcta   - opción incorrecta   (varias * = opción múltiple, con crédito parcial)\n"
+    . "  = verdadero  o  = falso                    (verdadero/falso)\n"
+    . "  = respuesta | otra forma válida           (respuesta corta: sin importar mayúsculas ni acentos)\n"
+    . "  = 42  o  = 3.5 ± 0.1                        (numérica, con tolerancia opcional)\n"
+    . "  = ?                                        (abierta: la califica el instructor en Aula → Evaluaciones)\n"
+    . "  > explicación que ve el alumno al revisar su intento\n"
+    . "En el texto de la pregunta: **negritas** y `código`. La vista de la evaluación con sesión en el panel muestra las respuestas correctas y los avisos del formato.";
 return [
     'label' => 'Aula: cursos en línea (LMS)',
-    'version' => '1.1.1',
-    'desc' => 'Cursos con lecciones, alumnos con cuenta propia, inscripciones y avance por lección. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada y siguen con la siguiente. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance de cada alumno y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos. Preparado para exámenes y calificaciones en una versión siguiente.',
+    'version' => '1.3.0',
+    'desc' => 'Cursos con lecciones y evaluaciones, alumnos con cuenta propia, inscripciones y avance. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada, presentan cuestionarios y exámenes (opción única o múltiple, verdadero/falso, respuesta corta, numérica y abiertas que califica el instructor) y siguen con lo siguiente. El avance de los videos se sigue solo (YouTube, Vimeo o MP4: cuenta lo que de verdad se vio) y puede exigirse antes de marcar la lección. Al terminar un curso, el alumno recibe por correo su constancia para imprimir o guardar en PDF, con código de verificación público. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance y calificaciones de cada alumno, revisión de intentos, preguntas por calificar y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos.',
     'assets' => [],
     'effects' => [],
     'admin' => ['label' => 'Alumnos y avance', 'file' => 'admin.php', 'group' => 'Aula'],
@@ -46,6 +54,7 @@ return [
                 'color'    => ['type' => 'color', 'label' => 'Color de la tapa', 'sidebar' => true],
                 'icon'     => ['type' => 'select', 'label' => 'Ícono de la tapa', 'sidebar' => true, 'options' => ['' => '— sin ícono —', 'flechas' => 'Flechas (intercambio)', 'nucleo' => 'Núcleo', 'billetes' => 'Billetes', 'grafica' => 'Gráfica', 'libro' => 'Libro', 'escudo' => 'Escudo', 'codigo' => 'Código', 'personas' => 'Personas', 'engrane' => 'Engrane', 'video' => 'Video', 'capas' => 'Capas']],
                 'short'    => ['type' => 'text', 'label' => 'Nombre en la tapa', 'i18n' => true, 'sidebar' => true, 'placeholder' => 'Arbitraje', 'help' => 'Corto; si se deja vacío va el nombre del curso.'],
+                'certificate' => ['type' => 'select', 'label' => 'Constancia al terminar', 'sidebar' => true, 'options' => ['' => 'La de Ajustes → Aula', 'si' => 'Sí', 'no' => 'No']],
                 'series'   => ['type' => 'text', 'label' => 'Serie (sobre el nombre en la tapa)', 'i18n' => true, 'sidebar' => true, 'placeholder' => 'Curso · NextSabi', 'help' => 'Vacío = la de Ajustes → Aula.'],
             ],
         ],
@@ -73,6 +82,34 @@ return [
                 'preview'  => ['type' => 'checkbox', 'label' => 'Lección de muestra', 'text' => 'Visible para todos, sin cuenta ni inscripción', 'sidebar' => true],
             ],
         ],
+        'evaluaciones' => [
+            'label' => 'Evaluaciones', 'label_singular' => 'Evaluación', 'group' => 'Aula',
+            'routes' => ['es' => 'evaluaciones', 'en' => 'quizzes'],
+            'template_single' => 'evaluacion', 'no_list' => true, 'noindex' => true, 'feed' => false,
+            'sort' => ['field' => 'order', 'dir' => 'asc'], 'list' => ['course', 'module', 'order', 'pass'],
+            'title_field' => 'title',
+            'help' => 'Cuestionarios y exámenes. Cada evaluación pertenece a un curso y aparece en su temario junto a las lecciones, según "Módulo" y "Orden" (usa el mismo orden que las lecciones: 35 va entre la 3 y la 4). Cuenta para el avance: se da por hecha al aprobarla. Resultados en Aula → Alumnos y avance → Evaluaciones.',
+            'fields' => [
+                'title'     => ['type' => 'text', 'label' => 'Nombre de la evaluación', 'i18n' => true, 'required' => true, 'placeholder' => 'Repaso del módulo 1, Examen final…'],
+                'intro'     => ['type' => 'html', 'label' => 'Instrucciones (se ven antes de empezar)', 'i18n' => true],
+                'questions' => ['type' => 'textarea', 'label' => 'Preguntas', 'i18n' => true, 'rows' => 22, 'index' => false, 'help' => $lmsQuizHelp,
+                                'placeholder' => "1. ¿Qué protocolo cifra el tráfico de la web?\n- FTP\n* HTTPS\n- SMTP\n> HTTPS es HTTP sobre TLS.\n\n2. Marca los lenguajes de programación\n* PHP\n* Python\n- HTML\n\n3. El agua hierve a 100 °C al nivel del mar.\n= verdadero\n\n4. Explica con tus palabras qué es una API. {3}\n= ?"],
+                'course'    => ['type' => 'select', 'label' => 'Curso', 'sidebar' => true, 'required' => true, 'options' => ['' => '— elige el curso —'], 'options_from' => 'cursos'],
+                'module'    => ['type' => 'text', 'label' => 'Módulo', 'i18n' => true, 'sidebar' => true, 'placeholder' => 'Módulo 1: Fundamentos'],
+                'order'     => ['type' => 'number', 'label' => 'Orden dentro del curso', 'sidebar' => true, 'help' => 'En la misma escala que las lecciones.'],
+                'pass'      => ['type' => 'number', 'label' => 'Calificación para aprobar (%)', 'sidebar' => true, 'min' => 0, 'max' => 100, 'placeholder' => '70',
+                                'help' => 'Vacío = 70. 0 = práctica: cuenta como hecha al enviarla.'],
+                'attempts'  => ['type' => 'number', 'label' => 'Intentos permitidos', 'sidebar' => true, 'min' => 0, 'placeholder' => 'sin límite', 'help' => 'Vacío o 0 = sin límite. Desde el panel se puede dar otro intento a un alumno.'],
+                'time'      => ['type' => 'number', 'label' => 'Tiempo límite (minutos)', 'sidebar' => true, 'min' => 0, 'placeholder' => 'sin límite',
+                                'help' => 'Con tiempo, el alumno pulsa "Empezar" y el reloj corre aunque cierre la página; al acabarse se envía lo que lleve.'],
+                'pick'      => ['type' => 'number', 'label' => 'Preguntas por intento', 'sidebar' => true, 'min' => 0, 'placeholder' => 'todas',
+                                'help' => 'Para un banco de preguntas: cada intento toma esta cantidad al azar.'],
+                'shuffle'   => ['type' => 'checkbox', 'label' => 'Orden', 'text' => 'Mezclar las preguntas y sus opciones en cada intento', 'sidebar' => true],
+                'reveal'    => ['type' => 'select', 'label' => 'Al terminar, el alumno ve', 'sidebar' => true,
+                                'options' => ['' => 'Aciertos; respuestas correctas al aprobar o al agotar los intentos', 'siempre' => 'Aciertos, respuestas correctas y explicaciones siempre', 'aciertos' => 'Solo qué contestó bien y mal', 'nada' => 'Solo la calificación']],
+                'gate'      => ['type' => 'checkbox', 'label' => 'Requisito', 'text' => 'Se abre solo al terminar todo lo anterior del curso', 'sidebar' => true],
+            ],
+        ],
     ],
 
     'settings' => ['Aula (cursos en línea)' => [
@@ -98,10 +135,24 @@ return [
                                'help' => 'Los cursos quedan en /cursos/<curso>. No uses el nombre de una carpeta de Archivos y carpetas (p. ej. capacitacion): esa carpeta se sirve antes que el aula.'],
         'lms_protect'      => ['type' => 'checkbox', 'label' => 'Videos protegidos', 'default' => true,
                                'text' => 'Los videos y materiales que estén en una carpeta propia (Archivos y carpetas) se sirven solo a quien puede ver la lección: el aula le pone a esa carpeta un .htaccess que corta el acceso directo'],
-        'lms_notify_to'    => ['type' => 'email', 'label' => 'Avisar de cada registro nuevo a (opcional)', 'half' => true],
+        'lms_video_mode'   => ['type' => 'select', 'label' => 'Avance de los videos', 'default' => 'auto',
+                               'options' => ['auto' => 'La lección se marca sola al ver el video (y también a mano)', 'exigir' => 'Se marca sola, y el botón "Marcar como terminada" espera a que se vea el video', 'manual' => 'Solo a mano, con el botón'],
+                               'help' => 'Cuenta lo que de verdad se reproduce (adelantar no cuenta), en videos de YouTube, Vimeo o archivo. Las lecciones sin video se marcan con el botón.'],
+        'lms_video_pct'    => ['type' => 'number', 'label' => 'Porcentaje del video que hay que ver', 'default' => 90, 'min' => 10, 'max' => 100, 'placeholder' => '90', 'half' => true],
+        'lms_cert'         => ['type' => 'checkbox', 'label' => 'Constancias', 'default' => true, 'text' => 'Al terminar un curso (lecciones y evaluaciones al 100 %) el alumno recibe una constancia con código de verificación; cada curso puede cambiarlo'],
+        'lms_cert_title'   => ['type' => 'text', 'i18n' => true, 'label' => 'Constancia: título', 'placeholder' => 'Constancia de terminación', 'half' => true, 'show_if' => ['lms_cert' => '1']],
+        'lms_cert_text'    => ['type' => 'text', 'i18n' => true, 'label' => 'Constancia: texto antes del curso', 'placeholder' => 'por haber concluido satisfactoriamente el curso', 'half' => true, 'show_if' => ['lms_cert' => '1']],
+        'lms_cert_signer'  => ['type' => 'text', 'label' => 'Constancia: quien firma', 'placeholder' => 'Ing. Ana Pérez', 'half' => true, 'show_if' => ['lms_cert' => '1']],
+        'lms_cert_signer_role' => ['type' => 'text', 'i18n' => true, 'label' => 'Constancia: cargo de quien firma', 'placeholder' => 'Directora de capacitación', 'half' => true, 'show_if' => ['lms_cert' => '1']],
+        'lms_cert_signature' => ['type' => 'image', 'label' => 'Constancia: imagen de la firma (PNG con fondo transparente)', 'show_if' => ['lms_cert' => '1']],
+        'lms_cert_logo'    => ['type' => 'image', 'label' => 'Constancia: logotipo (vacío = el nombre del sitio)', 'show_if' => ['lms_cert' => '1']],
+        'lms_cert_color'   => ['type' => 'color', 'label' => 'Constancia: color del marco y el título', 'half' => true, 'show_if' => ['lms_cert' => '1']],
+        'lms_notify_to'    => ['type' => 'email', 'label' => 'Avisar de registros nuevos y evaluaciones por calificar a (opcional)', 'half' => true],
         'lms_course_type'  => ['type' => 'text', 'label' => 'Colección de cursos', 'default' => 'cursos', 'placeholder' => 'cursos', 'half' => true,
                                'help' => 'Solo si el tema trae su propia colección de cursos con otra clave.'],
         'lms_lesson_type'  => ['type' => 'text', 'label' => 'Colección de lecciones', 'default' => 'lecciones', 'placeholder' => 'lecciones', 'half' => true],
         'lms_lesson_field' => ['type' => 'text', 'label' => 'Campo de la lección que dice su curso', 'default' => 'course', 'placeholder' => 'course', 'half' => true],
+        'lms_quiz_type'    => ['type' => 'text', 'label' => 'Colección de evaluaciones', 'default' => 'evaluaciones', 'placeholder' => 'evaluaciones', 'half' => true,
+                               'help' => 'Su campo "course" dice el curso, como en las lecciones.'],
     ]],
 ];

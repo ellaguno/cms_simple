@@ -103,7 +103,7 @@ function admin_field(string $name, array $def, $value): void
     // 'show_if' => ['otro_campo' => 'valor' | ['a', 'b']]: el panel muestra el campo solo cuando ese control tiene ese valor (JS)
     $showIf = !empty($def['show_if']) && is_array($def['show_if']) ? ' data-show-if=\'' . cms_e(json_encode($def['show_if'], JSON_UNESCAPED_UNICODE)) . '\'' : '';
     echo '<div class="ad-field ad-field-' . cms_e($def['type'] ?? 'text') . (!empty($def['half']) ? ' ad-field-half' : '') . '"' . $showIf . '><label>' . cms_e($label) . (!empty($def['required']) ? ' <span class="ad-req">*</span>' : '') . '</label>';
-    if (!empty($def['help'])) echo '<p class="ad-help">' . cms_e($def['help']) . '</p>';
+    if (!empty($def['help'])) echo '<p class="ad-help"' . (strpos((string) $def['help'], "\n") !== false ? ' style="white-space:pre-line"' : '') . '>' . cms_e($def['help']) . '</p>';   // con saltos de línea: se respetan (formato de las evaluaciones del aula)
     if (!empty($def['i18n']) && ($def['type'] ?? '') !== 'category') {
         echo '<div class="ad-langs">';
         foreach (cms_langs() as $l) {

@@ -6,19 +6,29 @@
  *   data/lms/users.json             alumnos: id => ['id', 'name', 'email', 'hash', 'active', 'created', 'notes']
  *   data/lms/progress/<id>.json     avance de un alumno: ['seen' => fecha, 'courses' => [curso => ['enrolled', 'by',
  *                                   'lessons' => [lección => fecha], 'last', 'completed']]]. Un archivo por alumno:
- *                                   marcar una lección reescribe solo el suyo. Reservado para la versión con exámenes:
- *                                   courses.<curso>.exams.<examen> = ['attempts' => [...], 'best' => n].
+ *                                   marcar una lección reescribe solo el suyo. Las evaluaciones guardan sus intentos en
+ *                                   courses.<curso>.exams.<evaluación> (ver quiz.php).
  *   data/lms/attempts.json          intentos fallidos de entrar, por IP (5 en 15 minutos bloquean)
  *
  * Sesión sin $_SESSION: una cookie firmada (HMAC con data/.secret) con el id del alumno, su caducidad y un trozo del
  * hash de su contraseña; cambiar la contraseña o desactivar al alumno la invalida. Así no choca con la sesión del panel
  * ni depende de la limpieza de sesiones del hosting (que en muchos cierra a los 24 minutos sin actividad).
  *
- * Rutas (gancho 'route'): /aula, /aula/entrar, /aula/registro, /aula/cuenta, /aula/salir, /aula/avance (POST).
- * Plantillas (gancho 'template'): cursos.php, curso.php y leccion.php del paquete cuando el tema no trae las suyas.
+ * Rutas (gancho 'route'): /aula, /aula/entrar, /aula/registro, /aula/cuenta, /aula/salir, /aula/avance (POST),
+ * /aula/evaluacion (POST: empezar o enviar una evaluación), /aula/visto (POST del reproductor: cuánto del video se ha
+ * visto), /aula/constancia?c=<curso> (la constancia para imprimir) y /aula/verificar?c=<código>.
+ *
+ * Avance de los videos: el reproductor (YouTube, Vimeo o MP4) cuenta qué partes del video se vieron de verdad (no
+ * basta con adelantarlo) y lo manda a /aula/visto; al llegar al porcentaje de Ajustes → Aula la lección se marca
+ * sola, y en modo "exigir" el botón "Marcar como terminada" no se habilita antes. Se guarda en
+ * courses.<curso>.watch.<lección> (porcentaje visto).
+ * Plantillas (gancho 'template'): cursos.php, curso.php, leccion.php y evaluacion.php del paquete cuando el tema no
+ * trae las suyas.
  */
 declare(strict_types=1);
 if (!function_exists('lms_settings')) {
+    require_once __DIR__ . '/quiz.php';
+    require_once __DIR__ . '/cert.php';
 
     /* ================================================================== ajustes y textos */
 
@@ -39,6 +49,8 @@ if (!function_exists('lms_settings')) {
             'course_type'  => preg_replace('/[^a-z0-9_-]/i', '', $g('lms_course_type', 'cursos')) ?: 'cursos',
             'lesson_type'  => preg_replace('/[^a-z0-9_-]/i', '', $g('lms_lesson_type', 'lecciones')) ?: 'lecciones',
             'lesson_field' => preg_replace('/[^a-z0-9_-]/i', '', $g('lms_lesson_field', 'course')) ?: 'course',
+            'video_mode'   => in_array($g('lms_video_mode', 'auto'), ['auto', 'exigir', 'manual'], true) ? $g('lms_video_mode', 'auto') : 'auto',
+            'video_pct'    => max(10, min(100, (int) $g('lms_video_pct', '90'))),
         ];
     }
 
@@ -115,6 +127,7 @@ if (!function_exists('lms_settings')) {
             'lesson'         => ['es' => 'Lección %d de %d', 'en' => 'Lesson %d of %d'],
             'mark_done'      => ['es' => 'Marcar como terminada', 'en' => 'Mark as complete'],
             'mark_next'      => ['es' => 'Terminada: siguiente lección', 'en' => 'Complete: next lesson'],
+            'mark_next_q'    => ['es' => 'Terminada: ir a la evaluación', 'en' => 'Complete: go to the quiz'],
             'mark_undo'      => ['es' => 'Marcar como pendiente', 'en' => 'Mark as not complete'],
             'done'           => ['es' => 'Lección terminada', 'en' => 'Lesson complete'],
             'prev'           => ['es' => 'Anterior', 'en' => 'Previous'],
@@ -138,6 +151,84 @@ if (!function_exists('lms_settings')) {
             'ok_saved'       => ['es' => 'Cambios guardados.', 'en' => 'Changes saved.'],
             'ok_welcome'     => ['es' => 'Bienvenido. Tu cuenta está lista.', 'en' => 'Welcome. Your account is ready.'],
             'ok_completed'   => ['es' => '¡Terminaste el curso!', 'en' => 'You completed the course!'],
+            'progress_mixed' => ['es' => '%d de %d lecciones y evaluaciones · %d %%', 'en' => '%d of %d lessons and quizzes · %d%%'],
+            'quizzes_n'      => ['es' => '%d evaluaciones', 'en' => '%d quizzes'],
+            'quiz_1'         => ['es' => '1 evaluación', 'en' => '1 quiz'],
+            'quiz'           => ['es' => 'Evaluación', 'en' => 'Quiz'],
+            'q_count'        => ['es' => '%d preguntas', 'en' => '%d questions'],
+            'q_count_1'      => ['es' => '1 pregunta', 'en' => '1 question'],
+            'q_pass'         => ['es' => 'Se aprueba con %d %%', 'en' => 'Pass mark %d%%'],
+            'q_practice'     => ['es' => 'De práctica', 'en' => 'Practice'],
+            'q_time'         => ['es' => '%d minutos', 'en' => '%d minutes'],
+            'q_attempts'     => ['es' => 'Intentos: %d de %d', 'en' => 'Attempts: %d of %d'],
+            'q_attempts_max' => ['es' => '%d intentos', 'en' => '%d attempts'],
+            'q_attempts_1'   => ['es' => 'Un solo intento', 'en' => 'One attempt'],
+            'q_attempts_inf' => ['es' => 'Intentos sin límite', 'en' => 'Unlimited attempts'],
+            'q_start'        => ['es' => 'Empezar la evaluación', 'en' => 'Start the quiz'],
+            'q_start_timed'  => ['es' => 'Al empezar corre el reloj: tienes %d minutos y se envía sola al acabarse el tiempo.', 'en' => 'The clock starts when you begin: you have %d minutes and it submits itself when time runs out.'],
+            'q_submit'       => ['es' => 'Enviar respuestas', 'en' => 'Submit answers'],
+            'q_unanswered'   => ['es' => 'Hay preguntas sin contestar. ¿Enviar de todos modos?', 'en' => 'Some questions are unanswered. Submit anyway?'],
+            'q_time_left'    => ['es' => 'Tiempo restante', 'en' => 'Time left'],
+            'q_login'        => ['es' => 'Entra con tu cuenta para presentar la evaluación.', 'en' => 'Sign in to take the quiz.'],
+            'q_retry'        => ['es' => 'Intentar de nuevo', 'en' => 'Try again'],
+            'q_no_more'      => ['es' => 'Ya usaste todos tus intentos.', 'en' => 'You have used all your attempts.'],
+            'q_wait'         => ['es' => 'Tu intento tiene preguntas abiertas: el instructor lo calificará pronto.', 'en' => 'Your attempt has open questions: the instructor will grade it soon.'],
+            'q_passed'       => ['es' => 'Aprobada', 'en' => 'Passed'],
+            'q_failed'       => ['es' => 'No aprobada', 'en' => 'Not passed'],
+            'q_pending'      => ['es' => 'Por calificar', 'en' => 'Pending grading'],
+            'q_late'         => ['es' => 'Fuera de tiempo', 'en' => 'Out of time'],
+            'q_result'       => ['es' => 'Resultado del intento %d', 'en' => 'Result of attempt %d'],
+            'q_score'        => ['es' => '%s de %s puntos', 'en' => '%s of %s points'],
+            'q_best'         => ['es' => 'Mejor calificación: %d %%', 'en' => 'Best score: %d%%'],
+            'q_history'      => ['es' => 'Tus intentos', 'en' => 'Your attempts'],
+            'q_attempt'      => ['es' => 'Intento', 'en' => 'Attempt'],
+            'q_date'         => ['es' => 'Fecha', 'en' => 'Date'],
+            'q_grade'        => ['es' => 'Calificación', 'en' => 'Score'],
+            'q_status'       => ['es' => 'Estado', 'en' => 'Status'],
+            'q_review'       => ['es' => 'Revisar', 'en' => 'Review'],
+            'q_your'         => ['es' => 'Tu respuesta:', 'en' => 'Your answer:'],
+            'q_correct'      => ['es' => 'Respuesta correcta:', 'en' => 'Correct answer:'],
+            'q_right'        => ['es' => 'Correcta', 'en' => 'Correct'],
+            'q_wrong'        => ['es' => 'Incorrecta', 'en' => 'Incorrect'],
+            'q_partial'      => ['es' => 'Parcial', 'en' => 'Partial'],
+            'q_blank'        => ['es' => '(sin contestar)', 'en' => '(no answer)'],
+            'q_points'       => ['es' => '%s pts', 'en' => '%s pts'],
+            'q_feedback'     => ['es' => 'Comentario del instructor:', 'en' => 'Instructor feedback:'],
+            'q_multi_hint'   => ['es' => 'Marca todas las que correspondan.', 'en' => 'Select all that apply.'],
+            'q_gate'         => ['es' => 'Esta evaluación se abre al terminar todo lo anterior del curso.', 'en' => 'This quiz opens once you finish everything before it in the course.'],
+            'q_gate_next'    => ['es' => 'Ir a lo pendiente', 'en' => 'Go to what is pending'],
+            'q_empty'        => ['es' => 'Esta evaluación todavía no tiene preguntas.', 'en' => 'This quiz has no questions yet.'],
+            'q_staff'        => ['es' => 'Vista de administración: ves las respuestas correctas; no se puede enviar.', 'en' => 'Admin view: correct answers are shown; it cannot be submitted.'],
+            'q_answers_link' => ['es' => 'Ver las respuestas correctas', 'en' => 'See the correct answers'],
+            'q_answer_ph'    => ['es' => 'Tu respuesta', 'en' => 'Your answer'],
+            'q_changed'      => ['es' => 'Las preguntas cambiaron después de este intento; la revisión puede no coincidir.', 'en' => 'The questions changed after this attempt; the review may not match.'],
+            'q_next'         => ['es' => 'Seguir con el curso', 'en' => 'Continue the course'],
+            'ok_quiz'        => ['es' => 'Respuestas enviadas.', 'en' => 'Answers submitted.'],
+            'video_watched'  => ['es' => 'Has visto el %d %% del video.', 'en' => 'You have watched %d%% of the video.'],
+            'video_need'     => ['es' => 'Ve al menos el %d %% del video para marcar la lección como terminada.', 'en' => 'Watch at least %d%% of the video to mark the lesson as complete.'],
+            'video_auto'     => ['es' => 'La lección se marca sola al ver el video.', 'en' => 'The lesson is marked complete when you watch the video.'],
+            'err_video'      => ['es' => 'Primero ve el video de la lección.', 'en' => 'Watch the lesson video first.'],
+            'staff_learner'  => ['es' => 'Tienes sesión en el panel y también como alumno (%s): tu avance se guarda como alumno.', 'en' => 'You are signed in to the admin and as a student (%s): progress is saved as the student.'],
+            'cert'           => ['es' => 'Constancia', 'en' => 'Certificate'],
+            'my_certs'       => ['es' => 'Mis constancias', 'en' => 'My certificates'],
+            'cert_get'       => ['es' => 'Ver mi constancia', 'en' => 'View my certificate'],
+            'cert_title'     => ['es' => 'Constancia de terminación', 'en' => 'Certificate of completion'],
+            'cert_to'        => ['es' => 'Se otorga a', 'en' => 'Awarded to'],
+            'cert_text'      => ['es' => 'por haber concluido satisfactoriamente el curso', 'en' => 'for successfully completing the course'],
+            'cert_date'      => ['es' => 'Concluido el %s', 'en' => 'Completed on %s'],
+            'cert_duration'  => ['es' => 'Duración: %s', 'en' => 'Duration: %s'],
+            'cert_grade'     => ['es' => 'Calificación: %d %%', 'en' => 'Grade: %d%%'],
+            'cert_code'      => ['es' => 'Código de verificación', 'en' => 'Verification code'],
+            'cert_print'     => ['es' => 'Imprimir o guardar como PDF', 'en' => 'Print or save as PDF'],
+            'cert_verify'    => ['es' => 'Verificar una constancia', 'en' => 'Verify a certificate'],
+            'cert_verify_lead' => ['es' => 'Escribe el código que aparece en la constancia.', 'en' => 'Enter the code printed on the certificate.'],
+            'cert_check'     => ['es' => 'Verificar', 'en' => 'Verify'],
+            'cert_valid'     => ['es' => 'Constancia válida', 'en' => 'Valid certificate'],
+            'cert_valid_text' => ['es' => '%s terminó el curso «%s» el %s.', 'en' => '%s completed the course “%s” on %s.'],
+            'cert_invalid'   => ['es' => 'Esta constancia ya no es válida.', 'en' => 'This certificate is no longer valid.'],
+            'cert_unknown'   => ['es' => 'No existe ninguna constancia con ese código.', 'en' => 'There is no certificate with that code.'],
+            'true'           => ['es' => 'Verdadero', 'en' => 'True'],
+            'false'          => ['es' => 'Falso', 'en' => 'False'],
         ];
         $lang = cms_current()['lang'] ?: cms_default_lang();
         $s = (string) cms_t('lms_' . $k, $lang, '');
@@ -292,11 +383,64 @@ if (!function_exists('lms_settings')) {
         else unset($c['lessons'][$lesson]);
         $c['last'] = $lesson;
         $p['courses'][$course] = $c;
-        $st = lms_stats_from($c, lms_lessons($course));
-        if ($st['total'] > 0 && $st['done'] >= $st['total']) { if (empty($p['courses'][$course]['completed'])) $p['courses'][$course]['completed'] = date('Y-m-d H:i'); }
-        else unset($p['courses'][$course]['completed']);
+        lms_course_recheck($p, $course, $uid);
         return lms_progress_save($uid, $p);
     }
+
+    /**
+     * Fecha el curso como terminado al llegar al 100 % (lecciones y evaluaciones), o quita la fecha si ya no lo está.
+     * Con $uid, al terminarlo emite la constancia (una vez; si luego se desmarca algo, la constancia se conserva) y,
+     * al acabar la petición, le manda al alumno el enlace por correo.
+     */
+    function lms_course_recheck(array &$p, string $course, string $uid = ''): void
+    {
+        if (!isset($p['courses'][$course])) return;
+        $st = lms_stats_from((array) $p['courses'][$course], lms_steps($course));
+        if ($st['total'] > 0 && $st['done'] >= $st['total']) {
+            if (empty($p['courses'][$course]['completed'])) $p['courses'][$course]['completed'] = date('Y-m-d H:i');
+            if ($uid !== '' && empty($p['courses'][$course]['cert']['code']) && lms_cert_issue($uid, $course, $p) !== '') register_shutdown_function('lms_cert_mail', $uid, $course);
+        }
+        else unset($p['courses'][$course]['completed']);
+    }
+
+    /**
+     * Registra cuánto del video de una lección se ha visto (se queda el mayor) y, si llega al porcentaje de Ajustes →
+     * Aula y el modo no es manual, la marca como terminada. Devuelve ['pct' => visto, 'done' => terminada].
+     */
+    function lms_watch(string $uid, string $course, string $lesson, int $pct): array
+    {
+        $p = lms_progress($uid);
+        $c = array_replace(['lessons' => []], (array) ($p['courses'][$course] ?? []));
+        $pct = max(0, min(100, $pct));
+        $old = (int) ($c['watch'][$lesson] ?? 0);
+        $done = !empty($c['lessons'][$lesson]);
+        $S = lms_settings();
+        $mark = !$done && $pct >= $S['video_pct'] && $S['video_mode'] !== 'manual';
+        if ($pct <= $old && !$mark) return ['pct' => $old, 'done' => $done];
+        $c['watch'][$lesson] = max($old, $pct);
+        if (empty($c['enrolled'])) { $c['enrolled'] = date('Y-m-d H:i'); $c['by'] = 'alumno'; }
+        if ($mark) { $c['lessons'][$lesson] = date('Y-m-d H:i'); $c['last'] = $lesson; $done = true; }
+        $p['courses'][$course] = $c;
+        lms_course_recheck($p, $course, $uid);
+        lms_progress_save($uid, $p);
+        return ['pct' => (int) $c['watch'][$lesson], 'done' => $done];
+    }
+
+    /** ¿La lección tiene un video cuyo avance se sigue? (YouTube, Vimeo o archivo de video) */
+    function lms_has_video(array $lesson): bool
+    {
+        $src = trim((string) ($lesson['video'] ?? ''));
+        return $src !== '' && (bool) preg_match('~youtube\.com|youtu\.be|vimeo\.com|\.(mp4|webm|m4v|mov)(\?.*)?$~i', $src);
+    }
+
+    /** Porcentaje visto del video de una lección por un alumno. */
+    function lms_watched(string $uid, string $course, string $lesson): int
+    {
+        return (int) (lms_progress($uid)['courses'][$course]['watch'][$lesson] ?? 0);
+    }
+
+    /** Alumno cuyo avance se guarda en esta página: el que entró, aunque también haya sesión en el panel. */
+    function lms_learner(): ?array { return lms_user(); }
 
     /* ================================================================== cursos y lecciones */
 
@@ -368,18 +512,23 @@ if (!function_exists('lms_settings')) {
         return lms_can_view($course, ['preview' => false]);
     }
 
-    /** Avance de un registro de curso contra sus lecciones actuales (las borradas no cuentan). */
-    function lms_stats_from(array $c, array $lessons): array
+    /**
+     * Avance de un registro de curso contra sus pasos actuales (lms_steps: lecciones y evaluaciones; los borrados no
+     * cuentan). Una lección cuenta al marcarse; una evaluación, al aprobarse.
+     */
+    function lms_stats_from(array $c, array $steps): array
     {
-        $done = 0; $next = null;
-        foreach ($lessons as $l) {
-            if (!empty($c['lessons'][$l['slug']])) $done++;
+        $done = 0; $next = null; $quizzes = 0;
+        $st = ['lessons' => (array) ($c['lessons'] ?? []), 'exams' => (array) ($c['exams'] ?? [])];
+        foreach ($steps as $l) {
+            if (lms_is_quiz($l)) $quizzes++;
+            if (lms_step_done($st, $l)) $done++;
             elseif ($next === null) $next = $l;
         }
-        $total = count($lessons);
-        return ['done' => $done, 'total' => $total, 'pct' => $total ? (int) floor($done * 100 / $total) : 0, 'next' => $next,
-                'enrolled' => !empty($c['enrolled']), 'started' => $done > 0 || !empty($c['enrolled']), 'completed' => (string) ($c['completed'] ?? ''),
-                'lessons' => (array) ($c['lessons'] ?? [])];
+        $total = count($steps);
+        return ['done' => $done, 'total' => $total, 'pct' => $total ? (int) floor($done * 100 / $total) : 0, 'next' => $next, 'quizzes' => $quizzes,
+                'enrolled' => !empty($c['enrolled']), 'started' => $done > 0 || !empty($c['enrolled']) || !empty($c['exams']), 'completed' => (string) ($c['completed'] ?? ''),
+                'lessons' => $st['lessons'], 'exams' => $st['exams']];
     }
 
     /** Avance del alumno que está viendo en un curso (o vacío si no hay alumno). */
@@ -387,7 +536,13 @@ if (!function_exists('lms_settings')) {
     {
         $user = $user ?? lms_user();
         $c = $user ? (array) (lms_progress($user['id'])['courses'][$course] ?? []) : [];
-        return lms_stats_from($c, lms_lessons($course));
+        return lms_stats_from($c, lms_steps($course));
+    }
+
+    /** "3 de 8 lecciones · 37 %" (o "… lecciones y evaluaciones …" si el curso tiene evaluaciones). */
+    function lms_progress_text(array $st): string
+    {
+        return lms_tx(!empty($st['quizzes']) ? 'progress_mixed' : 'progress', $st['done'], $st['total'], $st['pct']);
     }
 
     /* ================================================================== sesión (cookie firmada) */
@@ -595,6 +750,10 @@ if (!function_exists('lms_settings')) {
             'arrow'  => '<path d="M5 12h14M13 6l6 6-6 6"/>',
             'back'   => '<path d="M19 12H5M11 6l-6 6 6 6"/>',
             'user'   => '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+            'cert'   => '<circle cx="12" cy="9" r="5"/><path d="M8.5 13 7 21l5-3 5 3-1.5-8"/>',
+            'quiz'   => '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 11l1.5 1.5 3-3M8.5 16.5h7"/>',
+            'clock'  => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+            'x'      => '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
         ][$k] ?? '';
         return '<svg class="lms-ico lms-ico-' . $k . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $p . '</svg>';
     }
@@ -698,14 +857,14 @@ if (!function_exists('lms_settings')) {
         if ($src === '') return '';
         $t = cms_e($title);
         if (preg_match('~(?:youtube\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})~', $src, $m)) {
-            return '<div class="lms-video"><iframe src="https://www.youtube-nocookie.com/embed/' . $m[1] . '?rel=0" title="' . $t . '" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>';
+            return '<div class="lms-video" data-kind="youtube"><iframe src="https://www.youtube-nocookie.com/embed/' . $m[1] . '?rel=0&amp;enablejsapi=1&amp;origin=' . rawurlencode(cms_origin()) . '" title="' . $t . '" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div>';
         }
         if (preg_match('~vimeo\.com/(?:video/)?(\d+)~', $src, $m)) {
-            return '<div class="lms-video"><iframe src="https://player.vimeo.com/video/' . $m[1] . '?dnt=1" title="' . $t . '" loading="lazy" allow="fullscreen; picture-in-picture" allowfullscreen></iframe></div>';
+            return '<div class="lms-video" data-kind="vimeo"><iframe src="https://player.vimeo.com/video/' . $m[1] . '?dnt=1" title="' . $t . '" loading="lazy" allow="fullscreen; picture-in-picture" allowfullscreen></iframe></div>';
         }
         if (preg_match('~\.(mp4|webm|m4v|mov)(\?.*)?$~i', $src)) {
             $poster = trim((string) ($lesson['poster'] ?? ''));
-            return '<div class="lms-video"><video controls preload="metadata" playsinline controlslist="nodownload"' . ($poster !== '' ? ' poster="' . cms_e(lms_media_url($poster)) . '"' : '') . ' src="' . cms_e(lms_video_url($lesson)) . '"></video></div>';
+            return '<div class="lms-video" data-kind="file"><video controls preload="metadata" playsinline controlslist="nodownload"' . ($poster !== '' ? ' poster="' . cms_e(lms_media_url($poster)) . '"' : '') . ' src="' . cms_e(lms_video_url($lesson)) . '"></video></div>';
         }
         return '<p><a class="btn btn-ghost" href="' . cms_e(lms_video_url($lesson)) . '" target="_blank" rel="noopener">' . lms_icon('play') . ' Video</a></p>';
     }
@@ -819,7 +978,7 @@ if (!function_exists('lms_settings')) {
         if (($ex = (string) cms_f($c, 'excerpt', $lang)) !== '') $h .= '<p>' . cms_e($ex) . '</p>';
         if ($topics = array_filter((array) cms_f($c, 'topics', $lang, []))) $h .= '<span class="lms-c-topics">' . implode('', array_map(fn($x) => '<span>' . cms_e((string) $x) . '</span>', $topics)) . '</span>';
         if (($au = (string) cms_f($c, 'audience', $lang)) !== '') $h .= '<span class="lms-for"><strong>' . cms_e(lms_tx('for')) . '</strong> ' . cms_e($au) . '</span>';
-        if (!$soon && $st && $st['started'] && $st['total'] > 0) $h .= '<span class="lms-progress">' . lms_bar($st['pct']) . '<small>' . cms_e(lms_tx('progress', $st['done'], $st['total'], $st['pct'])) . '</small></span>';
+        if (!$soon && $st && $st['started'] && $st['total'] > 0) $h .= '<span class="lms-progress">' . lms_bar($st['pct']) . '<small>' . cms_e(lms_progress_text($st)) . '</small></span>';
         // pie
         $meta = $soon ? '<span>' . lms_svg('reloj') . cms_e(lms_tx('in_prep')) . '</span>'
             : '<span>' . lms_svg('video') . cms_e($n === 1 ? lms_tx('lesson_1') : lms_tx('lessons_n', $n)) . '</span>' . ($min ? '<span>' . lms_svg('reloj') . cms_e(lms_minutes_text($min)) . '</span>' : '');
@@ -841,28 +1000,37 @@ if (!function_exists('lms_settings')) {
         return $out;
     }
 
-    /** Temario de un curso por módulos, con el estado de cada lección para quien lo ve; $current resalta una. */
-    function lms_syllabus(array $course, array $lessons, array $st, string $lang, string $current = ''): string
+    /**
+     * Temario de un curso por módulos (lecciones y evaluaciones, de lms_steps), con el estado de cada paso para quien
+     * lo ve; $current resalta uno (slug; las evaluaciones con prefijo "q:").
+     */
+    function lms_syllabus(array $course, array $steps, array $st, string $lang, string $current = ''): string
     {
-        if (!$lessons) return '<p class="form-note">—</p>';
+        if (!$steps) return '<p class="form-note">—</p>';
         $canTake = lms_can_take($course);
         $h = '';
-        foreach (lms_modules($lessons, $lang) as [$mod, $ls]) {
+        foreach (lms_modules($steps, $lang) as [$mod, $ls]) {
             if ($mod !== '') $h .= '<h3 class="lms-module">' . cms_e($mod) . '</h3>';
             $h .= '<ol class="lms-lessons">';
             foreach ($ls as $l) {
-                $done = !empty($st['lessons'][$l['slug']]);
-                $can = $canTake || !empty($l['preview']);
-                $icon = $done ? 'done' : ($can ? ($l['slug'] === $current ? 'play' : 'todo') : 'lock');
+                $quiz = lms_is_quiz($l);
+                $key = ($quiz ? 'q:' : '') . $l['slug'];
+                $done = lms_step_done($st, $l);
+                $can = $canTake || (!$quiz && !empty($l['preview']));
+                if ($quiz && $can && !$done && !empty($l['gate']) && !lms_quiz_gate_ok($l, (string) $course['slug'], $st)) $can = false;   // requisito: se abre al terminar lo anterior
+                $icon = $done ? 'done' : ($can ? ($key === $current ? ($quiz ? 'quiz' : 'play') : ($quiz ? 'quiz' : 'todo')) : 'lock');
                 $label = '<span class="lms-l-title">' . cms_e((string) cms_f($l, 'title', $lang)) . '</span>';
                 $meta = '';
-                if (!$canTake && !empty($l['preview'])) $meta .= '<span class="tag tag-warn">' . cms_e(lms_tx('sample')) . '</span>';
-                if (($du = (string) ($l['duration'] ?? '')) !== '') $meta .= '<small>' . cms_e($du) . '</small>';
-                $cls = 'lms-l lms-l-' . $icon . ($l['slug'] === $current ? ' is-current' : '');
+                if (!$canTake && !$quiz && !empty($l['preview'])) $meta .= '<span class="tag tag-warn">' . cms_e(lms_tx('sample')) . '</span>';
+                if ($quiz) {
+                    $e = (array) ($st['exams'][$l['slug']] ?? []);
+                    $meta .= isset($e['best']) ? '<small>' . (int) $e['best'] . ' %</small>' : '<small>' . cms_e(lms_tx('quiz')) . '</small>';
+                } elseif (($du = (string) ($l['duration'] ?? '')) !== '') $meta .= '<small>' . cms_e($du) . '</small>';
+                $cls = 'lms-l lms-l-' . $icon . ($quiz ? ' is-quiz' : '') . ($key === $current ? ' is-current' : '');
                 $inner = lms_icon($icon) . $label . ($meta !== '' ? '<span class="lms-l-meta">' . $meta . '</span>' : '');
-                $h .= '<li class="' . $cls . '">' . ($can && $l['slug'] !== $current
-                    ? '<a href="' . cms_e(cms_url('item:' . lms_lesson_type(), $lang, $l['slug'])) . '">' . $inner . '</a>'
-                    : '<span' . ($l['slug'] === $current ? ' aria-current="page"' : '') . '>' . $inner . '</span>') . '</li>';
+                $h .= '<li class="' . $cls . '">' . ($can && $key !== $current
+                    ? '<a href="' . cms_e(lms_step_url($l, $lang)) . '">' . $inner . '</a>'
+                    : '<span' . ($key === $current ? ' aria-current="page"' : '') . '>' . $inner . '</span>') . '</li>';
             }
             $h .= '</ol>';
         }
@@ -886,7 +1054,43 @@ if (!function_exists('lms_settings')) {
         $headers = "From: $from\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n";
         $reply = (string) (cms_settings()['email'] ?? '');
         if (filter_var($reply, FILTER_VALIDATE_EMAIL)) $headers .= "Reply-To: $reply\r\n";
-        return @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers);
+        $ok = @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers);
+        lms_mail_log($to, $subject, $ok);
+        return $ok;
+    }
+
+    /** Bitácora de correos del aula (data/lms/mail.log, las últimas 300 líneas): fecha, resultado, destinatario y asunto. */
+    function lms_mail_log(string $to, string $subject, bool $ok): void
+    {
+        $f = lms_dir() . '/mail.log';
+        $lines = is_file($f) ? array_slice(file($f, FILE_IGNORE_NEW_LINES) ?: [], -299) : [];
+        $lines[] = date('Y-m-d H:i') . "\t" . ($ok ? 'ok' : 'falló') . "\t" . $to . "\t" . str_replace(["\t", "\n"], ' ', $subject);
+        if (!is_dir(lms_dir())) @mkdir(lms_dir(), 0775, true);
+        @file_put_contents($f, implode("\n", $lines) . "\n", LOCK_EX);
+    }
+
+    function lms_mail_recent(int $n = 20): array
+    {
+        $f = lms_dir() . '/mail.log';
+        $out = [];
+        foreach (array_reverse(array_slice(is_file($f) ? (file($f, FILE_IGNORE_NEW_LINES) ?: []) : [], -$n)) as $l) { $x = explode("\t", $l, 4); if (count($x) === 4) $out[] = $x; }
+        return $out;
+    }
+
+    /**
+     * Correo de bienvenida con los datos de acceso. $pass = '' cuando el alumno eligió la suya (registro propio): no se
+     * repite. $courses: nombres de los cursos en que quedó inscrito.
+     */
+    function lms_welcome_mail(array $u, string $pass, array $courses): bool
+    {
+        $lang = cms_default_lang();
+        $site = (string) (cms_settings()['site_name'] ?? cms_config('name'));
+        $body = "Hola, " . $u['name'] . ".\n\n" . ($pass !== '' ? "Te dimos de alta en el aula de $site." : "Tu cuenta en el aula de $site está lista.") . "\n\n"
+            . "Entra en: " . cms_origin() . lms_url('entrar', $lang) . "\nCorreo: " . $u['email'] . "\n"
+            . ($pass !== '' ? "Contraseña: $pass\n" : "Contraseña: la que elegiste al registrarte.\n") . "\n"
+            . ($courses ? "Cursos: " . implode(', ', $courses) . "\n\n" : '')
+            . "Ahí verás tus cursos y tu avance. " . ($pass !== '' ? "Puedes cambiar tu contraseña en «Mi cuenta» después de entrar.\n" : "Si olvidas tu contraseña, escríbenos para darte una nueva.\n");
+        return lms_mail((string) $u['email'], ($pass !== '' ? "Tu acceso al aula de $site" : "Bienvenido al aula de $site"), $body);
     }
 
     /** El paquete (para sus rutas de archivos), por el nombre de su carpeta. */
@@ -951,6 +1155,7 @@ if (!function_exists('lms_settings')) {
                     [$ok, $r] = lms_user_create((string) ($_POST['name'] ?? ''), (string) ($_POST['email'] ?? ''), $pass, 'registro propio');
                     if (!$ok) { if ($r === 'err_exists') lms_throttle_record(false, (string) ($_POST['email'] ?? '')); $err = lms_tx($r); break; }
                     $u = lms_user_get($r);
+                    lms_welcome_mail($u, '', []);
                     if (lms_settings()['notify_to'] !== '') lms_mail(lms_settings()['notify_to'], 'Alumno nuevo en el aula: ' . $u['name'], "Se registró un alumno nuevo:\n\n" . $u['name'] . "\n" . $u['email'] . "\n\nPanel: " . cms_origin() . CMS_BASE . '/admin/?p=pack:' . basename(__DIR__) . '&id=' . $u['id'] . "\n");
                     lms_login($u, false);
                     lms_redirect(lms_url('', $lang, ['ok' => 'welcome']));
@@ -1004,6 +1209,8 @@ if (!function_exists('lms_settings')) {
                 if (!$user) lms_redirect(lms_url('entrar', $lang, ['r' => $back]));
                 if (!lms_csrf_ok() || !$lesson || !$course || !lms_can_view($course, $lesson)) lms_redirect($back);
                 $done = ($_POST['done'] ?? '1') === '1';
+                if ($done && lms_settings()['video_mode'] === 'exigir' && lms_has_video($lesson) && lms_watched($user['id'], (string) $course['slug'], (string) $lesson['slug']) < lms_settings()['video_pct'])
+                    lms_redirect($back . '?ok=video');
                 lms_mark($user['id'], (string) $course['slug'], (string) $lesson['slug'], $done);
                 $st = lms_stats((string) $course['slug'], $user);
                 if ($done && $st['total'] > 0 && $st['done'] >= $st['total']) lms_redirect(cms_url('item:' . lms_course_type(), $lang, $course['slug']) . '?ok=completed');
@@ -1011,12 +1218,72 @@ if (!function_exists('lms_settings')) {
                 lms_redirect($done && $to !== '' ? $to : $back);
                 break;
 
+            case 'visto':   // POST del reproductor: {lesson, pct}; responde JSON con lo guardado
+                header('Content-Type: application/json; charset=utf-8');
+                $slug = cms_slugify((string) ($_POST['lesson'] ?? ''));
+                $lesson = $post && $slug !== '' && cms_type(lms_lesson_type()) ? cms_item(lms_lesson_type(), $slug) : null;
+                $course = $lesson ? lms_course(lms_lesson_course($lesson)) : null;
+                if (!$user || !lms_csrf_ok() || !$lesson || !$course || !lms_can_view($course, $lesson)) { http_response_code(403); echo '{"ok":false}'; exit; }
+                $r = lms_watch($user['id'], (string) $course['slug'], (string) $lesson['slug'], (int) ($_POST['pct'] ?? 0));
+                echo json_encode(['ok' => true] + $r);
+                exit;
+
+            case 'constancia':   // ?c=<curso>: la constancia del alumno (o, para el panel, &u=<alumno>)
+                $course = lms_course(cms_slugify((string) ($_GET['c'] ?? '')), false);
+                $uid = $user['id'] ?? '';
+                if (lms_staff() && preg_match('/^[a-f0-9]{12}$/', (string) ($_GET['u'] ?? ''))) $uid = (string) $_GET['u'];
+                if ($uid === '') lms_redirect(lms_url('entrar', $lang, ['r' => lms_here()]));
+                $owner = lms_user_get($uid);
+                $cert = $course && $owner ? lms_cert_get($uid, (string) $course['slug']) : null;
+                if (!$cert && $course && $owner && !empty(lms_progress($uid)['courses'][$course['slug']]['completed'])) {   // terminado antes de que hubiera constancias
+                    $p = lms_progress($uid);
+                    if (lms_cert_issue($uid, (string) $course['slug'], $p) !== '') { lms_progress_save($uid, $p); $cert = lms_cert_get($uid, (string) $course['slug']); }
+                }
+                if (!$cert) { http_response_code(404); header('Content-Type: text/plain; charset=utf-8'); echo lms_tx('cert_unknown'); exit; }
+                lms_cert_render($owner, $course, $cert, $lang);
+                break;
+
+            case 'verificar':   // ?c=<código>: pública
+                $GLOBALS['lms_cert_check'] = isset($_GET['c']) ? (lms_cert_lookup((string) $_GET['c']) ?? false) : null;
+                $titles['verificar'] = lms_tx('cert_verify');
+                break;
+
+            case 'evaluacion':   // POST: empezar (con tiempo) o enviar una evaluación; vuelve a su página con el resultado
+                if (!$post) lms_redirect(lms_url('', $lang));
+                $slug = cms_slugify((string) ($_POST['quiz'] ?? ''));
+                $quiz = $slug !== '' && cms_type(lms_quiz_type()) ? cms_item(lms_quiz_type(), $slug) : null;
+                $course = $quiz ? lms_course(lms_quiz_course($quiz)) : null;
+                $back = $quiz ? cms_url('item:' . lms_quiz_type(), $lang, $quiz['slug']) : lms_url('', $lang);
+                if (!$user) lms_redirect(lms_url('entrar', $lang, ['r' => $back]));
+                if (!lms_csrf_ok() || !$quiz || !$course || !lms_can_view($course, $quiz)) lms_redirect($back);
+                $cs = (string) $course['slug'];
+                if (!lms_quiz_gate_ok($quiz, $cs, lms_stats($cs, $user))) lms_redirect($back);
+                $qst = lms_quiz_state($quiz, $user, $cs);
+                $cfg = $qst['cfg'];
+                if (($_POST['action'] ?? '') === 'start') {
+                    if ($cfg['time'] > 0 && $qst['can_start']) lms_quiz_start($user['id'], $cs, $quiz, $lang);
+                    lms_redirect($back);
+                }
+                if ($qst['open']) $open = $qst['open'];   // intento con tiempo: el conjunto y la hora se guardaron al empezar
+                else {
+                    if ($cfg['time'] > 0 || !$qst['can_start']) lms_redirect($back);
+                    $set = (string) ($_POST['set'] ?? '');
+                    $n = $qst['used'] + 1;
+                    $qlang = in_array($_POST['qlang'] ?? '', cms_langs(), true) ? (string) $_POST['qlang'] : $lang;
+                    if (!preg_match('/^\d+(,\d+)*$/', $set) || !hash_equals(lms_quiz_sign($user['id'], $slug, $n, $set, $qlang), (string) ($_POST['sig'] ?? ''))) lms_redirect($back);
+                    $open = ['n' => $n, 'start' => date('Y-m-d H:i:s', max(time() - 86400, (int) ($_POST['t0'] ?? time()))), 'lang' => $qlang, 'set' => array_map('intval', explode(',', $set)),
+                             'hash' => lms_quiz_questions($quiz, $qlang)['hash']];
+                }
+                $a = lms_quiz_finish($user['id'], $cs, $quiz, (array) ($_POST['a'] ?? []), $open);
+                lms_redirect($back . '?' . http_build_query($a ? ['intento' => $a['n'], 'ok' => 'quiz'] : []));
+                break;
+
             default:
                 return null;
         }
 
         lms_staff(); lms_csrf();   // antes de que el tema empiece a imprimir: leen o ponen cookies
-        $view = ['' => 'aula', 'entrar' => 'entrar', 'registro' => 'registro', 'cuenta' => 'cuenta'][$sub] ?? 'aula';
+        $view = ['' => 'aula', 'entrar' => 'entrar', 'registro' => 'registro', 'cuenta' => 'cuenta', 'verificar' => 'verificar'][$sub] ?? 'aula';
         $GLOBALS['lms_error'] = $err;
         $site = (string) (cms_settings()['site_name'] ?? cms_config('name'));
         return ['file' => lms_view($view), 'page' => ['title' => ($titles[$sub] ?? lms_tx('my_classroom')) . ' · ' . $site, 'desc' => '', 'noindex' => true, 'lms' => true, 'route' => 'lms:' . ($sub ?: 'aula')]];
@@ -1027,7 +1294,8 @@ if (!function_exists('lms_settings')) {
     {
         $err = (string) ($GLOBALS['lms_error'] ?? '');
         if ($err !== '') return '<p class="form-msg err lms-msg" role="alert">' . cms_e($err) . '</p>';
-        $ok = ['saved' => 'ok_saved', 'welcome' => 'ok_welcome', 'completed' => 'ok_completed'][(string) ($_GET['ok'] ?? '')] ?? '';
+        if (($_GET['ok'] ?? '') === 'video') return '<p class="form-msg err lms-msg" role="alert">' . cms_e(lms_tx('err_video')) . '</p>';
+        $ok = ['saved' => 'ok_saved', 'welcome' => 'ok_welcome', 'completed' => 'ok_completed', 'quiz' => 'ok_quiz'][(string) ($_GET['ok'] ?? '')] ?? '';
         return $ok !== '' ? '<p class="form-msg ok lms-msg" role="status">' . cms_e(lms_tx($ok)) . '</p>' : '';
     }
 
@@ -1044,7 +1312,7 @@ if (!function_exists('lms_settings')) {
 
     // plantillas de cursos y lecciones cuando el tema no trae las suyas
     cms_on('template', function ($file, string $template, string $type, string $route) {
-        $ours = $type !== '' && ($type === lms_course_type() || $type === lms_lesson_type());
+        $ours = $type !== '' && ($type === lms_course_type() || $type === lms_lesson_type() || $type === lms_quiz_type());
         if ($ours) {   // la página muestra el avance de quien la ve: que no la guarde ninguna caché compartida
             header('Cache-Control: private, no-cache');
             lms_staff(); lms_csrf();
@@ -1053,13 +1321,14 @@ if (!function_exists('lms_settings')) {
         $single = strpos($route, 'item:') === 0;
         if ($type === lms_course_type()) return lms_view($single ? 'curso' : 'cursos');
         if ($type === lms_lesson_type() && $single) return lms_view('leccion');
+        if ($type === lms_quiz_type() && $single) return lms_view('evaluacion');
         return $file;
     });
 
     // estilos del aula solo en sus páginas; también evita que una página con avance personal se guarde en caché
     cms_on('head', function (array $page) {
         $type = (string) (cms_current()['type'] ?? '');
-        if (empty($page['lms']) && $type !== lms_course_type() && $type !== lms_lesson_type()) return;
+        if (empty($page['lms']) && $type !== lms_course_type() && $type !== lms_lesson_type() && $type !== lms_quiz_type()) return;
         $p = lms_pack();
         if ($p) echo '<link rel="stylesheet" href="' . cms_e(cms_pack_asset($p, 'assets/lms.css')) . '">' . "\n";
     });

@@ -36,6 +36,21 @@ foreach (cms_items(lms_course_type()) as $c) {
 <?php endif; ?>
   </div>
 </section>
+<?php
+$certs = [];
+foreach ($mine as $c) if (!empty($prog[$c['slug']]['completed']) && lms_cert_on($c)) $certs[] = $c;
+if ($certs): ?>
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head"><h2 style="font-size:1.5rem"><?= cms_e(lms_tx('my_certs')) ?></h2></div>
+    <ul class="lms-certs">
+<?php foreach ($certs as $c): $cc = (array) ($prog[$c['slug']]['cert'] ?? []); ?>
+      <li><a href="<?= cms_e(lms_cert_url((string) $c['slug'])) ?>" target="_blank" rel="noopener"><?= lms_icon('cert') ?><span><strong><?= cms_e((string) cms_f($c, 'title', $lang)) ?></strong><small><?= cms_e(lms_tx('completed_on', lms_date((string) $prog[$c['slug']]['completed']))) ?><?= !empty($cc['code']) ? ' · ' . cms_e((string) $cc['code']) : '' ?></small></span></a></li>
+<?php endforeach; ?>
+    </ul>
+  </div>
+</section>
+<?php endif; ?>
 <?php if ($others): ?>
 <section class="sec sec-alt">
   <div class="wrap">

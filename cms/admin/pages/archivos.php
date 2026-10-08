@@ -17,7 +17,8 @@ declare(strict_types=1);
 if (cms_config('file_manager', true) === false) { admin_flash('El gestor de archivos está desactivado en site/config.php.', 'err'); admin_redirect(admin_url()); }
 
 const FM_RESERVED = ['cms', 'site', 'themes', 'packs', 'data', 'uploads', 'admin', 'tools', 'vendor', 'node_modules', 'cache', '_build'];
-const FM_EXT = ['html', 'htm', 'css', 'js', 'mjs', 'json', 'txt', 'md', 'xml', 'svg', 'csv', 'pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'ico', 'avif', 'mp4', 'webm', 'mp3', 'ogg', 'wav', 'woff', 'woff2', 'ttf', 'otf', 'eot', 'webmanifest', 'map', 'vtt', 'srt', 'zip'];
+const FM_EXT = ['html', 'htm', 'css', 'js', 'mjs', 'json', 'txt', 'md', 'xml', 'svg', 'csv', 'pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'ico', 'avif', 'mp4', 'webm', 'mp3', 'ogg', 'wav', 'woff', 'woff2', 'ttf', 'otf', 'eot', 'webmanifest', 'map', 'vtt', 'srt', 'zip',
+                'docx', 'xlsx', 'pptx', 'doc', 'xls', 'ppt', 'odt', 'ods', 'odp', 'rtf', 'epub', 'm4a', 'm4v', 'mov'];   // documentos y medios (1.46): materiales de cursos
 const FM_TEXT = ['html', 'htm', 'css', 'js', 'mjs', 'json', 'txt', 'md', 'xml', 'svg', 'csv', 'webmanifest', 'vtt', 'srt'];
 const FM_MAX_TEXT = 2 * 1024 * 1024;
 
@@ -78,8 +79,12 @@ function fm_size(string $abs): array
     return [$n, $b];
 }
 
-/** Descomprime un zip dentro de $dst respetando subcarpetas, con el filtro de nombres y extensiones. Devuelve [copiados, omitidos]. */
-function fm_unzip(string $zipFile, string $dst): array
+/**
+ * Descomprime un zip dentro de $dst respetando subcarpetas, con el filtro de nombres y extensiones. Devuelve [copiados,
+ * omitidos]. $root = true (1.46): $dst es la raíz del sitio; solo se extraen carpetas (no archivos sueltos) y nunca las
+ * del sistema; las carpetas de arriba creadas quedan en $tops.
+ */
+function fm_unzip(string $zipFile, string $dst, bool $root = false, array &$tops = []): array
 {
     if (!class_exists('ZipArchive')) return [0, 0];
     $z = new ZipArchive();
@@ -91,9 +96,11 @@ function fm_unzip(string $zipFile, string $dst): array
         $parts = array_values(array_filter(explode('/', $entry), 'strlen'));
         $bad = false; foreach ($parts as $p) if (!fm_name_ok($p)) { $bad = true; break; }
         if ($bad) { $skipped++; continue; }
+        if ($root && (count($parts) < 2 && substr($entry, -1) !== '/' || in_array(strtolower($parts[0]), FM_RESERVED, true))) { $skipped++; continue; }
+        if ($root) $tops[$parts[0]] = true;
         $rel = implode('/', $parts);
         if (substr($entry, -1) === '/') { @mkdir($dst . '/' . $rel, 0755, true); continue; }
-        if (!fm_ext_ok($rel) || strtolower(pathinfo($rel, PATHINFO_EXTENSION)) === 'zip') { $skipped++; continue; }
+        if (!fm_ext_ok($rel)) { $skipped++; continue; }   // un .zip dentro del zip se guarda tal cual (no se descomprime)
         @mkdir(dirname($dst . '/' . $rel), 0755, true);
         $src = $z->getStream($entry);
         if (!$src) { $skipped++; continue; }
@@ -126,6 +133,23 @@ if (admin_is_post()) {
         elseif (!@mkdir($tabs . '/' . $name, 0755, true)) admin_flash('No se pudo crear la carpeta (permisos en la raíz del sitio).', 'err');
         else { if ($target === '') fm_protect($tabs . '/' . $name); admin_flash('Carpeta creada: /' . ($target !== '' ? $target . '/' : '') . $name . '/'); admin_redirect($back(($target !== '' ? $target . '/' : '') . $name)); }
         admin_redirect($back($target));
+    }
+    // en la raíz solo se sube un zip con carpetas (1.46): cada carpeta de arriba del zip queda como carpeta propia
+    if ($target === '' && $action === 'upload') {
+        $files = $_FILES['files'] ?? null; $ex = 0; $errs = []; $tops = [];
+        foreach ($files && is_array($files['name']) ? $files['name'] : [] as $i => $name) {
+            if (($files['error'][$i] ?? 1) === UPLOAD_ERR_NO_FILE) continue;
+            $name = basename(str_replace('\\', '/', (string) $name));
+            if (($files['error'][$i] ?? 1) !== UPLOAD_ERR_OK) { $errs[] = $name . ': error al subir (¿supera el límite de ' . media_human(media_limit_bytes()) . '?).'; continue; }
+            if (strtolower(pathinfo($name, PATHINFO_EXTENSION)) !== 'zip') { $errs[] = $name . ': en la raíz solo se sube un .zip con carpetas; los archivos sueltos van dentro de una carpeta.'; continue; }
+            [$c, $sk] = fm_unzip((string) $files['tmp_name'][$i], CMS_ROOT, true, $tops); $ex += $c;
+            if ($sk) $errs[] = $name . ': ' . $sk . ' entradas omitidas (archivos sueltos de la raíz, carpetas del sistema, o tipo o nombre no permitido).';
+        }
+        foreach (array_keys($tops) as $t) fm_protect(CMS_ROOT . '/' . $t);
+        if ($ex) admin_flash($ex . ' archivo(s) extraídos en ' . implode(', ', array_map(fn($t) => '/' . $t . '/', array_keys($tops))) . '.');
+        foreach ($errs as $e) admin_flash($e, 'err');
+        if (!$ex && !$errs) admin_flash('No se recibió ningún .zip.', 'err');
+        admin_redirect($back());
     }
     if ($target === '') { admin_flash('Elige una carpeta.', 'err'); admin_redirect($back()); }
 
@@ -208,6 +232,11 @@ $crumbs = []; if ($dir !== '') { $acc = ''; foreach (explode('/', $dir) as $p) {
   <form method="post" class="ad-fm-new"><?= admin_csrf_field() ?><input type="hidden" name="action" value="mkdir"><input type="hidden" name="dir" value="">
     <input type="text" name="name" placeholder="nueva carpeta (p. ej. presentacion)" pattern="[A-Za-z0-9_][A-Za-z0-9_.\-]*" required><button class="ad-btn ad-btn-sm" type="submit">Crear carpeta</button>
     <span class="ad-help">Se crea en la raíz, con un <code>.htaccess</code> que apaga PHP dentro de ella.</span>
+  </form>
+  <form method="post" enctype="multipart/form-data" class="ad-fm-new" style="margin-top:10px">
+    <?= admin_csrf_field() ?><input type="hidden" name="action" value="upload"><input type="hidden" name="dir" value=""><input type="hidden" name="unzip" value="1"><input type="hidden" name="MAX_FILE_SIZE" value="<?= media_limit_bytes() ?>">
+    <label class="ad-btn ad-btn-sm">Subir un .zip con carpetas <input type="file" name="files[]" accept=".zip" hidden data-auto-submit></label>
+    <span class="ad-help">Cada carpeta de arriba del zip queda en la raíz (p. ej. un zip con <code>capacitacion/…</code> crea o completa <code>/capacitacion/</code>). Los archivos sueltos y las carpetas del sistema se ignoran. Máximo: <?= media_human(media_limit_bytes()) ?>.</span>
   </form>
 </section>
 <?php if (!$roots): ?><p class="ad-help">Aún no hay carpetas propias. Crea una y sube en ella tu HTML, CSS, JS e imágenes.</p><?php else: ?>

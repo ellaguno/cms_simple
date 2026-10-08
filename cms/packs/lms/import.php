@@ -160,17 +160,32 @@ function lms_import_run(string $rel, array $opt): array
     $ct = lms_course_type(); $lt = lms_lesson_type();
     if (!cms_type($ct) || !cms_type($lt)) return [false, ['Faltan las colecciones de cursos y lecciones (Ajustes → Aula).']];
     $c = $plan['course'];
-    if (cms_item($ct, $c['slug'], false)) return [false, ['Ya existe un curso «' . $c['slug'] . '». Bórralo o cámbiale el slug si quieres importarlo otra vez.']];
     $now = date('Y-m-d');
     $msgs = [];
-    $c += ['status' => !empty($opt['publish']) ? 'published' : 'draft', 'created' => $now, 'updated' => $now];
-    if (!cms_item_save($ct, $c)) return [false, ['No se pudo guardar el curso en data/content/' . $ct . '/.']];
+    $old = cms_item($ct, $c['slug'], false);
+    if ($old) {
+        // el curso ya existe: si es solo la carátula (p. ej. creada como «Próximamente» al importar otro curso del
+        // catálogo, sin lecciones), se llena con los datos del curso y deja de ser «Próximamente»; si ya tiene
+        // lecciones, se respeta lo que tiene y solo se agrega lo que falta
+        $empty = !lms_lessons($c['slug'], false);
+        if ($empty) {
+            $c = array_replace($old, array_filter($c, fn($v) => $v !== '' && $v !== [] && !(is_array($v) && !array_filter($v))), ['soon' => false, 'updated' => $now]);
+            if (!empty($opt['publish'])) $c['status'] = 'published';
+            if (!cms_item_save($ct, $c)) return [false, ['No se pudo guardar el curso en data/content/' . $ct . '/.']];
+        } else $c = $old;
+    } else {
+        $c += ['status' => !empty($opt['publish']) ? 'published' : 'draft', 'created' => $now, 'updated' => $now];
+        if (!cms_item_save($ct, $c)) return [false, ['No se pudo guardar el curso en data/content/' . $ct . '/.']];
+    }
     $n = 0; $skipped = 0;
     foreach ($plan['lessons'] as $l) {
         if (cms_item($lt, $l['slug'], false)) { $skipped++; continue; }
         if (cms_item_save($lt, $l + ['status' => 'published', 'created' => $now, 'updated' => $now])) $n++;
     }
-    $msgs[] = 'Curso «' . $c['title'][cms_default_lang()] . '» creado (' . ($c['status'] === 'published' ? 'publicado' : 'borrador') . ') con ' . $n . ' lecciones' . ($skipped ? '; ' . $skipped . ' ya existían y no se tocaron' : '') . '.';
+    $ttl = (string) cms_f($c, 'title', cms_default_lang());
+    if (!$old) $msgs[] = 'Curso «' . $ttl . '» creado (' . ($c['status'] === 'published' ? 'publicado' : 'borrador') . ') con ' . $n . ' lecciones' . ($skipped ? '; ' . $skipped . ' ya existían y no se tocaron' : '') . '.';
+    elseif ($empty) $msgs[] = 'El curso «' . $ttl . '» ya existía sin lecciones (su carátula): se llenó con los datos del curso' . (!empty($old['soon']) ? ', dejó de ser «Próximamente»' : '') . ' y ' . ($c['status'] === 'published' ? 'está publicado' : 'sigue en borrador') . '; ' . $n . ' lecciones creadas.';
+    else $msgs[] = 'El curso «' . $ttl . '» ya existía: no se tocaron sus datos; ' . ($n ? $n . ' lección(es) nuevas creadas' : 'no faltaba ninguna lección') . ($skipped ? ' y ' . $skipped . ' ya existían' : '') . '.';
     if (lms_settings()['protect']) $msgs[] = 'Los videos de ' . $plan['rel'] . ' quedaron protegidos: solo se ven desde el aula.';
     if (!empty($opt['soon'])) {
         $k = 0;
@@ -198,7 +213,7 @@ function lms_import_run(string $rel, array $opt): array
             else $msgs[] = 'No se pudo cambiar /' . $d . '/index.html.';
         }
     }
-    $msgs = array_merge($msgs, lms_import_apply_extras($c['slug'], $plan['extras'], array_replace($opt, ['publish_quiz' => !empty($opt['publish'])])));
+    $msgs = array_merge($msgs, lms_import_apply_extras($c['slug'], $plan['extras'], array_replace($opt, ['publish_quiz' => !empty($opt['publish']) || !empty($opt['publish_quiz'])])));
     foreach (array_merge($plan['warn'], $plan['extras']['warn']) as $w) $msgs[] = 'Aviso: ' . $w;
     return [true, $msgs];
 }
@@ -213,7 +228,15 @@ function lms_import_run(string $rel, array $opt): array
 function lms_import_extras_dirs(string $rel, string $slug): array
 {
     $out = [];
-    foreach (array_unique([$rel, $rel . '/aula', 'aula/' . basename($rel), 'aula/' . $slug]) as $d) {
+    // la carpeta del curso, su aula/, y aula/<curso>/ junto a cualquiera de sus carpetas de arriba (si el zip se subió
+    // dentro de otra carpeta, aula/ queda al lado de capacitacion/, no en la raíz)
+    $cands = [$rel, $rel . '/aula'];
+    for ($up = dirname($rel); ; $up = dirname($up)) {
+        $pre = $up === '.' || $up === '' ? '' : $up . '/';
+        foreach ([basename($rel), $slug] as $n) $cands[] = $pre . 'aula/' . $n;
+        if ($pre === '') break;
+    }
+    foreach (array_unique($cands) as $d) {
         $abs = CMS_ROOT . '/' . $d;
         if (is_dir($abs) && (is_dir($abs . '/contenido') || is_dir($abs . '/evaluaciones') || is_dir($abs . '/materiales') || is_file($abs . '/curso.json'))) $out[] = $d;
     }
@@ -378,7 +401,10 @@ function lms_import_apply_extras(string $courseSlug, array $ex, array $opt): arr
 
     // contenido y módulo de las lecciones
     $nb = 0; $kept = 0; $nmod = 0;
-    foreach (lms_lessons($courseSlug, false) as $l) {
+    // directo de la colección: lms_lessons() guarda en caché la lista de antes de crear las lecciones
+    $f = lms_settings()['lesson_field'];
+    foreach (cms_items($lt, false) as $l) {
+        if ((string) ($l[$f] ?? '') !== $courseSlug) continue;
         $full = cms_item($lt, (string) $l['slug'], false);
         if (!$full) continue;
         $ch = false;

@@ -713,7 +713,7 @@ admin_header('Aula: alumnos y avance', $self);
   </table>
 <?php foreach ($plan['warn'] as $w): ?>  <p class="ad-flash err"><?= cms_e($w) ?></p>
 <?php endforeach; ?>
-<?php $ex = $plan['extras']; if ($ex['dir'] !== ''): ?>
+<?php $ex = $plan['extras']; $qt = lms_quiz_type(); if ($ex['dir'] !== ''): ?>
   <h3 style="margin:22px 0 6px">Lo que acompaña al curso <small class="ad-help" style="display:inline">en <code>/<?= cms_e($ex['dir']) ?>/</code><?= $ex['manifest'] ? ' · con curso.json' : '' ?></small></h3>
   <ul class="ad-help" style="margin:0 0 10px 18px">
     <li>Contenido de <?= count($ex['bodies']) ?> lección(es) (objetivos, ejercicios…)<?= $ex['module'] !== '' ? ' · módulo «' . cms_e($ex['module']) . '»' : '' ?></li>
@@ -754,12 +754,15 @@ admin_header('Aula: alumnos y avance', $self);
 <?php endif; ?>
     </fieldset>
 <?php }; ?>
-<?php if ($exists && $ex['dir'] !== ''): ?>
+<?php if ($exists): $oldC = cms_item($ct, $pc['slug'], false); $oldEmpty = !lms_lessons($pc['slug'], false); ?>
   <form method="post" class="ad-form" style="margin-top:14px">
-    <?= admin_csrf_field() ?><input type="hidden" name="action" value="import_complete"><input type="hidden" name="dir" value="<?= cms_e($plan['rel']) ?>">
-    <p class="ad-help">El curso ya existe: puedes completarlo con su contenido, materiales y evaluaciones sin tocar las lecciones ni el avance de los alumnos.</p>
+    <?= admin_csrf_field() ?><input type="hidden" name="action" value="import"><input type="hidden" name="dir" value="<?= cms_e($plan['rel']) ?>">
+    <p class="ad-help"><?= $oldEmpty
+        ? 'El curso «' . cms_e($pc['slug']) . '» ya existe pero no tiene lecciones' . (!empty($oldC['soon']) ? ' (es la carátula «Próximamente»)' : '') . ': al importar se llena con los datos de esta carpeta, deja de ser «Próximamente» y se crean sus lecciones, contenido, materiales y evaluaciones.'
+        : 'El curso ya existe y tiene lecciones: se respetan sus datos y su avance; se crean las lecciones que falten y se agregan contenido, materiales y evaluaciones.' ?></p>
     <?php $impOpts(true); ?>
-    <p><button class="ad-btn" type="submit">Completar el curso</button></p>
+    <label class="ad-check"><input type="checkbox" name="publish" value="1"<?= $oldEmpty ? ' checked' : '' ?>> Publicar el curso<?= $oldEmpty ? '' : ' (si estaba en borrador)' ?></label>
+    <p><button class="ad-btn" type="submit"><?= $oldEmpty ? 'Importar sobre la carátula' : 'Completar el curso' ?></button></p>
   </form>
 <?php endif; ?>
 <?php if (!$exists): ?>

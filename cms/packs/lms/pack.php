@@ -19,7 +19,7 @@ $lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Pri
     . "En el texto de la pregunta: **negritas** y `código`. La vista de la evaluación con sesión en el panel muestra las respuestas correctas y los avisos del formato.";
 return [
     'label' => 'Aula: cursos en línea (LMS)',
-    'version' => '1.6.0',
+    'version' => '1.7.0',
     'desc' => 'Cursos con lecciones y evaluaciones, alumnos con cuenta propia, inscripciones y avance. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada, presentan cuestionarios y exámenes (opción única o múltiple, verdadero/falso, respuesta corta, numérica y abiertas que califica el instructor) y siguen con lo siguiente. El avance de los videos se sigue solo (YouTube, Vimeo o MP4: cuenta lo que de verdad se vio) y puede exigirse antes de marcar la lección. Al terminar un curso, el alumno recibe por correo su constancia para imprimir o guardar en PDF, con código de verificación público. Reproduce paquetes SCORM 1.2 (Articulate, iSpring, Captivate, H5P…) con su avance y calificación, y exporta cada curso como paquete SCORM 1.2 para el LMS de un cliente. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance y calificaciones de cada alumno, revisión de intentos, preguntas por calificar y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos.',
     'assets' => [],
     'effects' => [],

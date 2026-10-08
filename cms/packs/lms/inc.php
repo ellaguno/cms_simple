@@ -437,7 +437,11 @@ if (!function_exists('lms_settings')) {
         if (!isset($p['courses'][$course])) return;
         $st = lms_stats_from((array) $p['courses'][$course], lms_steps($course));
         if ($st['total'] > 0 && $st['done'] >= $st['total']) {
-            if (empty($p['courses'][$course]['completed'])) $p['courses'][$course]['completed'] = date('Y-m-d H:i');
+            if (empty($p['courses'][$course]['completed'])) {
+                $p['courses'][$course]['completed'] = date('Y-m-d H:i');
+                // gancho para paquetes (1.48): al acabar la petición, cuando el avance ya está guardado
+                if ($uid !== '') register_shutdown_function(fn() => cms_do('lms.course.completed', $uid, $course));
+            }
             if ($uid !== '' && empty($p['courses'][$course]['cert']['code']) && lms_cert_issue($uid, $course, $p) !== '') register_shutdown_function('lms_cert_mail', $uid, $course);
         }
         else unset($p['courses'][$course]['completed']);

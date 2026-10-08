@@ -411,6 +411,7 @@ function lms_quiz_finish(string $uid, string $course, array $quiz, array $posted
     $p['courses'][$course] = $c;
     lms_course_recheck($p, $course, $uid);
     if (!lms_progress_save($uid, $p)) return null;
+    cms_do('lms.quiz.result', $uid, $course, $quiz, $a);   // gancho para paquetes (1.48): intento calificado (o pendiente)
 
     if ($a['status'] === 'pending' && lms_settings()['notify_to'] !== '' && ($u = lms_user_get($uid))) {
         lms_mail(lms_settings()['notify_to'], 'Evaluación por calificar: ' . cms_f($quiz, 'title', cms_default_lang()) . ' · ' . $u['name'],
@@ -444,7 +445,9 @@ function lms_quiz_grade(string $uid, string $course, array $quiz, int $n, array 
         $e['attempts'][$k] = $a;
         $p['courses'][$course]['exams'][$quiz['slug']] = lms_quiz_summary($e);
         lms_course_recheck($p, $course, $uid);
-        return lms_progress_save($uid, $p) ? $a : null;
+        if (!lms_progress_save($uid, $p)) return null;
+        cms_do('lms.quiz.result', $uid, $course, $quiz, $a);   // calificado a mano: el resultado ya es definitivo
+        return $a;
     }
     return null;
 }

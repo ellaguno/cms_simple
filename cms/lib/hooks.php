@@ -20,6 +20,9 @@
  *                                        un POST y redirigir: todavía no se ha enviado nada al navegador.
  *   template   filtro  ($file, $plantilla, $tipo, $ruta)  ruta de la plantilla del tema que se va a dibujar (1.41):
  *                                        un paquete da la suya cuando el tema no la tiene (is_file($file) es false).
+ *   layout.choice  filtro ('', $kind, $page, $item)  en cms_layout() (1.49), cuando la página no elige cabecera o pie:
+ *                                        el slug de una pieza de Diseño → Cabeceras y pies, 'none' (la del tema) o ''
+ *                                        (la predeterminada de Ajustes). $kind: header | footer.
  *   cron       acción  ($log)            cuando el cron del hosting llama a /_cms/cron?token=… (o php cms/cron.php).
  *                                        $log es una función ($mensaje) para dejar constancia en data/cron.json.
  *

@@ -1418,6 +1418,14 @@ if (!function_exists('lms_settings')) {
         return $ok !== '' ? '<p class="form-msg ok lms-msg" role="status">' . cms_e(lms_tx($ok)) . '</p>' : '';
     }
 
+    /** ¿Es una página del aula? /aula/…, o el listado o una ficha de cursos, lecciones o evaluaciones. */
+    function lms_is_page(array $page): bool
+    {
+        if (!empty($page['lms'])) return true;
+        $type = (string) (cms_current()['type'] ?? '');
+        return $type !== '' && in_array($type, [lms_course_type(), lms_lesson_type(), lms_quiz_type()], true);
+    }
+
     /* ================================================================== ganchos */
 
     cms_on('route', fn($r, array $seg, string $lang) => $r ?? lms_route($seg, $lang));
@@ -1446,10 +1454,15 @@ if (!function_exists('lms_settings')) {
         return $file;
     });
 
+    // cabecera y pie propios del aula (Ajustes → Aula), en sus páginas, si la página no eligió otros
+    cms_on('layout.choice', function (string $choice, string $kind, array $page, ?array $item) {
+        if ($choice !== '' || !lms_is_page($page)) return $choice;
+        return trim((string) (cms_settings()['lms_layout_' . $kind] ?? ''));
+    });
+
     // estilos del aula solo en sus páginas; también evita que una página con avance personal se guarde en caché
     cms_on('head', function (array $page) {
-        $type = (string) (cms_current()['type'] ?? '');
-        if (empty($page['lms']) && $type !== lms_course_type() && $type !== lms_lesson_type() && $type !== lms_quiz_type()) return;
+        if (!lms_is_page($page)) return;
         $p = lms_pack();
         if ($p) echo '<link rel="stylesheet" href="' . cms_e(cms_pack_asset($p, 'assets/lms.css')) . '">' . "\n";
     });

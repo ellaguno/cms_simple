@@ -9,6 +9,12 @@
 // dirección del listado de cursos (Ajustes → Aula); el manifiesto se lee después de cargar los ajustes
 $lmsS = function_exists('cms_settings') ? cms_settings() : [];
 $lmsRoute = cms_slugify((string) ($lmsS['lms_courses_route'] ?? '')) ?: 'cursos';
+// cabecera y pie de las páginas del aula: piezas de Diseño → Cabeceras y pies (si el sitio tiene constructor)
+$lmsLayouts = function (string $kind): array {
+    $o = $kind === 'footer' ? ['' => 'El del resto del sitio', 'none' => 'El del tema'] : ['' => 'La del resto del sitio', 'none' => 'La del tema'];
+    if (function_exists('cms_layouts')) foreach (cms_layouts($kind, false) as $slug => $it) $o[$slug] = (string) ($it['title'] ?? $slug) . (($it['status'] ?? '') !== 'published' ? ' (borrador)' : '');
+    return $o;
+};
 $lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Primera línea: la pregunta (el número del principio es opcional; {2} al final = vale 2 puntos). Debajo:\n"
     . "  * opción correcta   - opción incorrecta   (varias * = opción múltiple, con crédito parcial)\n"
     . "  = verdadero  o  = falso                    (verdadero/falso)\n"
@@ -19,7 +25,7 @@ $lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Pri
     . "En el texto de la pregunta: **negritas** y `código`. La vista de la evaluación con sesión en el panel muestra las respuestas correctas y los avisos del formato.";
 return [
     'label' => 'Aula: cursos en línea (LMS)',
-    'version' => '1.7.0',
+    'version' => '1.8.0',
     'desc' => 'Cursos con lecciones y evaluaciones, alumnos con cuenta propia, inscripciones y avance. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada, presentan cuestionarios y exámenes (opción única o múltiple, verdadero/falso, respuesta corta, numérica y abiertas que califica el instructor) y siguen con lo siguiente. El avance de los videos se sigue solo (YouTube, Vimeo o MP4: cuenta lo que de verdad se vio) y puede exigirse antes de marcar la lección. Al terminar un curso, el alumno recibe por correo su constancia para imprimir o guardar en PDF, con código de verificación público. Reproduce paquetes SCORM 1.2 (Articulate, iSpring, Captivate, H5P…) con su avance y calificación, y exporta cada curso como paquete SCORM 1.2 para el LMS de un cliente. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance y calificaciones de cada alumno, revisión de intentos, preguntas por calificar y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos.',
     'assets' => [],
     'effects' => [],
@@ -129,6 +135,9 @@ return [
                                'help' => 'Si lo pones, solo se registra quien lo conozca (útil para un grupo o un cliente).'],
         'lms_route'        => ['type' => 'text', 'label' => 'Dirección del aula', 'default' => 'aula', 'placeholder' => 'aula', 'half' => true,
                                'help' => 'Las páginas del alumno quedan en /aula, /aula/entrar, /aula/cuenta… Añade "/aula" al Menú para que se vea.'],
+        'lms_layout_header' => ['type' => 'select', 'label' => 'Cabecera del aula', 'options' => $lmsLayouts('header'), 'half' => true,
+                               'help' => 'Para /aula, el listado de cursos, los cursos, las lecciones y las evaluaciones. Se crea en Diseño → Cabeceras y pies (con su propio menú). "La del resto del sitio" = la predeterminada de Ajustes → Cabecera y pie.'],
+        'lms_layout_footer' => ['type' => 'select', 'label' => 'Pie del aula', 'options' => $lmsLayouts('footer'), 'half' => true],
         'lms_hero_kicker'  => ['type' => 'text', 'i18n' => true, 'label' => 'Listado de cursos: etiqueta del encabezado', 'placeholder' => 'Capacitación interna', 'half' => true],
         'lms_series'       => ['type' => 'text', 'i18n' => true, 'label' => 'Serie en las tapas de los cursos', 'placeholder' => 'Curso · NextSabi', 'half' => true],
         'lms_hero_title'   => ['type' => 'text', 'i18n' => true, 'label' => 'Listado de cursos: título', 'placeholder' => 'Lo que construimos, *explicado por quienes lo construyen*',

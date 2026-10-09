@@ -53,7 +53,8 @@ function cms_layouts_settings(): array
 
 /**
  * La cabecera o el pie que corresponde a la página actual (o a $page e $item dados): elemento completo o null.
- * Orden: la pieza en vista previa (su propio editor) → la elegida en la página → la predeterminada de Ajustes.
+ * Orden: la pieza en vista previa (su propio editor) → la elegida en la página → la que dé un paquete con el filtro
+ * layout.choice (p. ej. el aula para sus páginas) → la predeterminada de Ajustes.
  * En vistas previas y en el constructor cuentan también los borradores; en el sitio público, solo lo publicado.
  */
 function cms_layout(string $kind, ?array $page = null, ?array $item = null): ?array
@@ -65,6 +66,7 @@ function cms_layout(string $kind, ?array $page = null, ?array $item = null): ?ar
     if (!empty($page['layout_preview']) && (string) ($page['layout_preview']['kind'] ?? 'header') === $kind) return $page['layout_preview'];
     $item = $item ?? $cur['item'];
     $choice = trim((string) ($item['layout_' . $kind] ?? ''));
+    if ($choice === '') $choice = trim((string) cms_apply('layout.choice', '', $kind, $page, $item));
     if ($choice === '') $choice = trim((string) (cms_settings()['layout_' . $kind . '_default'] ?? ''));
     if ($choice === '' || $choice === 'none') return null;
     $publishedOnly = empty($GLOBALS['cms_builder']) && empty($page['preview']);

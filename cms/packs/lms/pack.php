@@ -16,12 +16,31 @@ $lmsLayouts = function (string $kind): array {
     if (function_exists('cms_layouts')) foreach (cms_layouts($kind, false) as $slug => $it) $o[$slug] = (string) ($it['title'] ?? $slug) . (($it['status'] ?? '') !== 'published' ? ' (borrador)' : '');
     return $o;
 };
-// industrias de Ajustes → Aula ("Nombre | English name" por línea): clave => nombre, para el campo de cada curso
-$lmsInd = [];
-foreach (preg_split('/\R/', (string) ($lmsS['lms_industries'] ?? '')) as $lmsLn) {
-    $lmsN = trim(explode('|', $lmsLn, 2)[0]);
-    if ($lmsN !== '' && ($lmsK = cms_slugify($lmsN)) !== '') $lmsInd[$lmsK] = $lmsN;
+if (!function_exists('lms_parse_list')) {
+    /**
+     * Lista de Ajustes → Aula (industrias, tracks): una entrada por línea, "Nombre | English name". Con $nested, una
+     * línea que empieza con "- " cuelga de la anterior sin guion (subtrack): su clave es "padre/hijo" y su etiqueta
+     * "Padre › Hijo". Devuelve clave => ['name', 'label', 'parent'] en el idioma pedido (null = el predeterminado).
+     */
+    function lms_parse_list(string $text, bool $nested = false, ?string $lang = null): array
+    {
+        $def = cms_default_lang();
+        $lang = $lang ?? $def;
+        $out = []; $top = '';
+        foreach (preg_split('/\R/', $text) as $ln) {
+            $sub = $nested && (bool) preg_match('/^\s*-\s*/', $ln);
+            $p = array_map('trim', explode('|', (string) preg_replace('/^\s*-\s*/', '', $ln), 2));
+            if (($k = cms_slugify($p[0])) === '') continue;
+            $name = $lang !== $def && ($p[1] ?? '') !== '' ? $p[1] : $p[0];
+            if ($sub && $top !== '') $out[$top . '/' . $k] = ['name' => $name, 'label' => $out[$top]['name'] . ' › ' . $name, 'parent' => $top];
+            elseif (!$sub) { $top = $k; $out[$k] = ['name' => $name, 'label' => $name, 'parent' => '']; }
+        }
+        return $out;
+    }
 }
+// industrias y tracks de Ajustes → Aula, para los campos de cada curso
+$lmsInd = array_map(fn($x) => $x['label'], lms_parse_list((string) ($lmsS['lms_industries'] ?? '')));
+$lmsTracks = array_map(fn($x) => $x['label'], lms_parse_list((string) ($lmsS['lms_tracks'] ?? ''), true));
 $lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Primera línea: la pregunta (el número del principio es opcional; {2} al final = vale 2 puntos). Debajo:\n"
     . "  * opción correcta   - opción incorrecta   (varias * = opción múltiple, con crédito parcial)\n"
     . "  = verdadero  o  = falso                    (verdadero/falso)\n"
@@ -32,7 +51,7 @@ $lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Pri
     . "En el texto de la pregunta: **negritas** y `código`. La vista de la evaluación con sesión en el panel muestra las respuestas correctas y los avisos del formato.";
 return [
     'label' => 'Aula: cursos en línea (LMS)',
-    'version' => '1.10.0',
+    'version' => '1.11.0',
     'desc' => 'Cursos con lecciones y evaluaciones, alumnos con cuenta propia, inscripciones y avance. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada, presentan cuestionarios y exámenes (opción única o múltiple, verdadero/falso, respuesta corta, numérica y abiertas que califica el instructor) y siguen con lo siguiente. El avance de los videos se sigue solo (YouTube, Vimeo o MP4: cuenta lo que de verdad se vio) y puede exigirse antes de marcar la lección. Al terminar un curso, el alumno recibe por correo su constancia para imprimir o guardar en PDF, con código de verificación público. Reproduce paquetes SCORM 1.2 (Articulate, iSpring, Captivate, H5P…) con su avance y calificación, y exporta cada curso como paquete SCORM 1.2 para el LMS de un cliente. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance y calificaciones de cada alumno, revisión de intentos, preguntas por calificar y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos.',
     'assets' => [],
     'effects' => [],
@@ -45,7 +64,7 @@ return [
             'routes' => ['es' => $lmsRoute, 'en' => $lmsRoute === 'cursos' ? 'courses' : $lmsRoute],
             'template_list' => 'cursos', 'template_single' => 'curso',
             'schema' => 'Course', 'feed' => false,
-            'sort' => ['field' => 'order', 'dir' => 'asc'], 'list' => ['access', 'industries', 'order'],
+            'sort' => ['field' => 'order', 'dir' => 'asc'], 'list' => ['access', 'tracks', 'industries', 'order'],
             'title_field' => 'title', 'excerpt_field' => 'excerpt', 'image_field' => 'image',
             'help' => 'Cada curso agrupa lecciones (Aula → Lecciones, campo "Curso"). Quién puede ver las lecciones se decide en "Acceso".',
             'fields' => [
@@ -65,6 +84,8 @@ return [
                                'help' => 'Las lecciones marcadas "de muestra" se ven siempre.'],
                 'groups'   => ['type' => 'tags', 'label' => 'Solo para los grupos', 'sidebar' => true, 'placeholder' => 'vacío = para todos',
                                'help' => 'Si pones grupos, el curso solo lo ven y lo toman los alumnos de esos grupos (y el panel); para los demás no aparece. Los grupos se ponen en la ficha de cada alumno; los alumnos que entran desde una organización (p. ej. su instancia de Iurefficient) quedan en el grupo de su organización.'],
+                'tracks'   => ['type' => 'checks', 'label' => 'Tracks', 'options' => $lmsTracks, 'sidebar' => true,
+                               'empty' => 'La lista se define en Ajustes → Aula → Tracks.', 'help' => 'Marca el subtrack (o el track, si no tiene). El listado de cursos se filtra por track y subtrack.'],
                 'industries' => ['type' => 'checks', 'label' => 'Industrias', 'options' => $lmsInd, 'sidebar' => true,
                                  'empty' => 'La lista se define en Ajustes → Aula → Industrias.', 'help' => 'El listado de cursos se puede filtrar por industria. La lista está en Ajustes → Aula.'],
                 'level'    => ['type' => 'text', 'label' => 'Nivel', 'i18n' => true, 'sidebar' => true, 'placeholder' => 'Básico, Intermedio…'],
@@ -158,6 +179,11 @@ return [
         'lms_features'     => ['type' => 'textarea', 'i18n' => true, 'rows' => 4, 'label' => 'Bloque bajo los cursos: una tarjeta por línea, "ícono | título | texto" (vacío = sin bloque)',
                                'placeholder' => "video | Módulos de 10 a 15 minutos | Se ven de corrido o uno al día.\nsubtitulos | Con subtítulos | Se pueden ver en silencio.\ncapas | Pensados para el cliente | Cada curso cierra con lo que preguntará el cliente.",
                                'help' => 'Íconos: video, subtitulos, capas, reloj, libro, personas, escudo, codigo, grafica, engrane, flechas, nucleo, billetes.'],
+        'lms_tracks'       => ['type' => 'textarea', 'rows' => 6, 'label' => 'Tracks: uno por línea, "Nombre | English name"; un subtrack empieza con "- " y cuelga del track de arriba',
+                               'placeholder' => "Track 100 · Fundamentos | Track 100 · Foundations\nTrack 200 · Gestión | Track 200 · Management\n- Project Management\n- Gestión de riesgos | Risk management",
+                               'help' => 'Cada curso marca su track o subtrack y el listado de cursos muestra una fila de tracks y, al elegir uno, la de sus subtracks. Cada uno tiene su dirección para ponerla en un menú: /cursos?track=track-200 (con sus subtracks) o /cursos?track=track-200/project-management. Si cambias el nombre en español de uno, vuelve a marcarlo en sus cursos.'],
+        'lms_tracks_label' => ['type' => 'text', 'i18n' => true, 'label' => 'Nombre de los tracks en el sitio', 'placeholder' => 'Tracks', 'half' => true],
+        'lms_hide_private' => ['type' => 'checkbox', 'label' => 'Cursos con cuenta', 'text' => 'Quien no ha entrado solo ve los cursos de acceso abierto: los que piden cuenta o inscripción no salen en el listado ni en el mapa del sitio, y su página le pide entrar'],
         'lms_industries'   => ['type' => 'textarea', 'rows' => 5, 'label' => 'Industrias: una por línea, "Nombre | English name" (el nombre en inglés es opcional)',
                                'placeholder' => "Despachos jurídicos | Law firms\nSalud | Healthcare\nManufactura | Manufacturing",
                                'help' => 'Cada curso marca las suyas (campo Industrias) y el listado de cursos muestra un filtro con las que tienen cursos; cada una tiene su dirección (/cursos?industria=salud) para ponerla en un menú. Si cambias el nombre en español de una industria, vuelve a marcarla en sus cursos.'],

@@ -20,18 +20,22 @@ $listTitle = $t($type . '_title', $def['label'] ?? lms_tx('courses'));
 $goals = (array) cms_f($item, 'goals', $lang, []);
 $S_contact = cms_url('home', $lang);
 foreach (cms_config('pages') as $pk => $pd) if (($pd['schema'] ?? '') === 'ContactPage') { $S_contact = cms_url('page:' . $pk, $lang); break; }
-if (!lms_course_visible($item)):   // curso de un grupo al que no pertenece quien lo ve
+if (!lms_course_visible($item)):   // curso de un grupo al que no pertenece quien lo ve, o con cuenta y quien lo ve no ha entrado
+    $grp = (bool) lms_course_groups($item);
     ?>
 <section class="phead lms-head"><div class="wrap phead-in">
-  <h1><?= cms_e(lms_tx('private_title')) ?></h1>
-  <p class="lead"><?= cms_e($user ? lms_tx('private_text') : lms_tx('private_login')) ?></p>
+  <h1><?= cms_e(lms_tx($grp ? 'private_title' : 'members_title')) ?></h1>
+  <p class="lead"><?= cms_e($user ? lms_tx('private_text') : lms_tx($grp ? 'private_login' : 'members_login')) ?></p>
   <div class="btnrow"><?php if (!$user): ?><a class="btn" href="<?= cms_e(lms_url('entrar', null, ['r' => lms_here()])) ?>"><?= cms_e(lms_tx('login')) ?></a><?php endif; ?><a class="btn btn-ghost" href="<?= cms_e(cms_url('list:' . $type, $lang)) ?>"><?= cms_e(lms_tx('all_courses')) ?></a></div>
 </div></section>
 <?php return; endif;
 ?>
 <section class="phead lms-head">
   <div class="wrap phead-in">
-    <nav class="crumbs" aria-label="Ruta"><a href="<?= cms_e(cms_url('home', $lang)) ?>"><?= cms_e($t('crumb_home', $lang === 'en' ? 'Home' : 'Inicio')) ?></a><span>/</span><a href="<?= cms_e(cms_url('list:' . $type, $lang)) ?>"><?= cms_e($listTitle) ?></a><span>/</span><em style="font-style:normal"><?= cms_e($title) ?></em></nav>
+    <nav class="crumbs" aria-label="Ruta"><a href="<?= cms_e(cms_url('home', $lang)) ?>"><?= cms_e($t('crumb_home', $lang === 'en' ? 'Home' : 'Inicio')) ?></a><span>/</span><a href="<?= cms_e(cms_url('list:' . $type, $lang)) ?>"><?= cms_e($listTitle) ?></a><span>/</span><?php
+    // el track del curso (el primero que tenga), con su subtrack: llevan al listado filtrado
+    $trk = array_key_first(lms_course_tracks($item, $lang)); $all = lms_tracks($lang);
+    if ($trk !== null) foreach (array_filter([$all[$trk]['parent'] ?? '', $trk]) as $tk) if (isset($all[$tk])) echo '<a href="', cms_e(cms_url('list:' . $type, $lang) . '?track=' . $tk), '">', cms_e($all[$tk]['name']), '</a><span>/</span>'; ?><em style="font-style:normal"><?= cms_e($title) ?></em></nav>
     <h1><?= cms_e($title) ?></h1>
     <?php if (($ex = (string) cms_f($item, 'excerpt', $lang)) !== ''): ?><p class="lead"><?= cms_e($ex) ?></p><?php endif; ?>
     <p class="lms-tags">

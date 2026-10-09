@@ -100,6 +100,12 @@ if (!function_exists('lms_settings')) {
             'no_match'       => ['es' => 'Ningún curso coincide con lo que elegiste.', 'en' => 'No course matches your selection.'],
             'clear_filters'  => ['es' => 'Quitar filtros', 'en' => 'Clear filters'],
             'by_industry'    => ['es' => 'Por industria', 'en' => 'By industry'],
+            'tracks'         => ['es' => 'Tracks', 'en' => 'Tracks'],
+            'all_tracks'     => ['es' => 'Todos', 'en' => 'All'],
+            'all_track'      => ['es' => 'Todo %s', 'en' => 'All of %s'],
+            'members_title'  => ['es' => 'Curso para alumnos', 'en' => 'Course for students'],
+            'members_login'  => ['es' => 'Este curso es para alumnos con cuenta. Entra para verlo.', 'en' => 'This course is for students with an account. Sign in to see it.'],
+            'login_more'     => ['es' => 'Entra con tu cuenta para ver todos los cursos.', 'en' => 'Sign in to see all courses.'],
             'courses'        => ['es' => 'Cursos', 'en' => 'Courses'],
             'courses_lead'   => ['es' => 'Capacitación en línea, a tu ritmo.', 'en' => 'Online training, at your own pace.'],
             'courses_empty'  => ['es' => 'Pronto publicaremos cursos aquí.', 'en' => 'Courses will be published here soon.'],
@@ -561,13 +567,29 @@ if (!function_exists('lms_settings')) {
 
     function lms_user_groups(?array $u): array { return $u ? lms_groups_clean($u['groups'] ?? []) : []; }
 
-    /** ¿El curso existe para quien lo ve? (sin grupos: para todos; con grupos: alumnos de esos grupos y el panel) */
+    /**
+     * ¿El curso existe para quien lo ve? Sin grupos: para todos; con grupos: alumnos de esos grupos y el panel. Con
+     * Ajustes → Aula → «Cursos con cuenta», quien no ha entrado solo ve los de acceso abierto.
+     */
     function lms_course_visible(array $course, ?array $user = null): bool
     {
-        $g = lms_course_groups($course);
-        if (!$g || lms_staff()) return true;
+        if (lms_staff()) return true;
         $user = $user ?? lms_user();
-        return (bool) array_intersect($g, lms_user_groups($user));
+        if (!$user && lms_members_only($course)) return false;
+        $g = lms_course_groups($course);
+        return !$g || (bool) array_intersect($g, lms_user_groups($user));
+    }
+
+    /** ¿El curso solo se muestra a quien tiene cuenta? (Ajustes → Aula → «Cursos con cuenta» y acceso no abierto) */
+    function lms_members_only(array $course): bool
+    {
+        return !empty(cms_settings()['lms_hide_private']) && lms_course_access($course) !== 'abierto';
+    }
+
+    /** ¿Lo ve cualquiera, sin cuenta? (para el mapa del sitio y los buscadores) */
+    function lms_course_public(array $course): bool
+    {
+        return !lms_course_groups($course) && !lms_members_only($course);
     }
 
     /** Cursos publicados que puede ver quien está viendo (los de grupos ajenos no aparecen). */
@@ -1070,7 +1092,7 @@ if (!function_exists('lms_settings')) {
         if ($series !== '') $h .= '<span class="lms-c-series">' . cms_e($series) . '</span>';
         $h .= '<span class="lms-c-name">' . cms_e($short) . '</span></span>';
         // detalle
-        $h .= '<span class="lms-c-body">' . (($ind = lms_course_industries($c, $lang)) ? '<span class="lms-c-ind">' . cms_e(implode(' · ', $ind)) . '</span>' : '') . '<h3>' . cms_e($title) . '</h3>';
+        $h .= '<span class="lms-c-body">' . (($ind = array_merge(array_values(lms_course_tracks($c, $lang)), array_values(lms_course_industries($c, $lang)))) ? '<span class="lms-c-ind">' . cms_e(implode(' · ', $ind)) . '</span>' : '') . '<h3>' . cms_e($title) . '</h3>';
         if (($ex = (string) cms_f($c, 'excerpt', $lang)) !== '') $h .= '<p>' . cms_e($ex) . '</p>';
         if ($topics = array_filter((array) cms_f($c, 'topics', $lang, []))) $h .= '<span class="lms-c-topics">' . implode('', array_map(fn($x) => '<span>' . cms_e((string) $x) . '</span>', $topics)) . '</span>';
         if (($au = (string) cms_f($c, 'audience', $lang)) !== '') $h .= '<span class="lms-for"><strong>' . cms_e(lms_tx('for')) . '</strong> ' . cms_e($au) . '</span>';
@@ -1428,17 +1450,10 @@ if (!function_exists('lms_settings')) {
         return $ok !== '' ? '<p class="form-msg ok lms-msg" role="status">' . cms_e(lms_tx($ok)) . '</p>' : '';
     }
 
-    /** Industrias de Ajustes → Aula ("Nombre | English name" por línea): clave => nombre en el idioma pedido. */
+    /** Industrias de Ajustes → Aula: clave => nombre en el idioma pedido. */
     function lms_industries(?string $lang = null): array
     {
-        $lang = $lang ?? (cms_current()['lang'] ?: cms_default_lang());
-        $out = [];
-        foreach (cms_lines((string) (cms_settings()['lms_industries'] ?? '')) as $ln) {
-            $p = array_map('trim', explode('|', $ln, 2));
-            if (($k = cms_slugify($p[0])) === '') continue;
-            $out[$k] = $lang !== cms_default_lang() && ($p[1] ?? '') !== '' ? $p[1] : $p[0];
-        }
-        return $out;
+        return array_map(fn($x) => $x['name'], lms_parse_list((string) (cms_settings()['lms_industries'] ?? ''), false, $lang ?? (cms_current()['lang'] ?: cms_default_lang())));
     }
 
     /** Industrias de un curso que siguen en la lista: clave => nombre. */
@@ -1450,6 +1465,28 @@ if (!function_exists('lms_settings')) {
         return $out;
     }
 
+    /** Tracks y subtracks de Ajustes → Aula: clave ("track" o "track/sub") => ['name', 'label', 'parent']. */
+    function lms_tracks(?string $lang = null): array
+    {
+        return lms_parse_list((string) (cms_settings()['lms_tracks'] ?? ''), true, $lang ?? (cms_current()['lang'] ?: cms_default_lang()));
+    }
+
+    /** Tracks de un curso que siguen en la lista: clave => etiqueta ("Track 200 › Project Management"). */
+    function lms_course_tracks(array $c, ?string $lang = null): array
+    {
+        $all = lms_tracks($lang);
+        $out = [];
+        foreach ((array) ($c['tracks'] ?? []) as $k) if (is_string($k) && isset($all[$k])) $out[$k] = $all[$k]['label'];
+        return $out;
+    }
+
+    /** ¿El curso está en ese track? Un track incluye sus subtracks; un subtrack, solo él. */
+    function lms_in_track(array $c, string $track): bool
+    {
+        foreach ((array) ($c['tracks'] ?? []) as $k) if (is_string($k) && ($k === $track || strpos($k, $track . '/') === 0)) return true;
+        return false;
+    }
+
     /** Texto en minúsculas y sin acentos, para buscar. */
     function lms_fold(string $s): string
     {
@@ -1458,16 +1495,18 @@ if (!function_exists('lms_settings')) {
     }
 
     /**
-     * Filtros del listado de cursos: ?industria=, ?nivel= y ?q= (busca en nombre, resumen, temas, "para quién" e
-     * industrias). Devuelve [cursos que quedan, filtros elegidos].
+     * Filtros del listado de cursos: ?track= (track o track/subtrack), ?industria=, ?nivel= y ?q= (busca en nombre,
+     * resumen, temas, "para quién", industrias y tracks). Devuelve [cursos que quedan, filtros elegidos].
      */
     function lms_catalog_filter(array $courses, string $lang): array
     {
         $f = [
+            'track'     => implode('/', array_slice(array_filter(array_map('cms_slugify', explode('/', (string) ($_GET['track'] ?? '')))), 0, 2)),
             'industria' => cms_slugify((string) ($_GET['industria'] ?? '')),
             'nivel'     => trim(mb_substr((string) ($_GET['nivel'] ?? ''), 0, 60)),
             'q'         => trim(mb_substr((string) ($_GET['q'] ?? ''), 0, 80)),
         ];
+        if ($f['track'] !== '') $courses = array_filter($courses, fn($c) => lms_in_track($c, $f['track']));
         if ($f['industria'] !== '') $courses = array_filter($courses, fn($c) => in_array($f['industria'], (array) ($c['industries'] ?? []), true));
         if ($f['nivel'] !== '') $courses = array_filter($courses, fn($c) => lms_fold(trim((string) cms_f($c, 'level', $lang))) === lms_fold($f['nivel']));
         if ($f['q'] !== '') {
@@ -1475,7 +1514,7 @@ if (!function_exists('lms_settings')) {
             $courses = array_filter($courses, function ($c) use ($words, $lang) {
                 $hay = lms_fold(implode(' ', array_merge(
                     [(string) cms_f($c, 'title', $lang), (string) cms_f($c, 'short', $lang), (string) cms_f($c, 'excerpt', $lang), (string) cms_f($c, 'audience', $lang), (string) cms_f($c, 'level', $lang)],
-                    array_map('strval', (array) cms_f($c, 'topics', $lang, [])), array_values(lms_course_industries($c, $lang)))));
+                    array_map('strval', (array) cms_f($c, 'topics', $lang, [])), array_values(lms_course_industries($c, $lang)), array_values(lms_course_tracks($c, $lang)))));
                 foreach ($words as $w) if (strpos($hay, $w) === false) return false;
                 return true;
             });
@@ -1555,6 +1594,13 @@ if (!function_exists('lms_settings')) {
         $S = cms_settings();
         $mine = trim((string) ($S['lms_layout_' . $kind] ?? ($kind === 'header' ? 'cabecera-aula' : '')));
         return $mine === 'cabecera-aula' ? lms_default_header() : $mine;
+    });
+
+    // los cursos que no ve cualquiera (de grupos, o con cuenta si así se eligió) no van al mapa del sitio ni a los buscadores
+    cms_on('sitemap.item', fn(bool $keep, string $type, array $it) => $keep && ($type !== lms_course_type() || lms_course_public($it)));
+    cms_on('head', function (array $page) {
+        $it = cms_current()['item'] ?? null;
+        if (empty($page['noindex']) && is_array($it) && (string) (cms_current()['type'] ?? '') === lms_course_type() && !lms_course_public($it)) echo '<meta name="robots" content="noindex, follow">' . "\n";
     });
 
     // estilos del aula solo en sus páginas; también evita que una página con avance personal se guarde en caché

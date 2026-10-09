@@ -23,6 +23,8 @@
  *   layout.choice  filtro ('', $kind, $page, $item)  en cms_layout() (1.49), cuando la página no elige cabecera o pie:
  *                                        el slug de una pieza de Diseño → Cabeceras y pies, 'none' (la del tema) o ''
  *                                        (la predeterminada de Ajustes). $kind: header | footer.
+ *   sitemap.item  filtro (true, $tipo, $item)  en /sitemap.xml (1.52): false deja fuera ese elemento (p. ej. un curso
+ *                                        que solo ven los alumnos con cuenta).
  *   cron       acción  ($log)            cuando el cron del hosting llama a /_cms/cron?token=… (o php cms/cron.php).
  *                                        $log es una función ($mensaje) para dejar constancia en data/cron.json.
  *

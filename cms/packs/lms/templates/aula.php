@@ -56,10 +56,19 @@ if ($certs): ?>
 $list = cms_url('list:' . lms_course_type(), $lang);
 $inds = [];
 foreach ($others as $c) foreach (lms_course_industries($c, $lang) as $k => $n) $inds[$k] = $n;
-$inds = array_intersect_key(lms_industries($lang), $inds); ?>
+$inds = array_intersect_key(lms_industries($lang), $inds);
+$tops = [];
+foreach ($others as $c) foreach (array_keys(lms_course_tracks($c, $lang)) as $k) $tops[(string) strtok($k, '/')] = 1;
+$tops = array_intersect_key(array_filter(lms_tracks($lang), fn($x) => $x['parent'] === ''), $tops); ?>
 <section class="sec sec-alt">
   <div class="wrap">
     <div class="sec-head"><h2 style="font-size:1.5rem"><?= cms_e(lms_tx('other_courses')) ?></h2></div>
+<?php if (count($tops) > 1): ?>
+    <div class="lms-chips" aria-label="<?= cms_e(lms_setting_text('lms_tracks_label') ?: lms_tx('tracks')) ?>">
+<?php foreach ($tops as $k => $tr): ?>      <a class="lms-chip" href="<?= cms_e($list . '?track=' . rawurlencode($k)) ?>"><?= cms_e($tr['name']) ?></a>
+<?php endforeach; ?>
+    </div>
+<?php endif; ?>
 <?php if (count($inds) > 1): ?>
     <div class="lms-chips" aria-label="<?= cms_e(lms_tx('by_industry')) ?>">
 <?php foreach ($inds as $k => $n): ?>      <a class="lms-chip" href="<?= cms_e($list . '?industria=' . rawurlencode($k)) ?>"><?= cms_e($n) ?></a>

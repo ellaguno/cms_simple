@@ -3,7 +3,8 @@
  * cms_simple admin — campos guiados por esquema.
  *
  * Definición de campo (site/config.php):
- *   'campo' => ['type' => text|textarea|html|date|number|url|email|select|checkbox|image|images|lines|tags,
+ *   'campo' => ['type' => text|textarea|html|date|number|url|email|select|checks|checkbox|image|images|lines|tags,
+ *               (checks: casillas de varias opciones de 'options' u 'options_from'; guarda la lista de claves marcadas; 1.51),
  *               'label' => 'Etiqueta', 'help' => 'Ayuda', 'i18n' => true|false, 'required' => bool,
  *               'options' => [...] (select), 'options_from' => 'tipo' (select con los elementos de esa colección), 'rows' => n, 'sidebar' => true (columna derecha), 'placeholder' => '',
  *               'show_if' => ['otro_campo' => 'valor'] (solo se muestra cuando ese control vale eso; 'valor' puede ser una lista)]
@@ -63,6 +64,17 @@ function admin_control(string $inputName, array $def, $value, string $extra = ''
                 $out .= '<option value="' . cms_e($val) . '"' . ((string) $value === (string) $val ? ' selected' : '') . '>' . cms_e($lab) . '</option>';
             }
             return $out . '</select>';
+        case 'checks':   // varias opciones a la vez (1.51); las marcadas que ya no están en la lista se ven, para poder quitarlas
+            $opts = admin_select_options($def);
+            $sel = array_values(array_filter(array_map(fn($x) => is_scalar($x) ? (string) $x : '', (array) $value), fn($x) => $x !== ''));
+            foreach ($sel as $x) if (!isset($opts[$x])) $opts[$x] = $x . ' (ya no está en la lista)';
+            if (!$opts) return '<p class="ad-help">' . cms_e((string) ($def['empty'] ?? 'Todavía no hay opciones.')) . '</p><input type="hidden" name="' . cms_e($inputName) . '[]" value="">';
+            $out = '<div class="ad-checks"><input type="hidden" name="' . cms_e($inputName) . '[]" value="">';
+            foreach ($opts as $k => $lab) {
+                $val = is_int($k) ? (string) $lab : (string) $k;
+                $out .= '<label class="ad-check"><input type="checkbox" name="' . cms_e($inputName) . '[]" value="' . cms_e($val) . '"' . (in_array($val, $sel, true) ? ' checked' : '') . '> ' . cms_e((string) $lab) . '</label>';
+            }
+            return $out . '</div>';
         case 'checkbox':
             return '<label class="ad-check"><input type="hidden" name="' . cms_e($inputName) . '" value="0"><input type="checkbox" name="' . cms_e($inputName) . '" value="1"' . ($value ? ' checked' : '') . '> ' . cms_e($def['text'] ?? 'Sí') . '</label>';
         case 'image':
@@ -134,6 +146,8 @@ function admin_read_control(array $def, $raw)
             return array_values(array_filter(array_map('trim', explode(',', is_string($raw) ? $raw : '')), fn($x) => $x !== ''));
         case 'html':
             return admin_clean_html(is_string($raw) ? str_replace("\r\n", "\n", $raw) : '');
+        case 'checks':
+            return array_values(array_unique(array_filter(array_map(fn($x) => is_string($x) ? trim($x) : '', is_array($raw) ? $raw : []), fn($x) => $x !== '')));
         case 'checkbox':
             return !empty($raw) && $raw !== '0';
         case 'sections':

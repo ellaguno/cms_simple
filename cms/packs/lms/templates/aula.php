@@ -1,7 +1,8 @@
 <?php
 /**
  * Paquete lms — /aula: el tablero del alumno. Sus cursos con el avance y el botón para seguir, y los demás cursos
- * a los que puede entrar. El tema puede reemplazarlo con templates/lms/aula.php.
+ * a los que puede entrar (los primeros seis, con las industrias y el enlace al listado completo cuando hay más).
+ * El tema puede reemplazarlo con templates/lms/aula.php.
  */
 $user = lms_user();
 $mine = []; $others = [];
@@ -51,13 +52,26 @@ if ($certs): ?>
   </div>
 </section>
 <?php endif; ?>
-<?php if ($others): ?>
+<?php if ($others):
+$list = cms_url('list:' . lms_course_type(), $lang);
+$inds = [];
+foreach ($others as $c) foreach (lms_course_industries($c, $lang) as $k => $n) $inds[$k] = $n;
+$inds = array_intersect_key(lms_industries($lang), $inds); ?>
 <section class="sec sec-alt">
   <div class="wrap">
     <div class="sec-head"><h2 style="font-size:1.5rem"><?= cms_e(lms_tx('other_courses')) ?></h2></div>
-    <div class="lms-grid-c">
-<?php foreach ($others as $c) echo lms_course_card($c, $lang, $user); ?>
+<?php if (count($inds) > 1): ?>
+    <div class="lms-chips" aria-label="<?= cms_e(lms_tx('by_industry')) ?>">
+<?php foreach ($inds as $k => $n): ?>      <a class="lms-chip" href="<?= cms_e($list . '?industria=' . rawurlencode($k)) ?>"><?= cms_e($n) ?></a>
+<?php endforeach; ?>
     </div>
+<?php endif; ?>
+    <div class="lms-grid-c">
+<?php foreach (array_slice($others, 0, 6) as $c) echo lms_course_card($c, $lang, $user); ?>
+    </div>
+<?php if (count($others) > 6): ?>
+    <p class="lms-more"><a class="btn btn-ghost" href="<?= cms_e($list) ?>"><?= cms_e(lms_tx('all_courses_n', count($others))) ?> <?= lms_icon('arrow') ?></a></p>
+<?php endif; ?>
   </div>
 </section>
 <?php endif; ?>

@@ -16,6 +16,12 @@ $lmsLayouts = function (string $kind): array {
     if (function_exists('cms_layouts')) foreach (cms_layouts($kind, false) as $slug => $it) $o[$slug] = (string) ($it['title'] ?? $slug) . (($it['status'] ?? '') !== 'published' ? ' (borrador)' : '');
     return $o;
 };
+// industrias de Ajustes → Aula ("Nombre | English name" por línea): clave => nombre, para el campo de cada curso
+$lmsInd = [];
+foreach (preg_split('/\R/', (string) ($lmsS['lms_industries'] ?? '')) as $lmsLn) {
+    $lmsN = trim(explode('|', $lmsLn, 2)[0]);
+    if ($lmsN !== '' && ($lmsK = cms_slugify($lmsN)) !== '') $lmsInd[$lmsK] = $lmsN;
+}
 $lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Primera línea: la pregunta (el número del principio es opcional; {2} al final = vale 2 puntos). Debajo:\n"
     . "  * opción correcta   - opción incorrecta   (varias * = opción múltiple, con crédito parcial)\n"
     . "  = verdadero  o  = falso                    (verdadero/falso)\n"
@@ -26,7 +32,7 @@ $lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Pri
     . "En el texto de la pregunta: **negritas** y `código`. La vista de la evaluación con sesión en el panel muestra las respuestas correctas y los avisos del formato.";
 return [
     'label' => 'Aula: cursos en línea (LMS)',
-    'version' => '1.9.0',
+    'version' => '1.10.0',
     'desc' => 'Cursos con lecciones y evaluaciones, alumnos con cuenta propia, inscripciones y avance. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada, presentan cuestionarios y exámenes (opción única o múltiple, verdadero/falso, respuesta corta, numérica y abiertas que califica el instructor) y siguen con lo siguiente. El avance de los videos se sigue solo (YouTube, Vimeo o MP4: cuenta lo que de verdad se vio) y puede exigirse antes de marcar la lección. Al terminar un curso, el alumno recibe por correo su constancia para imprimir o guardar en PDF, con código de verificación público. Reproduce paquetes SCORM 1.2 (Articulate, iSpring, Captivate, H5P…) con su avance y calificación, y exporta cada curso como paquete SCORM 1.2 para el LMS de un cliente. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance y calificaciones de cada alumno, revisión de intentos, preguntas por calificar y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos.',
     'assets' => [],
     'effects' => [],
@@ -39,7 +45,7 @@ return [
             'routes' => ['es' => $lmsRoute, 'en' => $lmsRoute === 'cursos' ? 'courses' : $lmsRoute],
             'template_list' => 'cursos', 'template_single' => 'curso',
             'schema' => 'Course', 'feed' => false,
-            'sort' => ['field' => 'order', 'dir' => 'asc'], 'list' => ['access', 'order'],
+            'sort' => ['field' => 'order', 'dir' => 'asc'], 'list' => ['access', 'industries', 'order'],
             'title_field' => 'title', 'excerpt_field' => 'excerpt', 'image_field' => 'image',
             'help' => 'Cada curso agrupa lecciones (Aula → Lecciones, campo "Curso"). Quién puede ver las lecciones se decide en "Acceso".',
             'fields' => [
@@ -59,6 +65,8 @@ return [
                                'help' => 'Las lecciones marcadas "de muestra" se ven siempre.'],
                 'groups'   => ['type' => 'tags', 'label' => 'Solo para los grupos', 'sidebar' => true, 'placeholder' => 'vacío = para todos',
                                'help' => 'Si pones grupos, el curso solo lo ven y lo toman los alumnos de esos grupos (y el panel); para los demás no aparece. Los grupos se ponen en la ficha de cada alumno; los alumnos que entran desde una organización (p. ej. su instancia de Iurefficient) quedan en el grupo de su organización.'],
+                'industries' => ['type' => 'checks', 'label' => 'Industrias', 'options' => $lmsInd, 'sidebar' => true,
+                                 'empty' => 'La lista se define en Ajustes → Aula → Industrias.', 'help' => 'El listado de cursos se puede filtrar por industria. La lista está en Ajustes → Aula.'],
                 'level'    => ['type' => 'text', 'label' => 'Nivel', 'i18n' => true, 'sidebar' => true, 'placeholder' => 'Básico, Intermedio…'],
                 'duration' => ['type' => 'text', 'label' => 'Duración', 'i18n' => true, 'sidebar' => true, 'placeholder' => '6 horas'],
                 'order'    => ['type' => 'number', 'label' => 'Orden en el listado', 'sidebar' => true],
@@ -150,6 +158,11 @@ return [
         'lms_features'     => ['type' => 'textarea', 'i18n' => true, 'rows' => 4, 'label' => 'Bloque bajo los cursos: una tarjeta por línea, "ícono | título | texto" (vacío = sin bloque)',
                                'placeholder' => "video | Módulos de 10 a 15 minutos | Se ven de corrido o uno al día.\nsubtitulos | Con subtítulos | Se pueden ver en silencio.\ncapas | Pensados para el cliente | Cada curso cierra con lo que preguntará el cliente.",
                                'help' => 'Íconos: video, subtitulos, capas, reloj, libro, personas, escudo, codigo, grafica, engrane, flechas, nucleo, billetes.'],
+        'lms_industries'   => ['type' => 'textarea', 'rows' => 5, 'label' => 'Industrias: una por línea, "Nombre | English name" (el nombre en inglés es opcional)',
+                               'placeholder' => "Despachos jurídicos | Law firms\nSalud | Healthcare\nManufactura | Manufacturing",
+                               'help' => 'Cada curso marca las suyas (campo Industrias) y el listado de cursos muestra un filtro con las que tienen cursos; cada una tiene su dirección (/cursos?industria=salud) para ponerla en un menú. Si cambias el nombre en español de una industria, vuelve a marcarla en sus cursos.'],
+        'lms_filters'      => ['type' => 'checkbox', 'label' => 'Filtros', 'default' => true, 'text' => 'Listado de cursos con buscador y filtros por industria y nivel (aparecen cuando hay más de un valor que elegir)'],
+        'lms_per_page'     => ['type' => 'number', 'label' => 'Cursos por página en el listado (0 = todos)', 'default' => 12, 'min' => 0, 'max' => 200, 'placeholder' => '12', 'half' => true],
         'lms_courses_route' => ['type' => 'text', 'label' => 'Dirección del listado de cursos', 'default' => 'cursos', 'placeholder' => 'cursos', 'half' => true,
                                'help' => 'Los cursos quedan en /cursos/<curso>. No uses el nombre de una carpeta de Archivos y carpetas (p. ej. capacitacion): esa carpeta se sirve antes que el aula.'],
         'lms_protect'      => ['type' => 'checkbox', 'label' => 'Videos protegidos', 'default' => true,

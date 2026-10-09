@@ -64,6 +64,7 @@ code { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 12px; 
 .ad-lang-tag { position: absolute; top: -9px; left: 10px; font-size: 10px; font-weight: 600; background: #000; color: #fff; padding: 1px 7px; border-radius: 10px; z-index: 2; }
 .ad-lang input, .ad-lang textarea { padding-top: 12px; }
 .ad-check { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; }
+.ad-checks { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 .ad-btn { display: inline-flex; align-items: center; gap: 6px; background: #000; color: #fff; border: 1px solid #000; border-radius: 30px; padding: 9px 20px; font: inherit; font-weight: 500; cursor: pointer; text-decoration: none; line-height: 1.2; }
 .ad-btn:hover { background: #222; }
 .ad-btn[disabled] { opacity: .5; cursor: default; }

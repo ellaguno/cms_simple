@@ -268,3 +268,22 @@ textarea.lms-q-input{min-height:7rem;resize:vertical}
 .lms-scorm-bar{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin:.6rem 0 0;font-size:.86rem;color:var(--lms-muted)}
 .lms-scorm.is-done [data-scorm-status]{color:var(--lms-ok)}
 @media (max-width:700px){.lms-scorm-stage{aspect-ratio:auto;height:75vh}}
+
+/* listado con muchos cursos: industrias, buscador, nivel y páginas */
+.lms-filters{display:flex;flex-direction:column;gap:.9rem;margin:0 0 1.4rem}
+.lms-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.2rem}
+.lms-filters .lms-chips{margin:0}
+.lms-chip{display:inline-flex;align-items:center;gap:.45em;padding:.4em .95em;border:1px solid var(--lms-line);border-radius:99px;font-size:.9rem;line-height:1.2;color:var(--lms-text);text-decoration:none;background:transparent;transition:border-color .15s,background .15s}
+.lms-chip span{font-size:.78em;opacity:.65}
+.lms-chip:hover{border-color:var(--lms-accent)}
+.lms-chip.is-on{background:var(--lms-accent);border-color:var(--lms-accent);color:#fff}
+.lms-filter-row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.lms-filter-row input[type=search]{flex:1 1 240px;min-width:0;padding:.55em .9em;border:1px solid var(--lms-line);border-radius:var(--lms-radius);font:inherit;background:transparent;color:inherit}
+.lms-filter-row select{padding:.55em .9em;border:1px solid var(--lms-line);border-radius:var(--lms-radius);font:inherit;background:transparent;color:inherit}
+.lms-results{margin:-.4rem 0 1.2rem;color:var(--lms-muted);font-size:.92rem}
+.lms-c-ind{display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--lms-accent);margin:0 0 .3rem}
+.lms-more{margin:1.6rem 0 0;text-align:center}
+.lms-catalog .cms-pager{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem;margin:2rem 0 0}
+.lms-catalog .cms-pager a,.lms-catalog .cms-pager span{min-width:2.4em;padding:.45em .8em;border:1px solid var(--lms-line);border-radius:var(--lms-radius);text-align:center;text-decoration:none;color:var(--lms-text)}
+.lms-catalog .cms-pager .cms-pager-cur{background:var(--lms-accent);border-color:var(--lms-accent);color:#fff}
+.lms-catalog .cms-pager .cms-pager-gap{border-color:transparent}

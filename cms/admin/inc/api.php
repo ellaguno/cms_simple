@@ -146,6 +146,8 @@ function api_form_control(array $fd, $v)
             return is_array($v) ? implode(', ', array_map('strval', $v)) : (string) $v;
         case 'lines': case 'images':
             return is_array($v) ? implode("\n", array_map('strval', $v)) : (string) $v;
+        case 'checks':
+            return array_values(array_map('strval', array_filter((array) $v, 'is_scalar')));
         case 'checkbox':
             return !empty($v) && $v !== '0' && $v !== 'false' ? '1' : '';
         case 'sections':

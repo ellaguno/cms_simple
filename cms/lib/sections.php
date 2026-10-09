@@ -135,9 +135,9 @@ function cms_block_data(array $def, array $data): array
         if (!array_key_exists($k, $data) || $data[$k] === null) {
             // valor inicial de la definición; un campo vaciado a propósito se respeta
             if (array_key_exists('default', $fd)) $data[$k] = $fd['default'];
-            elseif (in_array($fd['type'] ?? 'text', ['lines', 'images', 'tags'], true)) $data[$k] = [];
+            elseif (in_array($fd['type'] ?? 'text', ['lines', 'images', 'tags', 'checks'], true)) $data[$k] = [];
             else $data[$k] = '';
-        } elseif ($data[$k] === '' && in_array($fd['type'] ?? 'text', ['lines', 'images', 'tags'], true)) $data[$k] = [];
+        } elseif ($data[$k] === '' && in_array($fd['type'] ?? 'text', ['lines', 'images', 'tags', 'checks'], true)) $data[$k] = [];
     }
     return $data;
 }
@@ -329,7 +329,7 @@ function cms_block_sample(array $def): array
         switch (true) {
             case $t === 'image': $data[$k] = cms_demo_image('foto', ++$img); break;
             case $t === 'images': $data[$k] = [cms_demo_image('foto', 1), cms_demo_image('foto', 2), cms_demo_image('foto', 3)]; break;
-            case in_array($t, ['lines', 'tags'], true): $data[$k] = []; break;
+            case in_array($t, ['lines', 'tags', 'checks'], true): $data[$k] = []; break;
             case $t === 'html': $data[$k] = '<p>Texto de ejemplo con <strong>negritas</strong> y un <a href="#">enlace</a>.</p>'; break;
             case $t === 'checkbox': $data[$k] = false; break;
             case $t === 'number': $data[$k] = (int) ($fd['min'] ?? 3); break;

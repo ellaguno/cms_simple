@@ -90,6 +90,16 @@ if (!function_exists('lms_settings')) {
             'no_courses'     => ['es' => 'Todavía no tienes cursos. Elige uno de la lista para empezar.', 'en' => 'You have no courses yet. Pick one from the list to start.'],
             'other_courses'  => ['es' => 'Otros cursos', 'en' => 'Other courses'],
             'all_courses'    => ['es' => 'Ver todos los cursos', 'en' => 'See all courses'],
+            'all_courses_n'  => ['es' => 'Ver los %d cursos', 'en' => 'See all %d courses'],
+            'all_industries' => ['es' => 'Todas', 'en' => 'All'],
+            'all_levels'     => ['es' => 'Todos los niveles', 'en' => 'All levels'],
+            'search_courses' => ['es' => 'Buscar cursos', 'en' => 'Search courses'],
+            'search'         => ['es' => 'Buscar', 'en' => 'Search'],
+            'n_found_1'      => ['es' => '1 curso', 'en' => '1 course'],
+            'n_found'        => ['es' => '%d cursos', 'en' => '%d courses'],
+            'no_match'       => ['es' => 'Ningún curso coincide con lo que elegiste.', 'en' => 'No course matches your selection.'],
+            'clear_filters'  => ['es' => 'Quitar filtros', 'en' => 'Clear filters'],
+            'by_industry'    => ['es' => 'Por industria', 'en' => 'By industry'],
             'courses'        => ['es' => 'Cursos', 'en' => 'Courses'],
             'courses_lead'   => ['es' => 'Capacitación en línea, a tu ritmo.', 'en' => 'Online training, at your own pace.'],
             'courses_empty'  => ['es' => 'Pronto publicaremos cursos aquí.', 'en' => 'Courses will be published here soon.'],
@@ -1060,7 +1070,7 @@ if (!function_exists('lms_settings')) {
         if ($series !== '') $h .= '<span class="lms-c-series">' . cms_e($series) . '</span>';
         $h .= '<span class="lms-c-name">' . cms_e($short) . '</span></span>';
         // detalle
-        $h .= '<span class="lms-c-body"><h3>' . cms_e($title) . '</h3>';
+        $h .= '<span class="lms-c-body">' . (($ind = lms_course_industries($c, $lang)) ? '<span class="lms-c-ind">' . cms_e(implode(' · ', $ind)) . '</span>' : '') . '<h3>' . cms_e($title) . '</h3>';
         if (($ex = (string) cms_f($c, 'excerpt', $lang)) !== '') $h .= '<p>' . cms_e($ex) . '</p>';
         if ($topics = array_filter((array) cms_f($c, 'topics', $lang, []))) $h .= '<span class="lms-c-topics">' . implode('', array_map(fn($x) => '<span>' . cms_e((string) $x) . '</span>', $topics)) . '</span>';
         if (($au = (string) cms_f($c, 'audience', $lang)) !== '') $h .= '<span class="lms-for"><strong>' . cms_e(lms_tx('for')) . '</strong> ' . cms_e($au) . '</span>';
@@ -1416,6 +1426,61 @@ if (!function_exists('lms_settings')) {
         if (($_GET['ok'] ?? '') === 'video') return '<p class="form-msg err lms-msg" role="alert">' . cms_e(lms_tx('err_video')) . '</p>';
         $ok = ['saved' => 'ok_saved', 'welcome' => 'ok_welcome', 'completed' => 'ok_completed', 'quiz' => 'ok_quiz'][(string) ($_GET['ok'] ?? '')] ?? '';
         return $ok !== '' ? '<p class="form-msg ok lms-msg" role="status">' . cms_e(lms_tx($ok)) . '</p>' : '';
+    }
+
+    /** Industrias de Ajustes → Aula ("Nombre | English name" por línea): clave => nombre en el idioma pedido. */
+    function lms_industries(?string $lang = null): array
+    {
+        $lang = $lang ?? (cms_current()['lang'] ?: cms_default_lang());
+        $out = [];
+        foreach (cms_lines((string) (cms_settings()['lms_industries'] ?? '')) as $ln) {
+            $p = array_map('trim', explode('|', $ln, 2));
+            if (($k = cms_slugify($p[0])) === '') continue;
+            $out[$k] = $lang !== cms_default_lang() && ($p[1] ?? '') !== '' ? $p[1] : $p[0];
+        }
+        return $out;
+    }
+
+    /** Industrias de un curso que siguen en la lista: clave => nombre. */
+    function lms_course_industries(array $c, ?string $lang = null): array
+    {
+        $all = lms_industries($lang);
+        $out = [];
+        foreach ((array) ($c['industries'] ?? []) as $k) if (is_string($k) && isset($all[$k])) $out[$k] = $all[$k];
+        return $out;
+    }
+
+    /** Texto en minúsculas y sin acentos, para buscar. */
+    function lms_fold(string $s): string
+    {
+        $s = mb_strtolower($s);
+        return strtr($s, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n', 'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u', 'ç' => 'c']);
+    }
+
+    /**
+     * Filtros del listado de cursos: ?industria=, ?nivel= y ?q= (busca en nombre, resumen, temas, "para quién" e
+     * industrias). Devuelve [cursos que quedan, filtros elegidos].
+     */
+    function lms_catalog_filter(array $courses, string $lang): array
+    {
+        $f = [
+            'industria' => cms_slugify((string) ($_GET['industria'] ?? '')),
+            'nivel'     => trim(mb_substr((string) ($_GET['nivel'] ?? ''), 0, 60)),
+            'q'         => trim(mb_substr((string) ($_GET['q'] ?? ''), 0, 80)),
+        ];
+        if ($f['industria'] !== '') $courses = array_filter($courses, fn($c) => in_array($f['industria'], (array) ($c['industries'] ?? []), true));
+        if ($f['nivel'] !== '') $courses = array_filter($courses, fn($c) => lms_fold(trim((string) cms_f($c, 'level', $lang))) === lms_fold($f['nivel']));
+        if ($f['q'] !== '') {
+            $words = array_filter(preg_split('/\s+/', lms_fold($f['q'])));
+            $courses = array_filter($courses, function ($c) use ($words, $lang) {
+                $hay = lms_fold(implode(' ', array_merge(
+                    [(string) cms_f($c, 'title', $lang), (string) cms_f($c, 'short', $lang), (string) cms_f($c, 'excerpt', $lang), (string) cms_f($c, 'audience', $lang), (string) cms_f($c, 'level', $lang)],
+                    array_map('strval', (array) cms_f($c, 'topics', $lang, [])), array_values(lms_course_industries($c, $lang)))));
+                foreach ($words as $w) if (strpos($hay, $w) === false) return false;
+                return true;
+            });
+        }
+        return [$courses, $f];
     }
 
     /** ¿Es una página del aula? /aula/…, o el listado o una ficha de cursos, lecciones o evaluaciones. */

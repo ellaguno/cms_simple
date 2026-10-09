@@ -2,7 +2,8 @@
 /**
  * Paquete lms — listado de cursos (/cursos), al estilo del catálogo de capacitación: encabezado con etiqueta, título
  * con *énfasis*, texto y cifras; rejilla de tarjetas con tapa; y un bloque opcional "Cómo están hechos". Los textos
- * se editan en Ajustes → Aula. El tema puede reemplazarlo con templates/cursos.php o templates/lms/cursos.php.
+ * se editan en Ajustes → Aula. Con muchos cursos: buscador, filtros por industria y nivel (?industria=, ?nivel=, ?q=)
+ * y páginas (?pg=). El tema puede reemplazarlo con templates/cursos.php o templates/lms/cursos.php.
  * Disponibles: $lang, $page, $type, $def, $t (textos), $S (ajustes).
  */
 $user = lms_user();
@@ -13,6 +14,23 @@ $title = lms_setting_text('lms_hero_title', 'hero_title');
 $lead = lms_setting_text('lms_hero_lead', 'hero_lead');
 $numbers = (!isset($S0['lms_hero_numbers']) || !empty($S0['lms_hero_numbers'])) && $courses ? lms_catalog_numbers($courses) : [];
 $listLabel = $t($type . '_title', lms_tx('courses'));
+// buscador y filtros: solo lo que tiene más de una opción (industrias con cursos, niveles distintos; buscador con más de 6 cursos)
+$base = cms_url('list:' . $type, $lang);
+$filtersOn = !isset($S0['lms_filters']) || !empty($S0['lms_filters']);
+$indCount = []; $levels = [];
+foreach ($courses as $c) {
+    foreach (lms_course_industries($c, $lang) as $k => $n) $indCount[$k] = ($indCount[$k] ?? 0) + 1;
+    if (($lv = trim((string) cms_f($c, 'level', $lang))) !== '') $levels[lms_fold($lv)] = $lv;
+}
+$inds = array_intersect_key(lms_industries($lang), $indCount);
+$showSearch = $filtersOn && count($courses) > 6;
+$showLevels = $filtersOn && count($levels) > 1;
+$showInds = $filtersOn && $inds;
+[$shown, $f] = $filtersOn ? lms_catalog_filter($courses, $lang) : [$courses, ['industria' => '', 'nivel' => '', 'q' => '']];
+$filtered = $f['industria'] !== '' || $f['nivel'] !== '' || $f['q'] !== '';
+$per = (int) ($S0['lms_per_page'] ?? 12);
+$pg = $per > 0 ? cms_paginate(array_values($shown), $per) : ['items' => array_values($shown), 'page' => 1, 'pages' => 1, 'total' => count($shown)];
+$qs = fn(array $over) => (($q = http_build_query(array_filter(array_merge(array_diff_key($f, ['pg' => 1]), $over), fn($v) => $v !== ''))) !== '' ? '?' . $q : '');
 $features = [];
 foreach (cms_lines(lms_setting_text('lms_features')) as $line) {
     $p = array_map('trim', explode('|', $line, 3));
@@ -44,12 +62,43 @@ foreach (cms_lines(lms_setting_text('lms_features')) as $line) {
 <section class="sec lms-catalog">
   <div class="wrap">
     <h2 class="lms-eyebrow"><?= cms_e($listLabel) ?></h2>
+<?php if ($showInds || $showLevels || $showSearch): ?>
+    <form class="lms-filters" method="get" action="<?= cms_e($base) ?>" role="search">
+<?php if ($showInds): ?>
+      <div class="lms-chips" aria-label="<?= cms_e(lms_tx('by_industry')) ?>">
+        <a class="lms-chip<?= $f['industria'] === '' ? ' is-on' : '' ?>" href="<?= cms_e($base . $qs(['industria' => ''])) ?>"><?= cms_e(lms_tx('all_industries')) ?> <span><?= count($courses) ?></span></a>
+<?php foreach ($inds as $k => $n): ?>        <a class="lms-chip<?= $f['industria'] === $k ? ' is-on' : '' ?>" href="<?= cms_e($base . $qs(['industria' => $k])) ?>"><?= cms_e($n) ?> <span><?= (int) $indCount[$k] ?></span></a>
+<?php endforeach; ?>
+      </div>
+      <?php if ($f['industria'] !== ''): ?><input type="hidden" name="industria" value="<?= cms_e($f['industria']) ?>"><?php endif; ?>
+<?php endif; ?>
+<?php if ($showSearch || $showLevels): ?>
+      <div class="lms-filter-row">
+<?php if ($showSearch): ?>        <input type="search" name="q" value="<?= cms_e($f['q']) ?>" placeholder="<?= cms_e(lms_tx('search_courses')) ?>" aria-label="<?= cms_e(lms_tx('search_courses')) ?>">
+<?php endif; ?>
+<?php if ($showLevels): ?>        <select name="nivel" aria-label="<?= cms_e(lms_tx('all_levels')) ?>" onchange="this.form.submit()">
+          <option value=""><?= cms_e(lms_tx('all_levels')) ?></option>
+<?php foreach ($levels as $lk => $lv): ?>          <option value="<?= cms_e($lv) ?>"<?= lms_fold($f['nivel']) === $lk ? ' selected' : '' ?>><?= cms_e($lv) ?></option>
+<?php endforeach; ?>
+        </select>
+<?php endif; ?>
+        <button class="btn btn-primary btn-sm" type="submit"><?= cms_e(lms_tx('search')) ?></button>
+      </div>
+<?php endif; ?>
+    </form>
+<?php endif; ?>
+<?php if ($filtered): ?>
+    <p class="lms-results"><?= cms_e(count($shown) === 1 ? lms_tx('n_found_1') : lms_tx('n_found', count($shown))) ?> · <a href="<?= cms_e($base) ?>"><?= cms_e(lms_tx('clear_filters')) ?></a></p>
+<?php endif; ?>
 <?php if (!$courses): ?>
     <p class="lead"><?= cms_e(lms_tx('courses_empty')) ?></p>
+<?php elseif (!$shown): ?>
+    <p class="lead"><?= cms_e(lms_tx('no_match')) ?></p>
 <?php else: ?>
     <div class="lms-grid-c">
-<?php foreach ($courses as $c) echo lms_course_card($c, $lang, $user); ?>
+<?php foreach ($pg['items'] as $c) echo lms_course_card($c, $lang, $user); ?>
     </div>
+    <?= $pg['pages'] > 1 ? cms_pager($pg, $base, $f) : '' ?>
 <?php endif; ?>
 <?php if ($features): ?>
     <div class="lms-features" style="--n:<?= min(4, count($features)) ?>">

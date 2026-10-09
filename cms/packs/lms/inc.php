@@ -1454,10 +1454,42 @@ if (!function_exists('lms_settings')) {
         return $file;
     });
 
-    // cabecera y pie propios del aula (Ajustes → Aula), en sus páginas, si la página no eligió otros
+    /**
+     * Cabecera propia del aula (cabecera-aula): el bloque de cabecera del tema con un menú del aula (inicio del sitio,
+     * cursos, mi cuenta) y el botón «Mi aula». Se crea sola la primera vez que hace falta; luego se edita en
+     * Diseño → Cabeceras y pies como cualquier otra. '' si el sitio no tiene cabeceras con bloques.
+     */
+    function lms_default_header(): string
+    {
+        $slug = 'cabecera-aula';
+        if (!function_exists('cms_layout_default_section') || !cms_layouts_enabled()) return '';
+        if (cms_item(CMS_LAYOUTS, $slug, false)) return $slug;
+        $sec = cms_layout_default_section('header');
+        if (!$sec) return '';
+        $f = (array) (cms_block($sec['type'])['fields'] ?? []);
+        $route = lms_settings()['route'];
+        $cr = (array) (cms_type(lms_course_type())['routes'] ?? []);
+        $by = function (callable $fn) use ($f) { $o = []; foreach (cms_langs() as $l) $o[$l] = $fn($l, $l === 'en'); return $o; };
+        $set = function (string $k, array $v) use (&$sec, $f) { if (isset($f[$k])) $sec['data'][$k] = !empty($f[$k]['i18n']) ? $v : $v[cms_default_lang()]; };
+        $set('menu', $by(fn($l, $en) => [
+            ($en ? 'Home' : 'Inicio') . ' | /',
+            ($en ? 'Courses' : 'Cursos') . ' | /' . ($cr[$l] ?? $cr[cms_default_lang()] ?? 'cursos'),
+            ($en ? 'My account' : 'Mi cuenta') . ' | /' . $route . '/cuenta',
+        ]));
+        $set('button_text', $by(fn($l, $en) => $en ? 'My classroom' : 'Mi aula'));
+        if (isset($f['button_url'])) $sec['data']['button_url'] = '/' . $route;
+        if (isset($f['search']) && ($f['search']['type'] ?? '') === 'checkbox') $sec['data']['search'] = false;   // el buscador del sitio no busca cursos
+        $item = ['slug' => $slug, 'status' => 'published', 'title' => 'Cabecera del aula', 'kind' => 'header', 'sections' => [$sec], 'created' => date('Y-m-d'), 'updated' => date('Y-m-d')];
+        return cms_item_save(CMS_LAYOUTS, $item) ? $slug : '';
+    }
+
+    // cabecera y pie propios del aula (Ajustes → Aula), en sus páginas, si la página no eligió otros. La cabecera, de
+    // serie, es cabecera-aula (se crea sola); "La del resto del sitio" ('') la quita.
     cms_on('layout.choice', function (string $choice, string $kind, array $page, ?array $item) {
         if ($choice !== '' || !lms_is_page($page)) return $choice;
-        return trim((string) (cms_settings()['lms_layout_' . $kind] ?? ''));
+        $S = cms_settings();
+        $mine = trim((string) ($S['lms_layout_' . $kind] ?? ($kind === 'header' ? 'cabecera-aula' : '')));
+        return $mine === 'cabecera-aula' ? lms_default_header() : $mine;
     });
 
     // estilos del aula solo en sus páginas; también evita que una página con avance personal se guarde en caché

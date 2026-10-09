@@ -55,7 +55,10 @@ if (admin_is_post() && admin_post('action') === 'delete' && !$is_new) {
 }
 if (admin_is_post()) {
     admin_csrf_check();
+    $hadSections = !empty($item['sections']);
     [$item, $errors] = admin_read_item($type, $def, $fields, $item, $orig);
+    // cabecera o pie nuevos (o que siguen vacíos): empiezan con el bloque de cabecera o pie del tema, listo para editar
+    if ($type === CMS_LAYOUTS && !$hadSections && empty($item['sections']) && ($sec = cms_layout_default_section((string) ($item['kind'] ?? 'header')))) $item['sections'] = [$sec];
     $slug = $item['slug'];
     // copia hecha con Duplicar: no se publica con la URL «…-copia»; en cuanto la URL deja de ser la de la copia, se olvida la marca
     if (!empty($item['duplicated_from'])) {

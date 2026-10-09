@@ -84,11 +84,32 @@ function cms_layout_render(string $kind, ?array $page = null): string
     $page = $page ?? (array) cms_current()['page'];
     $lang = (string) ($page['lang'] ?? cms_default_lang());
     $secs = array_values(array_filter((array) ($it['sections'] ?? []), fn($x) => is_array($x) && empty($x['hidden'])));
-    if (!$secs) return '';
     // en el editor de la propia pieza sus secciones son clicables; en el de una página, no (son de otro elemento)
     $own = !empty($page['layout_preview']) && (string) ($page['layout_preview']['slug'] ?? '') === (string) $it['slug'];
+    // vacía: en el sitio el tema pone la suya; en su propio editor se dice, para que no parezca que la del tema es esta pieza
+    if (!$secs) return $own ? '<div class="cms-layout-warn">' . cms_e((string) ($it['title'] ?? '')) . ' todavía no tiene bloques' . ($kind === 'header' ? ': mientras tanto el sitio muestra aquí la cabecera del tema.' : ': mientras tanto el sitio muestra aquí el pie del tema.') . ' Añade un bloque de ' . ($kind === 'header' ? 'cabecera' : 'pie') . ' con «Añadir bloque» y escribe su menú.</div>' . "\n" : '';
     $ctx = ['lang' => $lang, 'S' => cms_settings(), 'page' => $page, 'item' => $it, 'builder' => $own];
     return '<!-- ' . $kind . ': ' . cms_e((string) $it['slug']) . " -->\n" . cms_sections_render($secs, $ctx);
+}
+
+/**
+ * Bloque con que empieza una cabecera o un pie sin bloques: el que diga config 'layout_blocks' => ['header' => …,
+ * 'footer' => …]; si no, el del tema cuyo nombre empiece por cabecera/header o pie/footer (los del tema reproducen
+ * su cabecera y su pie); si no, el del paquete estructura. null si no hay ninguno.
+ */
+function cms_layout_default_section(string $kind): ?array
+{
+    $kind = $kind === 'footer' ? 'footer' : 'header';
+    $blocks = cms_blocks();
+    $key = (string) (((array) cms_config('layout_blocks', []))[$kind] ?? '');
+    if (!isset($blocks[$key])) {
+        $key = '';
+        $re = $kind === 'header' ? '/^(cabecera|header)/' : '/^(pie|footer)/';
+        foreach ($blocks as $k => $d) if (strpos((string) $k, '/') === false && preg_match($re, (string) $k)) { $key = (string) $k; break; }
+        if ($key === '') $key = $kind === 'header' ? 'estructura/cabecera' : 'estructura/pie';
+    }
+    if (!isset($blocks[$key])) return null;
+    return ['id' => cms_section_id(), 'type' => $key, 'data' => cms_block_data($blocks[$key], []), 'style' => [], 'hidden' => false];
 }
 
 function cms_layout_header(?array $page = null): string { return cms_layout_render('header', $page); }

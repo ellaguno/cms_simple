@@ -18,7 +18,49 @@ Todo campo de texto marcado como bilingüe muestra un conmutador **Español / En
 - **Menú**: se edita por idioma en la misma pantalla.
 - **Ajustes → Menú de la landing para abogados**: hay un campo para las líneas en inglés.
 
-Lo que no cambia por idioma: imágenes, URL de páginas y colecciones, videos, precios y ajustes generales.
+Lo que no cambia por idioma: imágenes, URL de páginas y colecciones, videos, precios y ajustes generales. La excepción son las **lecciones del aula**: su video y la portada del video sí tienen una casilla por idioma (ver abajo).
+
+## Cursos del aula en dos idiomas
+
+Con el paquete **Aula** un curso es **el mismo** en los dos idiomas: mismas lecciones, mismas evaluaciones y la misma dirección (solo cambia el prefijo `/en/`). Lo que cambia es el texto y, si quieres, el video:
+
+- En el editor de cada lección, **Video** y **Portada del video** tienen su casilla ES / EN. Si la de inglés queda vacía, en `/en/` se ve el video en español.
+- Los videos protegidos (los de una carpeta propia) siguen protegidos en los dos idiomas: la página en inglés pide el suyo por `/en/aula/video`, y solo lo recibe quien puede ver la lección.
+- **El avance es uno solo.** Un alumno que empieza en español y sigue en inglés conserva sus lecciones terminadas, sus intentos de evaluación y su constancia: la lección es la misma, solo cambia el idioma en que la ve.
+- Al exportar un curso como paquete SCORM, se eligen el idioma y sus videos.
+
+### Importar la versión en inglés de un curso
+
+El importador del aula (Aula → Alumnos y avance → Importar) busca una subcarpeta **`en/`** junto al curso, con la misma forma que la versión en español, siempre que el inglés esté activo en Ajustes → Idiomas:
+
+```
+capacitacion/iu-102/            (la versión en español, como siempre)
+  index.html                    MODULOS, videos/01.mp4…
+  contenido/leccion-01.html
+  evaluaciones/IU-102-L01.txt
+  curso.json
+  en/                           la versión en inglés (todo opcional)
+    curso.json                  nombre, resumen, descripción, objetivos, temas, nivel, módulo… en inglés
+    index.html                  MODULOS en inglés (titulo, texto, para, archivo), en el mismo orden
+    contenido/leccion-01.html   contenido de la lección 1 en inglés
+    evaluaciones/IU-102-L01.txt la misma evaluación en inglés (mismo nombre de archivo)
+    videos/01.mp4               el video de la lección 1 en inglés (mismo nombre que el de español)
+    portadas/01.jpg             su portada
+    materiales/…                materiales en inglés (se agregan al curso con «(EN)»)
+```
+
+También sirve `aula/<curso>/en/`, al lado de `aula/<curso>/` (como lo entrega `publicar_curso.py`). Todo va al campo EN del mismo curso, de las mismas lecciones y de las mismas evaluaciones: **el español no se toca**. Lo que ya estaba escrito en inglés se respeta, salvo que marques «Reemplazar».
+
+**El video en inglés de la lección NN** se toma, en este orden:
+
+1. `en/curso.json` → `"lecciones": {"1": {"video": "…", "portada": "…"}}`
+2. `en/curso.json` → `"videos": {"1": "videos/clase-1-en.mp4", "2": "https://youtu.be/…"}` (o una lista en orden)
+3. el `archivo` de la lección NN en la lista `MODULOS` de `en/index.html`
+4. `en/videos/<mismo nombre que el video en español>` (si existe)
+
+En `curso.json`, una ruta relativa es desde la carpeta `en/`; con `/` al principio, desde la raíz del sitio; una URL va tal cual. La portada sale de `en/portadas/<nombre del video>.jpg` si no se indica. Guarda los videos en `en/videos/` y no sueltos en `en/`: la carpeta de un video protegido queda sin acceso directo, y con el video suelto en `en/` también quedarían bloqueadas las portadas.
+
+Las evaluaciones en inglés se emparejan por **nombre de archivo** con las de español; una que no tenga pareja se omite con un aviso. Su título sale de la cabecera `titulo:` del archivo (o de `curso.json`); si no lo trae, «Lesson N · …» o «Final quiz · …».
 
 ## Activar o desactivar un idioma
 

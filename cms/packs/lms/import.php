@@ -70,6 +70,8 @@ function lms_import_candidates(): array
         $h = (string) @file_get_contents($f, false, null, 0, 400000);
         if (preg_match('/\bMODULOS\s*=\s*\[/', $h)) $out[$rel] = lms_imp_text(preg_match('/<h1[^>]*>(.*?)<\/h1>/is', $h, $m) ? $m[1] : $rel);
     }
+    // <curso>/en/index.html es la versión en inglés de <curso>, no otro curso (1.53)
+    foreach (array_keys($out) as $rel) if (in_array(basename($rel), cms_langs(), true) && isset($out[dirname($rel)])) unset($out[$rel]);
     ksort($out);
     return $out;
 }
@@ -135,7 +137,13 @@ function lms_import_plan(string $rel, array $opt = []): array
     // lo que acompaña: contra las lecciones que ya existen si el curso ya se importó, o contra las del plan
     $existing = cms_item(lms_course_type(), $slug, false) ? lms_lessons($slug, false) : [];
     $extras = lms_import_extras($rel, $slug, $existing ?: $lessons, $opt);
-    return ['course' => $course, 'lessons' => $lessons, 'soon' => $soon, 'series' => $series, 'warn' => $warn, 'rel' => $rel, 'catalog' => $catalog ? $parent : '', 'extras' => $extras];
+    // versiones en los otros idiomas activos: <curso>/en/ (o aula/<curso>/en/), con la misma forma
+    $langs = [];
+    foreach (lms_import_lang_codes() as $L) {
+        $lp = lms_import_lang($rel, $slug, $existing ?: $lessons, $extras, $L);
+        if ($lp) $langs[$L] = $lp;
+    }
+    return ['course' => $course, 'lessons' => $lessons, 'soon' => $soon, 'series' => $series, 'warn' => $warn, 'rel' => $rel, 'catalog' => $catalog ? $parent : '', 'extras' => $extras, 'langs' => $langs];
 }
 
 /** Página que reemplaza a una vieja: lleva a la nueva dirección (meta refresh + enlace; sin PHP, sirve en carpetas estáticas). */
@@ -214,7 +222,8 @@ function lms_import_run(string $rel, array $opt): array
         }
     }
     $msgs = array_merge($msgs, lms_import_apply_extras($c['slug'], $plan['extras'], array_replace($opt, ['publish_quiz' => !empty($opt['publish']) || !empty($opt['publish_quiz'])])));
-    foreach (array_merge($plan['warn'], $plan['extras']['warn']) as $w) $msgs[] = 'Aviso: ' . $w;
+    $msgs = array_merge($msgs, lms_import_apply_langs($c['slug'], $plan['langs'] ?? [], $opt));
+    foreach (array_merge($plan['warn'], $plan['extras']['warn'], ...array_values(array_map(fn($x) => $x['warn'], $plan['langs'] ?? []))) as $w) $msgs[] = 'Aviso: ' . $w;
     return [true, $msgs];
 }
 
@@ -225,7 +234,7 @@ function lms_import_run(string $rel, array $opt): array
  * curso.json opcional. Se busca en la carpeta del curso y en aula/<carpeta>/ (como lo entrega publicar_curso.py).
  * Devuelve la ruta relativa o ''.
  */
-function lms_import_extras_dirs(string $rel, string $slug): array
+function lms_import_extras_dirs(string $rel, string $slug, string $sub = ''): array
 {
     $out = [];
     // la carpeta del curso, su aula/, y aula/<curso>/ junto a cualquiera de sus carpetas de arriba (si el zip se subió
@@ -236,9 +245,13 @@ function lms_import_extras_dirs(string $rel, string $slug): array
         foreach ([basename($rel), $slug] as $n) $cands[] = $pre . 'aula/' . $n;
         if ($pre === '') break;
     }
+    // $sub = 'en' (1.53): la versión en otro idioma, en una subcarpeta con su código junto a cada una de esas carpetas
+    // (<curso>/en/, aula/<curso>/en/); ahí cuentan también videos/ e index.html (MODULOS en ese idioma)
     foreach (array_unique($cands) as $d) {
+        if ($sub !== '') $d .= '/' . $sub;
         $abs = CMS_ROOT . '/' . $d;
-        if (is_dir($abs) && (is_dir($abs . '/contenido') || is_dir($abs . '/evaluaciones') || is_dir($abs . '/materiales') || is_file($abs . '/curso.json'))) $out[] = $d;
+        if (is_dir($abs) && (is_dir($abs . '/contenido') || is_dir($abs . '/evaluaciones') || is_dir($abs . '/materiales') || is_file($abs . '/curso.json')
+            || ($sub !== '' && (is_dir($abs . '/videos') || is_file($abs . '/index.html'))))) $out[] = $d;
     }
     return $out;
 }
@@ -446,8 +459,272 @@ function lms_import_complete(string $rel, array $opt): array
     if (isset($plan['error'])) return [false, [$plan['error']]];
     $slug = $plan['course']['slug'];
     if (!cms_item(lms_course_type(), $slug, false)) return [false, ['El curso «' . $slug . '» no existe: impórtalo primero.']];
-    if ($plan['extras']['dir'] === '') return [false, ['No hay contenido/, materiales/, evaluaciones/ ni curso.json junto a ' . $rel . '.']];
-    $msgs = lms_import_apply_extras($slug, $plan['extras'], $opt);
-    foreach ($plan['extras']['warn'] as $w) $msgs[] = 'Aviso: ' . $w;
+    if ($plan['extras']['dir'] === '' && empty($plan['langs'])) return [false, ['No hay contenido/, materiales/, evaluaciones/, curso.json ni versión en otro idioma (en/) junto a ' . $rel . '.']];
+    $msgs = array_merge(lms_import_apply_extras($slug, $plan['extras'], $opt), lms_import_apply_langs($slug, $plan['langs'] ?? [], $opt));
+    foreach (array_merge($plan['extras']['warn'], ...array_values(array_map(fn($x) => $x['warn'], $plan['langs'] ?? []))) as $w) $msgs[] = 'Aviso: ' . $w;
     return [true, $msgs ?: ['No había nada nuevo que agregar.']];
+}
+
+/* ================================================================== versión en otro idioma (1.53, paquete lms 1.12) */
+
+/**
+ * Idiomas en los que se busca una versión del curso: los activos que no son el predeterminado (Ajustes → Idiomas).
+ * La carpeta lleva el código del idioma: en/.
+ */
+function lms_import_lang_codes(): array
+{
+    $def = cms_default_lang();
+    return array_values(array_filter(cms_active_langs(), fn($l) => $l !== $def && preg_match('/^[a-z]{2,3}(-[a-z0-9]+)?$/i', (string) $l)));
+}
+
+/** Primer valor no vacío de un arreglo entre varias claves (curso.json acepta las claves en español o en inglés). */
+function lms_imp_pick(array $a, array $keys)
+{
+    foreach ($keys as $k) if (isset($a[$k]) && $a[$k] !== '' && $a[$k] !== []) return $a[$k];
+    return null;
+}
+
+/**
+ * Ruta de un video o portada escrita en en/curso.json: una URL va tal cual; "/carpeta/x.mp4" es desde la raíz del
+ * sitio; lo demás, relativo a la carpeta del idioma (la que tiene ese curso.json). Devuelve [ruta, existe].
+ */
+function lms_imp_lang_path(string $p, string $base): array
+{
+    $p = trim($p);
+    if ($p === '') return ['', false];
+    if (preg_match('#^([a-z][a-z0-9+.-]*:|//)#i', $p)) return [$p, true];
+    $rel = $p[0] === '/' ? ltrim($p, '/') : $base . '/' . $p;
+    $rel = trim(str_replace('\\', '/', $rel), '/');
+    if (strpos($rel, '..') !== false) return ['', false];
+    return [$rel, is_file(CMS_ROOT . '/' . $rel)];
+}
+
+/**
+ * Lo que trae la versión en el idioma $L de un curso (para lms_import_plan), o null si no hay carpeta $L/.
+ * Se busca <curso>/<L>/ y aula/<curso>/<L>/ (lms_import_extras_dirs con $sub) y se lee con la misma forma que el
+ * idioma principal:
+ *   <L>/curso.json           titulo, resumen, descripcion, objetivos, temas, para, nivel, duracion, nombre, serie, modulo
+ *                            (o sus nombres en inglés: title, excerpt, description, goals, topics, audience, level,
+ *                            duration, short, series, module); "lecciones": {"1": {titulo, resumen, para, modulo, video,
+ *                            portada}}, "videos": {"1": "ruta o URL"} y "evaluaciones" como en el principal
+ *   <L>/index.html           opcional: la lista MODULOS en ese idioma (titulo, texto, para, archivo), en el mismo orden
+ *   <L>/contenido/NN.html    contenido de la lección NN
+ *   <L>/evaluaciones/<mismo nombre que la del idioma principal>   título, preguntas e instrucciones de esa evaluación
+ *   <L>/videos/<mismo nombre que el video principal>               el video de la lección (y <L>/portadas/<nombre>.jpg)
+ *   <L>/materiales/*         materiales del curso en ese idioma (se agregan con "(EN)" en el texto)
+ * El video de la lección NN se toma, en este orden, de lecciones.NN.video, de videos.NN, del archivo de la NN en
+ * <L>/index.html o de <L>/videos/<nombre del video principal>. Las lecciones se emparejan por número (el del nombre
+ * del video, "-01"), como contenido/NN.html; las evaluaciones, por su nombre de archivo.
+ */
+function lms_import_lang(string $rel, string $slug, array $lessons, array $extras, string $L): ?array
+{
+    $dirs = lms_import_extras_dirs($rel, $slug, $L);
+    if (!$dirs) return null;
+    $def = cms_default_lang();
+    $out = ['lang' => $L, 'dir' => implode(' y /', $dirs), 'course' => [], 'lessons' => [], 'quizzes' => [], 'materials' => [], 'warn' => []];
+    $tag = strtoupper($L) . ': ';
+
+    $md = lms_import_part($dirs, 'curso.json');
+    $man = $md !== '' ? json_decode((string) file_get_contents(CMS_ROOT . '/' . $md . '/curso.json'), true) : [];
+    if ($md !== '' && !is_array($man)) { $out['warn'][] = $tag . 'curso.json no es JSON válido; se ignoró.'; $man = []; }
+    $man = (array) $man;
+    $base = $md !== '' ? $md : $dirs[0];
+
+    // MODULOS en ese idioma (opcional): títulos, resúmenes, "para" y archivo de cada lección, en el mismo orden
+    $ih = lms_import_part($dirs, 'index.html');
+    $ihtml = $ih !== '' ? (string) file_get_contents(CMS_ROOT . '/' . $ih . '/index.html') : '';
+    $emods = $ihtml !== '' ? lms_imp_array($ihtml, 'MODULOS') : [];
+
+    // el curso
+    $str = fn($v) => is_scalar($v) ? trim((string) $v) : '';
+    $list = fn($v) => is_array($v) ? array_values(array_filter(array_map(fn($x) => is_scalar($x) ? trim((string) $x) : '', $v), fn($x) => $x !== '')) : [];
+    $h1 = $ihtml !== '' && preg_match('/<h1[^>]*>(.*?)<\/h1>/is', $ihtml, $m) ? trim(preg_replace('/\s*~\s*\d+\s*min\w*\s*$/i', '', lms_imp_text($m[1])) ?? '') : '';
+    $intro = $ihtml !== '' && preg_match('/<p[^>]*class="[^"]*\bintro\b[^"]*"[^>]*>(.*?)<\/p>/is', $ihtml, $m) ? lms_imp_text($m[1]) : '';
+    $desc = $str(lms_imp_pick($man, ['descripcion', 'description', 'body']));
+    $c = [
+        'title'    => $str(lms_imp_pick($man, ['titulo', 'title'])) ?: $h1,
+        'excerpt'  => $str(lms_imp_pick($man, ['resumen', 'excerpt', 'texto'])) ?: $intro,
+        'body'     => $desc !== '' ? (strpos($desc, '<') !== false ? $desc : '<p>' . cms_e($desc) . '</p>') : ($intro !== '' ? '<p>' . cms_e($intro) . '</p>' : ''),
+        'goals'    => $list(lms_imp_pick($man, ['objetivos', 'goals'])) ?: array_values(array_filter(array_map(fn($x) => trim((string) ($x['titulo'] ?? '')), $emods))),
+        'topics'   => $list(lms_imp_pick($man, ['temas', 'topics'])),
+        'audience' => $str(lms_imp_pick($man, ['para', 'audience'])),
+        'level'    => $str(lms_imp_pick($man, ['nivel', 'level'])),
+        'duration' => $str(lms_imp_pick($man, ['duracion', 'duration'])),
+        'short'    => $str(lms_imp_pick($man, ['nombre', 'short'])),
+        'series'   => $str(lms_imp_pick($man, ['serie', 'series'])),
+    ];
+    $out['course'] = array_filter($c, fn($v) => $v !== '' && $v !== []);
+    $module = $str(lms_imp_pick($man, ['modulo', 'module']));
+
+    // lecciones por número, como contenido/NN.html del idioma principal
+    $byNum = [];
+    foreach (array_values($lessons) as $i => $l) $byNum[preg_match('/-(\d+)$/', (string) $l['slug'], $m) ? (int) $m[1] : $i + 1] = $l;
+    // por número de lección: {"1": …, "2": …} o una lista en orden ([…, …] = lecciones 1, 2…)
+    $byLessonNum = fn($v) => is_array($v) ? (isset($v[0]) ? array_combine(range(1, count($v)), array_values($v)) : $v) : [];
+    $mLess = $byLessonNum($man['lecciones'] ?? $man['lessons'] ?? null);
+    $mVids = $byLessonNum($man['videos'] ?? null);
+    foreach ($byNum as $num => $l) {
+        $ls = (string) $l['slug'];
+        $em = $emods[$num - 1] ?? [];
+        $ml = is_array($mLess[$num] ?? null) ? $mLess[$num] : [];
+        $f = array_filter([
+            'title'    => $str(lms_imp_pick($ml, ['titulo', 'title'])) ?: $str($em['titulo'] ?? ''),
+            'summary'  => $str(lms_imp_pick($ml, ['resumen', 'summary', 'texto'])) ?: $str($em['texto'] ?? ''),
+            'audience' => $str(lms_imp_pick($ml, ['para', 'audience'])) ?: $str($em['para'] ?? ''),
+            'module'   => $str(lms_imp_pick($ml, ['modulo', 'module'])) ?: $module,
+        ], fn($v) => $v !== '');
+        // el video: lecciones.NN.video > videos.NN > archivo de MODULOS > <L>/videos/<nombre del video principal>
+        $video = ''; $from = '';
+        foreach ([[$str(lms_imp_pick($ml, ['video'])), $base], [$str($mVids[$num] ?? ''), $base], [$str($em['archivo'] ?? ''), $ih !== '' ? $ih : $base]] as [$p, $b]) {
+            if ($p === '') continue;
+            [$video, $ok] = lms_imp_lang_path($p, $b);
+            $from = $p;
+            if (!$ok) { $out['warn'][] = $tag . 'no existe el video ' . ($video !== '' ? $video : $p) . ' (lección ' . $num . ').'; $video = ''; }
+            break;
+        }
+        if ($video === '' && $from === '') {
+            $main = lms_lesson_media($l, 'video', $def);
+            if ($main !== '' && lms_rel($main) !== '') foreach ($dirs as $d) {
+                $cand = $d . '/videos/' . basename(lms_rel($main));
+                if (is_file(CMS_ROOT . '/' . $cand)) { $video = $cand; break; }
+            }
+        }
+        if ($video !== '') $f['video'] = $video;
+        // la portada: lecciones.NN.portada, o <L>/portadas/<nombre del video>.jpg junto a su videos/
+        $pp = $str(lms_imp_pick($ml, ['portada', 'poster']));
+        if ($pp !== '') { [$poster, $ok] = lms_imp_lang_path($pp, $base); if ($ok) $f['poster'] = $poster; else $out['warn'][] = $tag . 'no existe la portada ' . $pp . ' (lección ' . $num . ').'; }
+        elseif ($video !== '' && lms_rel($video) !== '') {
+            $poster = preg_replace('/\.(mp4|webm|m4v|mov)$/i', '.jpg', str_replace('/videos/', '/portadas/', '/' . $video)) ?? '';
+            if (is_file(CMS_ROOT . $poster)) $f['poster'] = ltrim($poster, '/');
+        }
+        if ($f) $out['lessons'][$ls] = $f;
+    }
+
+    // contenido/NN.html
+    $cd = lms_import_part($dirs, 'contenido');
+    foreach ($cd !== '' ? (glob(CMS_ROOT . '/' . $cd . '/contenido/*.html') ?: []) : [] as $f) {
+        if (!preg_match('/(\d+)\.html$/', $f, $m) || !isset($byNum[(int) $m[1]])) { $out['warn'][] = $tag . 'contenido/' . basename($f) . ': no hay lección con ese número.'; continue; }
+        $html = (string) file_get_contents($f);
+        if (preg_match('#<body[^>]*>(.*)</body>#is', $html, $b)) $html = $b[1];
+        $out['lessons'][(string) $byNum[(int) $m[1]]['slug']]['body'] = trim($html);
+    }
+
+    // materiales en ese idioma: se agregan a los del curso con "(EN)"
+    $mdir = $md !== '' && !empty($man['materiales']) ? $md : (lms_import_part($dirs, 'materiales') ?: $dirs[0]);
+    $mats = [];
+    foreach ((array) ($man['materiales'] ?? $man['materials'] ?? []) as $mm) if (is_array($mm) && !empty($mm['archivo'] ?? $mm['file'] ?? '')) $mats[] = [(string) ($mm['texto'] ?? $mm['text'] ?? basename((string) ($mm['archivo'] ?? $mm['file']))), ltrim((string) ($mm['archivo'] ?? $mm['file']), '/')];
+    if (!$mats) foreach (glob(CMS_ROOT . '/' . $mdir . '/materiales/*') ?: [] as $f) if (is_file($f)) {
+        $b = pathinfo($f, PATHINFO_FILENAME);
+        $label = ucfirst(str_replace(['-', '_'], ' ', preg_replace('/-' . preg_quote($slug, '/') . '$/i', '', $b) ?? $b));
+        if (preg_match('/\.html?$/i', $f) && preg_match('#<title[^>]*>(.*?)</title>#is', (string) file_get_contents($f, false, null, 0, 20000), $tm)) $label = trim(preg_replace('/^.*?·\s*/u', '', lms_imp_text($tm[1])) ?? $label) ?: $label;
+        $mats[] = [$label, 'materiales/' . basename($f)];
+    }
+    foreach ($mats as [$label, $src]) {
+        $from = $mdir . '/' . $src;
+        if (!is_file(CMS_ROOT . '/' . $from)) { $out['warn'][] = $tag . 'material no encontrado: ' . $from; continue; }
+        $to = strpos($from . '/', $rel . '/') === 0 ? $from : $rel . '/' . $L . '/materiales/' . basename($src);
+        $out['materials'][] = ['label' => $label . ' (' . strtoupper($L) . ')', 'from' => $from, 'to' => $to];
+    }
+
+    // evaluaciones: el mismo nombre de archivo que la del idioma principal → la misma evaluación
+    $qdir = $md !== '' && !empty($man['evaluaciones']) ? $md : (lms_import_part($dirs, 'evaluaciones') ?: $dirs[0]);
+    $defs = [];
+    foreach ((array) ($man['evaluaciones'] ?? $man['quizzes'] ?? []) as $q) if (is_array($q) && !empty($q['archivo'] ?? $q['file'] ?? '')) $defs[ltrim((string) ($q['archivo'] ?? $q['file']), '/')] = $q;
+    if (!$defs) foreach (glob(CMS_ROOT . '/' . $qdir . '/evaluaciones/*.{txt,gift,xml}', GLOB_BRACE) ?: [] as $f) $defs['evaluaciones/' . basename($f)] = [];
+    ksort($defs, SORT_NATURAL);
+    $mainQ = [];
+    foreach ($extras['quizzes'] ?? [] as $q) $mainQ[(string) $q['item']['slug']] = $q;
+    $code = strtoupper($slug);
+    foreach ($defs as $file => $m) {
+        $abs = CMS_ROOT . '/' . $qdir . '/' . $file;
+        if (!is_file($abs)) { $out['warn'][] = $tag . 'evaluación no encontrada: ' . $qdir . '/' . $file; continue; }
+        $qb = pathinfo($file, PATHINFO_FILENAME);
+        $qslug = cms_slugify(stripos($qb, $slug) === 0 ? $qb : $slug . '-' . $qb);
+        if (!isset($mainQ[$qslug]) && !(cms_type(lms_quiz_type()) && cms_item(lms_quiz_type(), $qslug, false))) {
+            $out['warn'][] = $tag . $file . ': no hay evaluación con ese nombre en el idioma principal; se omitió.'; continue;
+        }
+        [$front, $body] = lms_import_front((string) file_get_contents($abs));
+        $m = array_replace(array_change_key_case($front), array_change_key_case(array_map(fn($v) => is_scalar($v) ? (string) $v : '', $m)));
+        [$text, $qwarn] = lms_quiz_import_text($body, $file);
+        $title = trim((string) ($m['titulo'] ?? $m['title'] ?? ''));
+        if ($title === '' && $L === 'en' && isset($mainQ[$qslug])) {   // en otro idioma sin título: se queda el del principal
+            $mi = $mainQ[$qslug]['item'];
+            $after = (string) ($mi['after'] ?? '');
+            $num = 0;
+            foreach ($byNum as $n => $l) if ((string) $l['slug'] === $after) $num = $n;
+            $lt = $after !== '' ? (string) ($out['lessons'][$after]['title'] ?? '') : '';
+            $title = $after === '' ? 'Final quiz · ' . $code : 'Lesson ' . $num . ($lt !== '' ? ' · ' . $lt : '');
+        }
+        $q = ['questions' => $text];
+        if ($title !== '') $q['title'] = $title;
+        $intro = trim((string) ($m['intro'] ?? $m['instrucciones'] ?? ''));
+        if ($intro !== '') $q['intro'] = strpos($intro, '<') !== false ? $intro : '<p>' . cms_e($intro) . '</p>';
+        $out['quizzes'][$qslug] = ['file' => $file, 'count' => count(lms_quiz_parse($text)['questions']), 'warn' => $qwarn, 'fields' => $q];
+    }
+    return $out;
+}
+
+/** Pone $val en el idioma $L de un campo bilingüe sin tocar los demás. Un valor de antes (no bilingüe) pasa al predeterminado. */
+function lms_imp_i18n_put($cur, string $L, $val, bool $replace)
+{
+    $def = cms_default_lang();
+    $empty = fn($v) => $v === null || $v === '' || $v === [];
+    if ($empty($val)) return $cur;
+    if (!cms_is_i18n_value($cur)) $cur = $empty($cur) ? [$def => is_array($val) ? [] : ''] : [$def => $cur];
+    if (!$replace && !$empty($cur[$L] ?? null)) return $cur;
+    $cur[$L] = $val;
+    return $cur;
+}
+
+/** Aplica las versiones en otros idiomas (lms_import_lang). $opt: replace_body (curso y lecciones), replace_quiz. */
+function lms_import_apply_langs(string $courseSlug, array $langs, array $opt): array
+{
+    $msgs = [];
+    if (!$langs) return $msgs;
+    $ct = lms_course_type(); $lt = lms_lesson_type(); $qt = lms_quiz_type(); $now = date('Y-m-d');
+    foreach ($langs as $L => $lp) {
+        $course = cms_item($ct, $courseSlug, false);
+        if (!$course) return ['No se encontró el curso «' . $courseSlug . '».'];
+        $rb = !empty($opt['replace_body']);
+        $ch = false;
+        foreach ($lp['course'] as $k => $v) { $nv = lms_imp_i18n_put($course[$k] ?? null, $L, $v, $rb); if ($nv !== ($course[$k] ?? null)) { $course[$k] = $nv; $ch = true; } }
+        // materiales en ese idioma, como los del principal
+        $files = lms_file_list($course); $have = array_column($files, 1); $nm = 0;
+        foreach ($lp['materials'] as $mt) {
+            if ($mt['to'] !== $mt['from']) {
+                $dst = CMS_ROOT . '/' . $mt['to'];
+                if (!is_dir(dirname($dst))) @mkdir(dirname($dst), 0755, true);
+                if (!@copy(CMS_ROOT . '/' . $mt['from'], $dst)) { $msgs[] = 'No se pudo copiar ' . $mt['from'] . ' a ' . $mt['to'] . '.'; continue; }
+            }
+            if (!in_array($mt['to'], $have, true)) { $files[] = [$mt['label'], $mt['to']]; $have[] = $mt['to']; $nm++; }
+        }
+        if ($nm) { $course['files'] = array_map(fn($f) => $f[0] . ' | ' . $f[1], $files); $ch = true; }
+        if ($ch) { $course['updated'] = $now; cms_item_save($ct, $course); }
+
+        $nl = 0; $nv = 0;
+        foreach ($lp['lessons'] as $ls => $fields) {
+            $full = cms_item($lt, (string) $ls, false);
+            if (!$full) continue;
+            $before = $full;
+            foreach ($fields as $k => $v) $full[$k] = lms_imp_i18n_put($full[$k] ?? null, $L, $v, $rb);
+            if ($full !== $before) {
+                if (isset($fields['video']) && lms_lesson_media($full, 'video', $L) === $fields['video']) $nv++;
+                $full['updated'] = $now;
+                if (cms_item_save($lt, $full)) $nl++;
+            }
+        }
+        $nq = 0;
+        if ($lp['quizzes'] && cms_type($qt)) foreach ($lp['quizzes'] as $qs => $q) {
+            $it = cms_item($qt, (string) $qs, false);
+            if (!$it) continue;
+            $before = $it;
+            foreach ($q['fields'] as $k => $v) $it[$k] = lms_imp_i18n_put($it[$k] ?? null, $L, $v, !empty($opt['replace_quiz']));
+            if ($it !== $before) { $it['updated'] = $now; if (cms_item_save($qt, $it)) $nq++; }
+        }
+        $U = strtoupper($L);
+        $msgs[] = 'Versión ' . $U . ' (/' . $lp['dir'] . '/): ' . ($ch ? 'datos del curso' . ($nm ? ' y ' . $nm . ' material(es)' : '') . '; ' : '')
+            . $nl . ' lección(es)' . ($nv ? ' (' . $nv . ' con su video en ' . $U . ')' : '') . ', ' . $nq . ' evaluación(es). El idioma principal no se tocó'
+            . ($rb || !empty($opt['replace_quiz']) ? '.' : '; lo que ya estaba en ' . $U . ' se respetó (marca «Reemplazar» para sobrescribirlo).');
+    }
+    return $msgs;
 }

@@ -710,7 +710,7 @@ admin_header('Aula: alumnos y avance', $self);
     <thead><tr><th>#</th><th>Lección</th><th>Duración</th><th>Para</th><th>Video</th></tr></thead>
     <tbody>
 <?php foreach ($plan['lessons'] as $l): ?>
-      <tr><td><?= (int) $l['order'] ?></td><td><strong><?= cms_e($l['title'][$dl]) ?></strong><small class="ad-help"><?= cms_e($l['summary'][$dl]) ?></small></td><td><?= cms_e($l['duration']) ?></td><td><?= cms_e($l['audience'][$dl]) ?></td><td><code><?= cms_e($l['video']) ?></code><?= $l['poster'] !== '' ? ' + portada' : '' ?></td></tr>
+      <tr><td><?= (int) $l['order'] ?></td><td><strong><?= cms_e($l['title'][$dl]) ?></strong><small class="ad-help"><?= cms_e($l['summary'][$dl]) ?></small></td><td><?= cms_e($l['duration']) ?></td><td><?= cms_e($l['audience'][$dl]) ?></td><td><code><?= cms_e(lms_lesson_media($l, 'video', $dl)) ?></code><?= lms_lesson_media($l, 'poster', $dl) !== '' ? ' + portada' : '' ?><?php foreach ($plan['langs'] ?? [] as $L => $lp): $lv = (string) ($lp['lessons'][$l['slug']]['video'] ?? ''); if ($lv !== ''): ?><br><small class="ad-help"><?= strtoupper($L) ?>: <code><?= cms_e($lv) ?></code></small><?php endif; endforeach; ?></td></tr>
 <?php endforeach; ?>
     </tbody>
   </table>
@@ -737,7 +737,17 @@ admin_header('Aula: alumnos y avance', $self);
 <?php foreach ($ex['warn'] as $w): ?>  <p class="ad-flash err"><?= cms_e($w) ?></p>
 <?php endforeach; ?>
 <?php endif; ?>
-<?php $impOpts = function (bool $complete) use ($ex): void { if ($ex['dir'] === '') return; ?>
+<?php foreach ($plan['langs'] ?? [] as $L => $lp): $U = strtoupper($L); ?>
+  <h3 style="margin:22px 0 6px">Versión en <?= cms_e($U) ?> <small class="ad-help" style="display:inline">en <code>/<?= cms_e($lp['dir']) ?>/</code> · se guarda en el campo <?= cms_e($U) ?> del mismo curso, sus lecciones y sus evaluaciones (el idioma principal no se toca; el avance de los alumnos es el mismo)</small></h3>
+  <ul class="ad-help" style="margin:0 0 10px 18px">
+    <li>Del curso: <?= $lp['course'] ? cms_e(implode(', ', array_keys($lp['course']))) : 'nada' ?></li>
+    <li>Lecciones: <?= count($lp['lessons']) ?> (<?= count(array_filter($lp['lessons'], fn($x) => isset($x['video']))) ?> con su video en <?= cms_e($U) ?>, <?= count(array_filter($lp['lessons'], fn($x) => isset($x['body']))) ?> con contenido)</li>
+    <li>Evaluaciones: <?= $lp['quizzes'] ? cms_e(implode(', ', array_map(fn($q) => basename($q['file']) . ' (' . $q['count'] . ')', $lp['quizzes']))) : 'ninguna' ?></li>
+    <li>Materiales: <?= $lp['materials'] ? cms_e(implode(', ', array_column($lp['materials'], 'label'))) : 'ninguno' ?></li>
+  </ul>
+<?php foreach ($lp['warn'] as $w): ?>  <p class="ad-flash err"><?= cms_e($w) ?></p>
+<?php endforeach; endforeach; ?>
+<?php $impOpts = function (bool $complete) use ($ex, $plan): void { if ($ex['dir'] === '' && empty($plan['langs'])) return; ?>
     <fieldset style="border:1px solid #e3e3e3;border-radius:10px;padding:10px 14px;margin:10px 0">
       <legend class="ad-help" style="padding:0 6px">Evaluaciones y lecciones (curso.json o la cabecera de cada archivo mandan sobre esto)</legend>
       <div class="ad-two">

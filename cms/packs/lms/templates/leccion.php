@@ -94,7 +94,7 @@ if ($pkg !== '') $track = false;
 <?php elseif ($pkg !== ''): ?>
         <p class="form-msg err lms-msg"><?= cms_e(lms_tx('scorm_missing')) ?><?= $staff && $man ? ' (' . cms_e((string) $man['error']) . ')' : '' ?></p>
 <?php elseif ($track): ?>
-        <div data-lms-watch data-url="<?= cms_e(lms_url('visto')) ?>" data-lesson="<?= cms_e($item['slug']) ?>" data-csrf="<?= cms_e(lms_csrf()) ?>" data-pct="<?= $watched ?>" data-need="<?= $S['video_pct'] ?>" data-done="<?= $done ? '1' : '0' ?>" data-key="<?= cms_e(substr(hash('sha256', $user['id'] . '|' . $item['slug']), 0, 16)) ?>" data-kind="<?= cms_e(preg_match('~vimeo~i', (string) $item['video']) ? 'vimeo' : (preg_match('~youtu~i', (string) $item['video']) ? 'youtube' : 'file')) ?>">
+        <div data-lms-watch data-url="<?= cms_e(lms_url('visto')) ?>" data-lesson="<?= cms_e($item['slug']) ?>" data-csrf="<?= cms_e(lms_csrf()) ?>" data-pct="<?= $watched ?>" data-need="<?= $S['video_pct'] ?>" data-done="<?= $done ? '1' : '0' ?>" data-key="<?= cms_e(substr(hash('sha256', $user['id'] . '|' . $item['slug']), 0, 16)) ?>" data-kind="<?= cms_e(preg_match('~vimeo~i', lms_lesson_media($item, 'video')) ? 'vimeo' : (preg_match('~youtu~i', lms_lesson_media($item, 'video')) ? 'youtube' : 'file')) ?>">
           <?= lms_video($item, $title) ?>
         </div>
 <?php if ($S['video_mode'] !== 'manual' || $watched > 0): ?>

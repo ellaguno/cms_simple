@@ -276,13 +276,14 @@ function lms_scorm_export(string $courseSlug, string $lang, array $opt = []): ar
             if (array_filter($qs, fn($q) => $q['kind'] === 'open')) $warn[] = '«' . $st['title'] . '» tiene preguntas abiertas: en el paquete no cuentan para la calificación.';
         } else {
             $full = cms_item(lms_lesson_type(), (string) $s['slug'], false) ?? $s;
-            $video = trim((string) ($full['video'] ?? ''));
+            $video = lms_lesson_media($full, 'video', $lang);   // el del idioma del paquete (o el principal si no tiene)
+            $poster = lms_lesson_media($full, 'poster', $lang);
             $vid = ['kind' => '', 'src' => '', 'poster' => ''];
             if ($video !== '') {
                 if (preg_match('~(?:youtube\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})~', $video, $m)) $vid = ['kind' => 'youtube', 'src' => $m[1], 'poster' => ''];
                 elseif (preg_match('~vimeo\.com/(?:video/)?(\d+)~', $video, $m)) $vid = ['kind' => 'vimeo', 'src' => $m[1], 'poster' => ''];
                 elseif (lms_local_file($video)) {
-                    if (!empty($opt['videos'])) $vid = ['kind' => 'file', 'src' => $addFile($video, 'media'), 'poster' => ($full['poster'] ?? '') !== '' ? $addFile((string) $full['poster'], 'media') : ''];
+                    if (!empty($opt['videos'])) $vid = ['kind' => 'file', 'src' => $addFile($video, 'media'), 'poster' => $poster !== '' ? $addFile($poster, 'media') : ''];
                     else $warn[] = 'El video de «' . $st['title'] . '» no se incluyó (marca «Incluir los videos»).';
                 } else $vid = ['kind' => 'file', 'src' => $video, 'poster' => ''];
             }

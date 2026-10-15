@@ -486,10 +486,29 @@ if (!function_exists('lms_settings')) {
         return ['pct' => (int) $c['watch'][$lesson], 'done' => $done];
     }
 
-    /** ¿La lección tiene un video cuyo avance se sigue? (YouTube, Vimeo o archivo de video) */
-    function lms_has_video(array $lesson): bool
+    /**
+     * Video o portada de una lección en un idioma (1.12: 'video' y 'poster' son bilingües). Acepta el valor de antes
+     * (una sola ruta para todos los idiomas), el bilingüe ([es => …, en => …], con respaldo al predeterminado) y el ya
+     * resuelto al idioma de la página. $lang null = el idioma que se está dibujando (el predeterminado en el panel).
+     */
+    function lms_lesson_media(array $lesson, string $field, ?string $lang = null): string
     {
-        $src = trim((string) ($lesson['video'] ?? ''));
+        $v = cms_f($lesson, $field, $lang ?? cms_render_lang());
+        return is_scalar($v) ? trim((string) $v) : '';
+    }
+
+    /** Todos los valores distintos de 'video' o 'poster' de una lección, en cualquier idioma (para protegerlos). */
+    function lms_lesson_media_all(array $lesson, string $field): array
+    {
+        $v = $lesson[$field] ?? '';
+        $all = is_array($v) ? array_values($v) : [$v];
+        return array_values(array_unique(array_filter(array_map(fn($x) => is_scalar($x) ? trim((string) $x) : '', $all), fn($x) => $x !== '')));
+    }
+
+    /** ¿La lección tiene un video cuyo avance se sigue? (YouTube, Vimeo o archivo de video) */
+    function lms_has_video(array $lesson, ?string $lang = null): bool
+    {
+        $src = lms_lesson_media($lesson, 'video', $lang);
         return $src !== '' && (bool) preg_match('~youtube\.com|youtu\.be|vimeo\.com|\.(mp4|webm|m4v|mov)(\?.*)?$~i', $src);
     }
 
@@ -954,16 +973,19 @@ if (!function_exists('lms_settings')) {
     }
 
     /** URL del video de una lección: protegido por el aula o directo. */
-    function lms_video_url(array $lesson): string
+    function lms_video_url(array $lesson, ?string $lang = null): string
     {
-        $src = trim((string) ($lesson['video'] ?? ''));
-        return lms_protected($src) ? lms_url('video', null, ['l' => $lesson['slug']]) : lms_media_url($src);
+        $lang = $lang ?? cms_render_lang();
+        $src = lms_lesson_media($lesson, 'video', $lang);
+        // el protegido va por /<idioma>/aula/video: el aula resuelve el archivo del idioma de la página que lo pide
+        return lms_protected($src) ? lms_url('video', $lang, ['l' => $lesson['slug']]) : lms_media_url($src);
     }
 
     /** Reproductor de una lección: YouTube, Vimeo o un archivo de video (con su portada). */
-    function lms_video(array $lesson, string $title = ''): string
+    function lms_video(array $lesson, string $title = '', ?string $lang = null): string
     {
-        $src = trim((string) ($lesson['video'] ?? ''));
+        $lang = $lang ?? cms_render_lang();
+        $src = lms_lesson_media($lesson, 'video', $lang);
         if ($src === '') return '';
         $t = cms_e($title);
         if (preg_match('~(?:youtube\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})~', $src, $m)) {
@@ -973,10 +995,10 @@ if (!function_exists('lms_settings')) {
             return '<div class="lms-video" data-kind="vimeo"><iframe src="https://player.vimeo.com/video/' . $m[1] . '?dnt=1" title="' . $t . '" loading="lazy" allow="fullscreen; picture-in-picture" allowfullscreen></iframe></div>';
         }
         if (preg_match('~\.(mp4|webm|m4v|mov)(\?.*)?$~i', $src)) {
-            $poster = trim((string) ($lesson['poster'] ?? ''));
-            return '<div class="lms-video" data-kind="file"><video controls preload="metadata" playsinline controlslist="nodownload"' . ($poster !== '' ? ' poster="' . cms_e(lms_media_url($poster)) . '"' : '') . ' src="' . cms_e(lms_video_url($lesson)) . '"></video></div>';
+            $poster = lms_lesson_media($lesson, 'poster', $lang);
+            return '<div class="lms-video" data-kind="file"><video controls preload="metadata" playsinline controlslist="nodownload"' . ($poster !== '' ? ' poster="' . cms_e(lms_media_url($poster)) . '"' : '') . ' src="' . cms_e(lms_video_url($lesson, $lang)) . '"></video></div>';
         }
-        return '<p><a class="btn btn-ghost" href="' . cms_e(lms_video_url($lesson)) . '" target="_blank" rel="noopener">' . lms_icon('play') . ' Video</a></p>';
+        return '<p><a class="btn btn-ghost" href="' . cms_e(lms_video_url($lesson, $lang)) . '" target="_blank" rel="noopener">' . lms_icon('play') . ' Video</a></p>';
     }
 
     /** Materiales de una lección: [[texto, ruta], …] a partir de líneas "Texto | ruta" (o solo la ruta). */
@@ -1334,7 +1356,8 @@ if (!function_exists('lms_settings')) {
                 $course = $lesson ? lms_course(lms_lesson_course($lesson)) : null;
                 if (!$lesson && lms_staff() && cms_type(lms_lesson_type())) { $lesson = cms_item(lms_lesson_type(), cms_slugify((string) ($_GET['l'] ?? '')), false); $course = $lesson ? lms_course(lms_lesson_course($lesson), false) : null; }
                 $path = '';
-                if ($lesson) $path = $sub === 'video' ? (string) ($lesson['video'] ?? '') : (string) (lms_file_list($lesson)[(int) ($_GET['n'] ?? -1)][1] ?? '');
+                // el video del idioma de la petición (/en/aula/video → el inglés, o el principal si no tiene)
+                if ($lesson) $path = $sub === 'video' ? lms_lesson_media($lesson, 'video', $lang) : (string) (lms_file_list($lesson)[(int) ($_GET['n'] ?? -1)][1] ?? '');
                 $file = $path !== '' ? lms_local_file($path) : null;
                 if (!$file || !$course || !lms_can_view($course, $lesson)) { http_response_code($file ? 403 : 404); header('Content-Type: text/plain; charset=utf-8'); echo $file ? 'Sin acceso.' : 'No encontrado.'; exit; }
                 lms_send_file($file);
@@ -1539,7 +1562,7 @@ if (!function_exists('lms_settings')) {
         if (!lms_settings()['protect']) return;
         if ($type === lms_course_type()) { foreach (lms_file_list($item) as [, $path]) lms_protect_dir($path); return; }
         if ($type !== lms_lesson_type()) return;
-        lms_protect_dir((string) ($item['video'] ?? ''));
+        foreach (lms_lesson_media_all($item, 'video') as $v) lms_protect_dir($v);   // el de cada idioma
         foreach (lms_file_list($item) as [, $path]) lms_protect_dir($path);
     });
 

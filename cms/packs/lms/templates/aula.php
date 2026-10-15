@@ -10,7 +10,7 @@ $prog = lms_progress($user['id'])['courses'];
 foreach (lms_visible_courses($user) as $c) {
     $s = (string) $c['slug'];
     if (!empty($prog[$s]['enrolled']) || !empty($prog[$s]['lessons'])) $mine[] = $c;
-    elseif (lms_course_access($c) !== 'inscritos') $others[] = $c;
+    elseif (lms_course_access($c) !== 'inscritos' && lms_course_in_lang($c, $lang ?? cms_render_lang())) $others[] = $c;
 }
 ?>
 <section class="phead lms-head">

@@ -168,7 +168,11 @@ const CMS_COUNTRY_LANGS = [
     'it' => ['IT', 'SM', 'VA'],
 ];
 
-/** Idioma activo que prefiere el visitante según su navegador (Accept-Language, en orden de preferencia), o ''. */
+/**
+ * Idioma activo que prefiere el visitante según su navegador (Accept-Language, en orden de preferencia), o ''.
+ * Con Ajustes → General → «Navegador en otro idioma» (lang_other, 1.54) manda solo el idioma principal del navegador:
+ * si está activo se usa; si no, el elegido ahí (un navegador en francés con «es» de segunda opción va a ese idioma).
+ */
 function cms_browser_lang(): string
 {
     $prefs = [];
@@ -179,6 +183,11 @@ function cms_browser_lang(): string
     }
     usort($prefs, fn($a, $b) => $b[1] <=> $a[1] ?: $a[2] <=> $b[2]);
     $active = cms_active_langs();
+    $other = (string) (cms_settings()['lang_other'] ?? '');
+    if ($other !== '' && in_array($other, $active, true)) {
+        if (!$prefs) return '';   // sin cabecera (bots, herramientas): no se decide nada
+        return in_array($prefs[0][0], $active, true) ? $prefs[0][0] : $other;
+    }
     foreach ($prefs as [$l]) if (in_array($l, $active, true)) return $l;
     return '';
 }

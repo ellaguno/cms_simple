@@ -8,7 +8,7 @@
  * Disponibles: $lang, $page, $type, $def, $t (textos), $S (ajustes).
  */
 $user = lms_user();
-$courses = array_values(lms_visible_courses());
+$courses = array_values(array_filter(lms_visible_courses(), fn($c) => lms_course_in_lang($c, $lang)));   // «Cursos por idioma»
 $S0 = cms_settings();
 $kicker = lms_setting_text('lms_hero_kicker', 'hero_kicker');
 $title = lms_setting_text('lms_hero_title', 'hero_title');
@@ -36,7 +36,7 @@ $topTracks = array_filter($tracks, fn($x) => $x['parent'] === '');
 $showTracks = $filtersOn && $topTracks;
 $tracksLabel = lms_setting_text('lms_tracks_label') ?: lms_tx('tracks');
 // quien no ha entrado y no ve los cursos que piden cuenta: se le invita a entrar
-$hiddenForGuest = !$user && !lms_staff() && !empty($S0['lms_hide_private']) && count(cms_items(lms_course_type())) > count($courses);
+$hiddenForGuest = !$user && !lms_staff() && !empty($S0['lms_hide_private']) && count(array_filter(cms_items(lms_course_type()), fn($c) => lms_course_in_lang($c, $lang))) > count($courses);
 $showSearch = $filtersOn && count($courses) > 6;
 $showLevels = $filtersOn && count($levels) > 1;
 $showInds = $filtersOn && $inds;

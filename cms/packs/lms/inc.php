@@ -617,6 +617,20 @@ if (!function_exists('lms_settings')) {
         return array_filter(cms_items(lms_course_type()), fn($c) => lms_course_visible($c, $user));
     }
 
+    /**
+     * ¿El curso se lista en este idioma? Con Ajustes → Aula → «Cursos por idioma» (1.54), solo si su título está escrito
+     * en ese idioma (sin título en inglés no sale en /en/cursos, aunque la página se vea con el respaldo en español).
+     */
+    function lms_course_in_lang(array $course, string $lang): bool
+    {
+        if (empty(cms_settings()['lms_lang_only'])) return true;
+        static $raw = null;   // al dibujar, cms_items() ya resolvió el título con el respaldo al predeterminado: se mira el índice
+        if ($raw === null) $raw = cms_index(lms_course_type());
+        $v = $raw[(string) ($course['slug'] ?? '')]['title'] ?? ($course['title'] ?? '');
+        if (!is_array($v) || isset($v[0])) return true;   // título sin idiomas: vale para todos
+        return trim((string) ($v[$lang] ?? '')) !== '';
+    }
+
     /** ¿Quien está viendo puede abrir esta lección? */
     function lms_can_view(array $course, array $lesson): bool
     {
@@ -1460,7 +1474,9 @@ if (!function_exists('lms_settings')) {
         $view = ['' => 'aula', 'entrar' => 'entrar', 'registro' => 'registro', 'cuenta' => 'cuenta', 'verificar' => 'verificar'][$sub] ?? 'aula';
         $GLOBALS['lms_error'] = $err;
         $site = (string) (cms_settings()['site_name'] ?? cms_config('name'));
-        return ['file' => lms_view($view), 'page' => ['title' => ($titles[$sub] ?? lms_tx('my_classroom')) . ' · ' . $site, 'desc' => '', 'noindex' => true, 'lms' => true, 'route' => 'lms:' . ($sub ?: 'aula')]];
+        $alt = [];   // la misma página en cada idioma: para el selector de idioma y el idioma según el visitante
+        foreach (cms_active_langs() as $l) $alt[$l] = lms_url($sub, $l);
+        return ['file' => lms_view($view), 'page' => ['title' => ($titles[$sub] ?? lms_tx('my_classroom')) . ' · ' . $site, 'desc' => '', 'noindex' => true, 'lms' => true, 'route' => 'lms:' . ($sub ?: 'aula'), 'alt' => $alt]];
     }
 
     /** Aviso de la página: ?ok=… tras una redirección, o el error del formulario. */

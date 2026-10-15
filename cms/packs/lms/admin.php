@@ -143,6 +143,14 @@ if (admin_is_post()) {
         admin_flash(implode(' ', $msgs), $ok ? 'ok' : 'err');
         admin_redirect($ok ? $url(['tab' => 'cursos']) : $url(['tab' => 'importar', 'dir' => admin_post('dir')]));
     }
+    if ($action === 'import_forget') {   // curso creado por error desde una carpeta de idioma (antes de 1.54)
+        $sl = cms_slugify(admin_post('course'));
+        $bad = array_filter(lms_import_lang_mistakes(), fn($c) => (string) $c['slug'] === $sl);
+        if (!$bad) { admin_flash('Ese curso no salió de una carpeta de idioma; bórralo desde Cursos si hace falta.', 'err'); admin_redirect($url(['tab' => 'importar'])); }
+        $n = lms_import_forget($sl);
+        admin_flash('Curso «' . $sl . '» borrado' . ($n['course'] ? '' : ' (no se pudo borrar el curso)') . ', con ' . $n['lessons'] . ' lección(es) y ' . $n['quizzes'] . ' evaluación(es). Ahora revisa cada curso en español y usa «Completar» para ponerle su versión en inglés.', $n['course'] ? 'ok' : 'err');
+        admin_redirect($url(['tab' => 'importar']));
+    }
     if ($action === 'scorm_upload') {   // subir un paquete SCORM (.zip)
         $f = $_FILES['file'] ?? null;
         if (!is_array($f) || ($f['error'] ?? 1) !== UPLOAD_ERR_OK) admin_flash('No llegó el archivo' . (is_array($f) && in_array($f['error'] ?? 0, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true) ? ': pasa del tamaño máximo de subida del servidor (' . ini_get('upload_max_filesize') . '). Súbelo por FTP o en Archivos y carpetas y escribe su ruta abajo.' : '.'), 'err');
@@ -697,6 +705,12 @@ admin_header('Aula: alumnos y avance', $self);
 <?php endforeach; ?>
     </tbody>
   </table>
+<?php endif; ?>
+<?php foreach (lms_import_lang_mistakes() as $bad): ?>
+  <div class="ad-flash err"><p>El curso <strong>«<?= cms_e((string) cms_f($bad, 'title', cms_default_lang())) ?>»</strong> (<code><?= cms_e(cms_url('item:' . $ct, cms_default_lang(), (string) $bad['slug'])) ?></code>) se creó por error desde <code>/<?= cms_e((string) $bad['imported_from']) ?>/</code>: esa carpeta es la versión en <?= cms_e(strtoupper(basename((string) $bad['imported_from']))) ?> de un curso, no otro curso. Si importaste varias, todas cayeron en él. Bórralo con sus <?= count(lms_lessons((string) $bad['slug'], false)) ?> lecciones y sus evaluaciones; después revisa cada curso de la lista y usa «Completar».</p>
+    <form method="post" data-confirm="¿Borrar el curso «<?= cms_e((string) $bad['slug']) ?>» con sus lecciones y evaluaciones? Los cursos en español no se tocan."><?= admin_csrf_field() ?><input type="hidden" name="action" value="import_forget"><input type="hidden" name="course" value="<?= cms_e((string) $bad['slug']) ?>"><button class="ad-btn ad-btn-sm ad-btn-danger" type="submit">Borrar el curso «<?= cms_e((string) $bad['slug']) ?>»</button></form></div>
+<?php endforeach; if ($orph = lms_import_orphan_langs()): ?>
+  <p class="ad-help">Versiones en otro idioma sin su curso en la lista (falta el <code>index.html</code> con MODULOS de la carpeta de arriba y su copia en data/backups/lms-import/): <?= implode(', ', array_map(fn($r) => '<code>/' . cms_e($r) . '/</code>', $orph)) ?>. Sube también la carpeta del curso en el idioma principal.</p>
 <?php endif; ?>
 </section>
 <?php if ($plan && isset($plan['error'])): ?>

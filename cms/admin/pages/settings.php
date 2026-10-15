@@ -58,6 +58,7 @@ if (admin_is_post()) {
     $S['languages'] = [];
     foreach (cms_langs() as $l) if ($l !== cms_default_lang()) $S['languages'][$l] = !empty($_POST['lang_' . $l]);
     $S['lang_auto'] = in_array(admin_post('lang_auto'), ['browser', 'country', 'both'], true) ? admin_post('lang_auto') : '';
+    $S['lang_other'] = in_array(admin_post('lang_other'), cms_langs(), true) ? admin_post('lang_other') : '';
     foreach ($socials as $k => $_) $S['social'][$k] = admin_post('social_' . $k);
     $S['other_sites'] = [];
     foreach (cms_lines(admin_post('other_sites')) as $line) {
@@ -101,6 +102,12 @@ admin_header('Ajustes', 'settings');
         <option value="<?= $v ?>"<?= $la === $v ? ' selected' : '' ?>><?= cms_e($txt) ?></option>
 <?php endforeach; ?>
       </select><p class="ad-help">Quien llega de fuera a una página en <?= cms_e(strtoupper(cms_default_lang())) ?> pasa a la misma página en su idioma, si está activo y traducido. Si cambia de idioma con el selector, se recuerda (cookie) y la próxima vez entra en el que eligió. Los enlaces con prefijo (/en/…) y los buscadores no se redirigen.</p></div>
+      <div class="ad-field"><label>Navegador en otro idioma</label><select name="lang_other">
+        <option value="">Su siguiente idioma preferido que esté activo; si no hay, <?= cms_e(strtoupper(cms_default_lang())) ?></option>
+<?php foreach (cms_langs() as $l): ?>
+        <option value="<?= $l ?>"<?= ($S['lang_other'] ?? '') === $l ? ' selected' : '' ?>>La versión en <?= cms_e(['es' => 'español', 'en' => 'inglés', 'fr' => 'francés', 'pt' => 'portugués', 'de' => 'alemán', 'it' => 'italiano'][$l] ?? strtoupper($l)) ?></option>
+<?php endforeach; ?>
+      </select><p class="ad-help">Qué ve quien tiene el navegador en un idioma que el sitio no ofrece (francés, alemán…). Al elegir una versión solo cuenta el idioma principal del navegador: por ejemplo, español → español y cualquier otro → inglés.</p></div>
 <?php endif; ?>
       <div class="ad-field"><label>URL canónica del sitio (con https y sin barra final; fija el dominio en canonical, sitemap y datos estructurados aunque entren por www)</label><input type="url" name="site_url" value="<?= cms_e($S['site_url'] ?? '') ?>" placeholder="https://midominio.com"></div>
       <div class="ad-field"><label>Otros sitios (enlaces del footer): una por línea, "Texto | URL"</label><textarea name="other_sites" rows="3"><?= cms_e(implode("\n", array_map(fn($o) => ($o['label'] ?? '') . ' | ' . ($o['url'] ?? ''), (array) ($S['other_sites'] ?? [])))) ?></textarea>

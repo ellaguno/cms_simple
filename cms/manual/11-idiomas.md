@@ -82,6 +82,12 @@ Cómo se comporta:
 - Un enlace con prefijo (`/en/…`) siempre abre en su idioma: si compartes una página en inglés, se ve en inglés.
 - Los buscadores nunca se redirigen: cada idioma sigue indexándose en su propia URL.
 
+**Navegador en otro idioma** (1.54): justo debajo eliges qué ve quien tiene el navegador en un idioma que el sitio no ofrece (francés, alemán, japonés…). De serie se busca su siguiente idioma preferido que sí esté activo y, si no hay, se queda en el principal. Si eliges una versión —por ejemplo **La versión en inglés**— solo cuenta el idioma principal de su navegador: español → español; inglés, francés o cualquier otro → inglés.
+
+**Si la versión en inglés salió como un curso aparte** (antes de 1.54): pasaba cuando el curso en español se importó con «Cambiar las páginas viejas por una redirección» y la carpeta `en/` se subió después; se creaba un curso llamado «en» y todas las versiones en inglés caían en él. Desde 1.54, Aula → Importar avisa y lo borra con un botón; después revisa cada curso en español de la lista y usa **Completar**.
+
+**Cursos del aula por idioma** (1.54): con **Ajustes → Aula → Cursos por idioma**, cada idioma lista solo sus cursos: `/en/courses` muestra los que tienen título en inglés y `/cursos` los que lo tienen en español; lo mismo en «Otros cursos» de `/aula`. Los cursos en que el alumno ya está inscrito siguen en su aula en cualquier idioma, y un enlace directo a un curso sigue abriendo. El botón de idioma de la cabecera cambia de catálogo y se recuerda.
+
 ## Por qué no aparece la opción de "crear un idioma" en el panel
 
 Añadir un idioma cambia la estructura del sitio, no solo el contenido: hay que decidir el código y la URL, marcar qué campos del tema se traducen, y escribir los textos fijos del diseño en el idioma nuevo. Eso lo declara quien programa el tema en `site/config.php`, en la lista `langs`, y a partir de ahí el panel muestra el conmutador en todos los campos bilingües y la casilla en Ajustes → Idiomas. Es un trabajo de una vez por idioma; después, todo es contenido.

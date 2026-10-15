@@ -59,6 +59,34 @@ function lms_imp_text(string $html): string
     return trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?? '');
 }
 
+/**
+ * index.html de la carpeta $rel con la lista $marker (MODULOS o CURSOS). Si al importar se cambió por una redirección
+ * al aula, se lee la copia que quedó en data/backups/lms-import/ (la más reciente que la tenga), así un curso ya
+ * importado se puede completar (p. ej. con su carpeta en/) y su catálogo sigue dando las tarjetas (1.54). '' si no hay.
+ */
+function lms_imp_index_html(string $rel, string $marker = 'MODULOS'): string
+{
+    $re = '/\b' . $marker . '\s*=\s*\[/';
+    $f = CMS_ROOT . '/' . $rel . '/index.html';
+    $h = is_file($f) ? (string) @file_get_contents($f, false, null, 0, 400000) : '';
+    if ($h === '' || preg_match($re, $h)) return $h;
+    $bk = glob(CMS_DATA . '/backups/lms-import/*-' . str_replace('/', '_', $rel) . '-index.html') ?: [];
+    rsort($bk);   // el nombre empieza con la fecha: la más reciente primero
+    foreach ($bk as $b) {
+        if (substr(basename($b), 16) !== str_replace('/', '_', $rel) . '-index.html') continue;   // AAAAMMDD-HHMMSS-<carpeta>-index.html
+        $x = (string) @file_get_contents($b, false, null, 0, 400000);
+        if (preg_match($re, $x)) return $x;
+    }
+    return '';
+}
+
+/** ¿La carpeta es la versión en otro idioma de un curso (<curso>/en/)? Nunca es un curso aparte. */
+function lms_imp_is_lang_dir(string $rel): bool
+{
+    $b = basename($rel);
+    return $b !== $rel && $b !== cms_default_lang() && in_array($b, cms_langs(), true);
+}
+
 /** Carpetas de Archivos y carpetas que parecen un curso (index.html con MODULOS), con la ruta relativa como clave. */
 function lms_import_candidates(): array
 {
@@ -67,22 +95,54 @@ function lms_import_candidates(): array
     foreach (array_merge(glob(CMS_ROOT . '/*/index.html') ?: [], glob(CMS_ROOT . '/*/*/index.html') ?: [], glob(CMS_ROOT . '/*/*/*/index.html') ?: []) as $f) {
         $rel = trim(substr(dirname($f), strlen(CMS_ROOT)), '/');
         if (in_array(strtolower(explode('/', $rel)[0]), $skip, true)) continue;
-        $h = (string) @file_get_contents($f, false, null, 0, 400000);
-        if (preg_match('/\bMODULOS\s*=\s*\[/', $h)) $out[$rel] = lms_imp_text(preg_match('/<h1[^>]*>(.*?)<\/h1>/is', $h, $m) ? $m[1] : $rel);
+        // <curso>/en/ es la versión en inglés de <curso>, no otro curso (1.53); desde 1.54 aunque el index.html de
+        // <curso> ya sea la redirección al aula (antes salía como un curso «en» y todos caían en el mismo)
+        if (lms_imp_is_lang_dir($rel)) continue;
+        $h = lms_imp_index_html($rel);
+        if ($h !== '') $out[$rel] = lms_imp_text(preg_match('/<h1[^>]*>(.*?)<\/h1>/is', $h, $m) ? $m[1] : $rel);
     }
-    // <curso>/en/index.html es la versión en inglés de <curso>, no otro curso (1.53)
-    foreach (array_keys($out) as $rel) if (in_array(basename($rel), cms_langs(), true) && isset($out[dirname($rel)])) unset($out[$rel]);
     ksort($out);
     return $out;
+}
+
+/** Carpetas de idioma (<carpeta>/en/ con index.html) cuyo curso no aparece entre los que se pueden importar. */
+function lms_import_orphan_langs(): array
+{
+    $cands = lms_import_candidates();
+    $out = [];
+    foreach (array_merge(glob(CMS_ROOT . '/*/*/index.html') ?: [], glob(CMS_ROOT . '/*/*/*/index.html') ?: [], glob(CMS_ROOT . '/*/*/*/*/index.html') ?: []) as $f) {
+        $rel = trim(substr(dirname($f), strlen(CMS_ROOT)), '/');
+        if (lms_imp_is_lang_dir($rel) && !isset($cands[dirname($rel)]) && !in_array(strtolower(explode('/', $rel)[0]), lms_core_dirs(), true)) $out[] = $rel;
+    }
+    sort($out);
+    return $out;
+}
+
+/** Cursos que se importaron por error desde una carpeta de idioma (slug «en», imported_from …/en), antes de 1.54. */
+function lms_import_lang_mistakes(): array
+{
+    if (!cms_type(lms_course_type())) return [];
+    return array_values(array_filter(cms_items(lms_course_type(), false), fn($c) => lms_imp_is_lang_dir((string) ($c['imported_from'] ?? ''))));
+}
+
+/** Borra un curso importado por error con sus lecciones y evaluaciones (nadie avanza en él: no tiene alumnos propios). */
+function lms_import_forget(string $slug): array
+{
+    $n = ['lessons' => 0, 'quizzes' => 0];
+    foreach (lms_lessons($slug, false) as $l) if (cms_item_delete(lms_lesson_type(), (string) $l['slug'])) $n['lessons']++;
+    if (cms_type(lms_quiz_type())) foreach (cms_items(lms_quiz_type(), false) as $q) if ((string) ($q['course'] ?? '') === $slug && cms_item_delete(lms_quiz_type(), (string) $q['slug'])) $n['quizzes']++;
+    $n['course'] = cms_item_delete(lms_course_type(), $slug);
+    return $n;
 }
 
 /** Lo que se crearía al importar la carpeta $rel: ['course' => elemento, 'lessons' => [...], 'soon' => [...], 'warn' => [...]]. */
 function lms_import_plan(string $rel, array $opt = []): array
 {
     $rel = trim(str_replace('\\', '/', $rel), '/');
-    if ($rel === '' || strpos($rel, '..') !== false || !isset(lms_import_candidates()[$rel])) return ['error' => 'No es una carpeta de curso (index.html con la lista MODULOS).'];
-    $dir = CMS_ROOT . '/' . $rel;
-    $html = (string) file_get_contents($dir . '/index.html');
+    if ($rel === '' || strpos($rel, '..') !== false || !isset(lms_import_candidates()[$rel])) return ['error' => lms_imp_is_lang_dir($rel)
+        ? '/' . $rel . '/ es la versión en ' . strtoupper(basename($rel)) . ' de /' . dirname($rel) . '/: revisa esa carpeta y usa «Completar».'
+        : 'No es una carpeta de curso (index.html con la lista MODULOS).'];
+    $html = lms_imp_index_html($rel);
     $mods = lms_imp_array($html, 'MODULOS');
     if (!$mods) return ['error' => 'No se pudo leer la lista MODULOS de ' . $rel . '/index.html.'];
     $folder = basename($rel);
@@ -94,7 +154,7 @@ function lms_import_plan(string $rel, array $opt = []): array
     // la tarjeta en el catálogo de la carpeta de arriba, si la hay
     $card = []; $soon = []; $catOrder = 0;
     $parent = dirname($rel);
-    $catHtml = $parent !== '.' && is_file(CMS_ROOT . '/' . $parent . '/index.html') ? (string) file_get_contents(CMS_ROOT . '/' . $parent . '/index.html') : '';
+    $catHtml = $parent !== '.' ? lms_imp_index_html($parent, 'CURSOS') : '';
     $catalog = $catHtml !== '' ? lms_imp_array($catHtml, 'CURSOS') : [];
     $series = preg_match('/class="serie">([^<$]+)</', $catHtml, $sm) ? lms_imp_text($sm[1]) : '';   // la serie fija de las tapas ("Curso · NextSabi")
     foreach ($catalog as $i => $c) {
@@ -215,6 +275,7 @@ function lms_import_run(string $rel, array $opt): array
         foreach ($pairs as [$d, $to, $tt]) {
             $f = CMS_ROOT . '/' . $d . '/index.html';
             if (trim($d, '/') === lms_settings()['route'] || cms_segment(cms_type($ct) ?? [], cms_default_lang()) === explode('/', $d)[0]) { $msgs[] = 'No se redirigió /' . $d . '/: es la misma dirección del aula o de los cursos.'; continue; }
+            if (is_file($f) && strpos((string) file_get_contents($f), 'Esta página se mudó al aula') !== false) continue;   // ya es la redirección
             $bk = CMS_DATA . '/backups/lms-import/' . date('Ymd-His') . '-' . str_replace('/', '_', $d) . '-index.html';
             if (!is_dir(dirname($bk))) @mkdir(dirname($bk), 0755, true);
             if (is_file($f) && @copy($f, $bk) && @file_put_contents($f, lms_import_redirect_html($to, $tt)) !== false) $msgs[] = '/' . $d . '/ ahora lleva a ' . $to . ' (el original está en data/backups/lms-import/).';

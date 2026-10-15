@@ -51,7 +51,7 @@ $lmsQuizHelp = "Una pregunta por bloque, separadas por una línea en blanco. Pri
     . "En el texto de la pregunta: **negritas** y `código`. La vista de la evaluación con sesión en el panel muestra las respuestas correctas y los avisos del formato.";
 return [
     'label' => 'Aula: cursos en línea (LMS)',
-    'version' => '1.12.0',
+    'version' => '1.13.0',
     'desc' => 'Cursos con lecciones y evaluaciones, alumnos con cuenta propia, inscripciones y avance. Los alumnos entran en /aula, ven sus cursos con su porcentaje, marcan cada lección como terminada, presentan cuestionarios y exámenes (opción única o múltiple, verdadero/falso, respuesta corta, numérica y abiertas que califica el instructor) y siguen con lo siguiente. El avance de los videos se sigue solo (YouTube, Vimeo o MP4: cuenta lo que de verdad se vio) y puede exigirse antes de marcar la lección. Al terminar un curso, el alumno recibe por correo su constancia para imprimir o guardar en PDF, con código de verificación público. Reproduce paquetes SCORM 1.2 (Articulate, iSpring, Captivate, H5P…) con su avance y calificación, y exporta cada curso como paquete SCORM 1.2 para el LMS de un cliente. El panel gana la página Aula: alta de alumnos (con contraseña generada y aviso por correo opcional), inscripciones por curso, avance y calificaciones de cada alumno, revisión de intentos, preguntas por calificar y exportación CSV. Acceso por curso: abierto, con cuenta o solo inscritos; lecciones de muestra visibles para todos.',
     'assets' => [],
     'effects' => [],
@@ -184,6 +184,7 @@ return [
                                'help' => 'Cada curso marca su track o subtrack y el listado de cursos muestra una fila de tracks y, al elegir uno, la de sus subtracks. Cada uno tiene su dirección para ponerla en un menú: /cursos?track=track-200 (con sus subtracks) o /cursos?track=track-200/project-management. Si cambias el nombre en español de uno, vuelve a marcarlo en sus cursos.'],
         'lms_tracks_label' => ['type' => 'text', 'i18n' => true, 'label' => 'Nombre de los tracks en el sitio', 'placeholder' => 'Tracks', 'half' => true],
         'lms_hide_private' => ['type' => 'checkbox', 'label' => 'Cursos con cuenta', 'text' => 'Quien no ha entrado solo ve los cursos de acceso abierto: los que piden cuenta o inscripción no salen en el listado ni en el mapa del sitio, y su página le pide entrar'],
+        'lms_lang_only'    => ['type' => 'checkbox', 'label' => 'Cursos por idioma', 'text' => 'Cada idioma lista solo sus cursos: en /en/cursos salen los que tienen título en inglés y en /cursos los que lo tienen en español. Los cursos en que el alumno ya está inscrito siguen en su aula, en cualquier idioma'],
         'lms_industries'   => ['type' => 'textarea', 'rows' => 5, 'label' => 'Industrias: una por línea, "Nombre | English name" (el nombre en inglés es opcional)',
                                'placeholder' => "Despachos jurídicos | Law firms\nSalud | Healthcare\nManufactura | Manufacturing",
                                'help' => 'Cada curso marca las suyas (campo Industrias) y el listado de cursos muestra un filtro con las que tienen cursos; cada una tiene su dirección (/cursos?industria=salud) para ponerla en un menú. Si cambias el nombre en español de una industria, vuelve a marcarla en sus cursos.'],

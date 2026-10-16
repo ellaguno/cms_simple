@@ -5,6 +5,7 @@
  * Definición de campo (site/config.php):
  *   'campo' => ['type' => text|textarea|html|date|number|url|email|select|checks|checkbox|image|images|lines|tags,
  *               (checks: casillas de varias opciones de 'options' u 'options_from'; guarda la lista de claves marcadas; 1.51),
+ *               (rows: filas repetibles con sus propios subcampos en 'fields'; ver admin_rows_control(); 1.55),
  *               'label' => 'Etiqueta', 'help' => 'Ayuda', 'i18n' => true|false, 'required' => bool,
  *               'options' => [...] (select), 'options_from' => 'tipo' (select con los elementos de esa colección), 'rows' => n, 'sidebar' => true (columna derecha), 'placeholder' => '',
  *               'show_if' => ['otro_campo' => 'valor'] (solo se muestra cuando ese control vale eso; 'valor' puede ser una lista)]
@@ -85,6 +86,8 @@ function admin_control(string $inputName, array $def, $value, string $extra = ''
                 . '<img class="ad-thumb" src="' . ($v ? cms_e(cms_img($v)) : '') . '" alt="" data-preview' . ($v ? '' : ' hidden') . '></div>';
         case 'sections':
             return admin_sections_control($inputName, $def, is_array($value) ? $value : []);
+        case 'rows':
+            return admin_rows_control($inputName, $def, is_array($value) ? $value : []);
         case 'category':   // selector del registro de categorías del tipo (+ nueva); el valor guardado sigue siendo la etiqueta
             $tk = (string) ($def['_type'] ?? '');
             $cur = $tk !== '' ? cms_category_slug_of($tk, $value) : '';
@@ -120,7 +123,7 @@ function admin_field(string $name, array $def, $value): void
     $showIf = !empty($def['show_if']) && is_array($def['show_if']) ? ' data-show-if=\'' . cms_e(json_encode($def['show_if'], JSON_UNESCAPED_UNICODE)) . '\'' : '';
     echo '<div class="ad-field ad-field-' . cms_e($def['type'] ?? 'text') . (!empty($def['half']) ? ' ad-field-half' : '') . '"' . $showIf . '><label>' . cms_e($label) . (!empty($def['required']) ? ' <span class="ad-req">*</span>' : '') . '</label>';
     if (!empty($def['help'])) echo '<p class="ad-help"' . (strpos((string) $def['help'], "\n") !== false ? ' style="white-space:pre-line"' : '') . '>' . cms_e($def['help']) . '</p>';   // con saltos de línea: se respetan (formato de las evaluaciones del aula)
-    if (!empty($def['i18n']) && ($def['type'] ?? '') !== 'category') {
+    if (!empty($def['i18n']) && !in_array($def['type'] ?? '', ['category', 'rows'], true)) {
         echo '<div class="ad-langs">';
         foreach (cms_langs() as $l) {
             $v = is_array($value) && !isset($value[0]) ? ($value[$l] ?? '') : ($l === cms_default_lang() ? $value : '');
@@ -133,6 +136,30 @@ function admin_field(string $name, array $def, $value): void
         echo admin_control($name, $def, $value);
     }
     echo '</div>';
+}
+
+/**
+ * Campos de la columna principal del editor, agrupados (1.55): los campos seguidos con el mismo 'fieldset' => 'Nombre'
+ * van en un bloque plegable con ese título (el primero abierto; 'fieldset_open' => true en su primer campo lo abre
+ * también). Sin 'fieldset' se dibujan como siempre. Sirve para tipos con muchos campos (una landing por sector).
+ */
+function admin_fields_grouped(array $fields, array $item): void
+{
+    $cur = null; $n = 0;
+    foreach ($fields as $name => $fd) {
+        $fs = isset($fd['fieldset']) ? trim((string) $fd['fieldset']) : '';
+        if ($fs !== ($cur ?? '')) {
+            if ($cur !== null && $cur !== '') echo '</div></details>';
+            if ($fs !== '') {
+                $open = $n === 0 || !empty($fd['fieldset_open']);
+                echo '<details class="ad-fieldset"' . ($open ? ' open' : '') . '><summary>' . cms_e($fs) . '</summary><div class="ad-fieldset-body">';
+                $n++;
+            }
+            $cur = $fs;
+        }
+        admin_field($name, $fd, $item[$name] ?? '');
+    }
+    if ($cur !== null && $cur !== '') echo '</div></details>';
 }
 
 /** Lee un valor del POST según la definición del campo. */
@@ -152,6 +179,8 @@ function admin_read_control(array $def, $raw)
             return !empty($raw) && $raw !== '0';
         case 'sections':
             return admin_read_sections($raw);
+        case 'rows':
+            return admin_read_rows($def, $raw);
         case 'code':
             return is_string($raw) ? str_replace("\r\n", "\n", $raw) : '';
         case 'number':
@@ -170,12 +199,96 @@ function admin_read_field(string $name, array $def, ?array $src = null)
 {
     $src = $src ?? $_POST;
     if (($def['type'] ?? '') === 'category') return admin_read_category($name, $def, $src);
-    if (!empty($def['i18n'])) {
+    if (!empty($def['i18n']) && ($def['type'] ?? '') !== 'rows') {
         $out = [];
         foreach (cms_langs() as $l) $out[$l] = admin_read_control($def, $src[$name][$l] ?? null);
         return $out;
     }
     return admin_read_control($def, $src[$name] ?? null);
+}
+
+/* ------------------------------------------------------------------ filas repetibles ('rows', 1.55) */
+
+/**
+ * Subcampos de un campo 'rows'. Admite los mismos tipos que un campo normal salvo los que necesitan su propio
+ * editor de página completa: 'sections', 'rows' (no se anidan) y 'category'; 'html' se dibuja como área de texto.
+ */
+function admin_rows_fields(array $def): array
+{
+    $out = [];
+    foreach ((array) ($def['fields'] ?? []) as $k => $fd) {
+        if (!is_array($fd) || !preg_match('/^[a-z0-9_]+$/i', (string) $k)) continue;
+        $t = (string) ($fd['type'] ?? 'text');
+        if (in_array($t, ['sections', 'rows', 'category'], true)) continue;
+        if ($t === 'html') $fd['type'] = 'textarea';
+        unset($fd['sidebar'], $fd['show_if']);
+        $out[(string) $k] = $fd;
+    }
+    return $out;
+}
+
+/** ¿Tiene contenido un valor leído (texto, lista, casilla marcada o algún idioma lleno)? */
+function admin_value_filled($v): bool
+{
+    if (is_array($v)) { foreach ($v as $x) if (admin_value_filled($x)) return true; return false; }
+    if (is_bool($v)) return $v;
+    return $v !== null && trim((string) $v) !== '';
+}
+
+/** Una fila del campo 'rows' ($key es su clave en el formulario; '__ROW__' en la plantilla para filas nuevas). */
+function admin_row_html(string $name, array $fields, string $key, array $row): string
+{
+    $h = '<div class="ad-row" data-row data-row-key="' . cms_e($key) . '"><div class="ad-row-head">'
+        . '<span class="ad-row-num" data-row-num></span><span class="ad-row-title" data-row-label></span><span class="ad-row-tools">'
+        . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-row-up title="Subir">↑</button>'
+        . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-row-down title="Bajar">↓</button>'
+        . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-row-dup title="Duplicar">⧉</button>'
+        . '<button type="button" class="ad-btn ad-btn-sm ad-btn-light" data-row-del title="Quitar">✕</button>'
+        . '</span></div><div class="ad-row-body">';
+    ob_start();
+    foreach ($fields as $k => $fd) admin_field($name . '[' . $key . '][' . $k . ']', ['label' => admin_field_label($k, $fd)] + $fd, array_key_exists($k, $row) ? $row[$k] : ($fd['default'] ?? ''));
+    return $h . ob_get_clean() . '</div></div>';
+}
+
+/**
+ * Campo 'rows': una lista de filas que se agregan, reordenan, duplican y quitan, cada una con sus subcampos.
+ *   'items' => ['type' => 'rows', 'label' => 'Capacidades', 'fields' => [
+ *       'title' => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
+ *       'module' => ['type' => 'select', 'options_from' => 'modulos', 'label' => 'Módulo']],
+ *     'add' => 'Agregar capacidad', 'max' => 12, 'row_title' => 'title']
+ * Se guarda como lista de objetos ([{title: {es, en}, module: 'tickets'}, …]); cada subcampo es bilingüe si declara
+ * 'i18n'. Las filas sin nada escrito se descartan al guardar. En las vistas: cms_rows($item, 'items').
+ */
+function admin_rows_control(string $name, array $def, array $rows): string
+{
+    $fields = admin_rows_fields($def);
+    if (!$fields) return '<p class="ad-help">Este campo no declara subcampos (\'fields\').</p>';
+    $max = max(0, (int) ($def['max'] ?? 0));
+    $titleKey = (string) ($def['row_title'] ?? array_key_first($fields));
+    $h = '<div class="ad-rows" data-rows="' . cms_e($name) . '"' . ($max ? ' data-max="' . $max . '"' : '') . ' data-row-title="' . cms_e($titleKey) . '">';
+    $h .= '<div class="ad-rows-list" data-rows-list>';
+    foreach (array_values(array_filter($rows, 'is_array')) as $i => $row) $h .= admin_row_html($name, $fields, 'r' . $i, $row);
+    $h .= '</div><p class="ad-help ad-rows-empty" data-rows-empty>' . cms_e((string) ($def['empty'] ?? 'Todavía no hay filas.')) . '</p>';
+    $h .= '<template data-row-template>' . admin_row_html($name, $fields, '__ROW__', []) . '</template>';
+    $h .= '<button type="button" class="ad-btn ad-btn-sm" data-row-add>+ ' . cms_e((string) ($def['add'] ?? 'Agregar')) . '</button>';
+    if ($max) $h .= ' <span class="ad-help">Máximo ' . $max . '.</span>';
+    return $h . '</div>';
+}
+
+/** Lee un campo 'rows' (del formulario o de la API): conserva el orden, limpia cada subcampo y quita las filas vacías. */
+function admin_read_rows(array $def, $raw): array
+{
+    if (!is_array($raw)) return [];
+    $fields = admin_rows_fields($def);
+    $out = [];
+    foreach ($raw as $k => $r) {
+        if (!is_array($r) || (string) $k === '__ROW__') continue;
+        $row = [];
+        foreach ($fields as $sk => $sd) $row[$sk] = admin_read_field($sk, $sd, $r);
+        if (admin_value_filled($row)) $out[] = $row;
+    }
+    $max = max(0, (int) ($def['max'] ?? 0));
+    return $max ? array_slice($out, 0, $max) : $out;
 }
 
 /** Campo 'category': el select trae el slug (o "__new__" con el nombre en <campo>__new); se guarda la etiqueta del registro. */

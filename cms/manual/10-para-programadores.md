@@ -29,7 +29,12 @@ Se declara en `site/config.php`, en `types`. Un tipo tiene ruta, plantillas de l
 - Un campo `type => 'sections'` convierte el tipo en páginas del constructor.
 - `home_item => ['paginas', 'inicio']` en la raíz de la configuración hace que la portada sea ese elemento.
 
-Tipos de campo: `text`, `textarea`, `html`, `code`, `date`, `number`, `url`, `email`, `select`, `checkbox`, `image`, `images`, `lines`, `tags`, `sections`. Opciones: `label`, `help`, `i18n`, `required`, `sidebar`, `rows`, `options`, `default`, `placeholder`.
+Tipos de campo: `text`, `textarea`, `html`, `code`, `date`, `number`, `url`, `email`, `select`, `checks`, `checkbox`, `image`, `images`, `lines`, `tags`, `rows`, `sections`. Opciones: `label`, `help`, `i18n`, `required`, `sidebar`, `half`, `rows`, `options`, `options_from`, `default`, `placeholder`, `fieldset`.
+
+- `rows` (1.55): filas repetibles con sus subcampos en `fields` (`add`, `max`, `row_title`, `empty`). En la vista, `cms_rows($item, 'campo')`.
+- `fieldset` => 'Nombre' (1.55): agrupa los campos seguidos en un bloque plegable del editor.
+- `'list_page' => ['paginas', 'slug']` en un tipo (1.55): su listado se dibuja con esa página del constructor.
+- Referencias: `cms_refs('tipo', $slugs)` y la inversa `cms_referencing('tipo', 'campo', $slug, 'subcampo')`.
 
 ## Un bloque del constructor
 
@@ -57,6 +62,8 @@ Carpeta en `cms/packs/<nombre>` o `site/packs/<nombre>` con `pack.php` (manifies
 | `cms_picture($ruta, $alt)` | imagen con WebP y tamaño |
 | `cms_sections_render($secciones, $ctx)` | dibujar las secciones de un elemento |
 | `cms_tree_children('tipo', $slug)` | páginas hijas |
+| `cms_rows($item, 'campo')` | filas de un campo `rows` |
+| `cms_refs('tipo', $slugs)`, `cms_referencing('tipo', 'campo', $slug, 'sub')` | elementos referidos y relación inversa |
 
 El detalle completo está en el `README.md` del repositorio.
 

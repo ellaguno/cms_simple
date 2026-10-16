@@ -442,6 +442,52 @@ function cms_f(array $item, string $field, string $lang, $default = '')
     return $v ?? $default;
 }
 
+/* ------------------------------------------------------------------ filas y referencias entre colecciones (1.55) */
+
+/** Filas de un campo 'rows' de un elemento (lista de arreglos; ya en el idioma que se dibuja si el elemento viene localizado). */
+function cms_rows(array $item, string $field): array
+{
+    $v = $item[$field] ?? [];
+    return is_array($v) ? array_values(array_filter($v, 'is_array')) : [];
+}
+
+/**
+ * Elementos publicados de $type en el orden de $slugs (lista de slugs, o una sola). Los que no existen o no están
+ * publicados se omiten en silencio: así una referencia a un elemento borrado o en borrador no rompe la página.
+ * $full = true lee los archivos completos (con sus campos pesados); si no, sale del índice ligero.
+ */
+function cms_refs(string $type, $slugs, bool $full = false): array
+{
+    $items = cms_items($type, true, $full);
+    $out = [];
+    foreach ((array) $slugs as $s) {
+        $s = is_scalar($s) ? (string) $s : '';
+        if ($s !== '' && isset($items[$s]) && !isset($out[$s])) $out[$s] = $items[$s];
+    }
+    return $out;
+}
+
+/**
+ * Elementos publicados de $type cuyo campo $field apunta a $slug: un 'select' o 'checks' (con 'options_from'),
+ * o la columna $sub de un campo 'rows'. Sirve para la relación inversa sin guardarla dos veces: el sector dice qué
+ * módulos usa y la página del módulo pregunta qué sectores lo usan. Respeta el orden de la colección.
+ */
+function cms_referencing(string $type, string $field, string $slug, string $sub = ''): array
+{
+    if ($slug === '' || !cms_type($type)) return [];
+    $full = in_array($field, cms_index_heavy_fields($type), true);
+    $out = [];
+    foreach (cms_items($type, true, $full) as $k => $it) {
+        $v = $it[$field] ?? null;
+        $vals = [];
+        if ($sub !== '') { foreach ((array) $v as $row) if (is_array($row) && is_scalar($row[$sub] ?? null)) $vals[] = (string) $row[$sub]; }
+        elseif (is_array($v)) { foreach ($v as $x) if (is_scalar($x)) $vals[] = (string) $x; }
+        elseif (is_scalar($v)) $vals[] = (string) $v;
+        if (in_array($slug, $vals, true)) $out[$k] = $it;
+    }
+    return $out;
+}
+
 /* ------------------------------------------------------------------ tipos en árbol ('tree' => true: elementos con 'parent' y ruta completa 'path') */
 
 /** Ruta completa de un elemento de un tipo en árbol (padre/…/slug), calculada a partir de 'parent'. */

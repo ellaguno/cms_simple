@@ -509,8 +509,77 @@
       openPicker(btn.getAttribute("data-pick-append"), function (it) { ta.value = (ta.value.trim() ? ta.value.replace(/\s+$/, "") + "\n" : "") + it.path + suffix; ta.dispatchEvent(new Event("input", { bubbles: true })); });
     });
   });
+  /* ---------------- filas repetibles (campo 'rows', 1.55): agregar, subir, bajar, duplicar y quitar ---------------- */
+  root.querySelectorAll("[data-rows]").forEach(function (box) {
+    if (box.hasAttribute("data-bound")) return; box.setAttribute("data-bound", "1");
+    var list = box.querySelector("[data-rows-list]"), tpl = box.querySelector("template[data-row-template]");
+    var addBtn = box.querySelector("[data-row-add]"), empty = box.querySelector("[data-rows-empty]");
+    var max = parseInt(box.getAttribute("data-max") || "0", 10), titleKey = box.getAttribute("data-row-title") || "";
+    var seq = 0;
+    function rows() { return Array.prototype.filter.call(list.children, function (el) { return el.hasAttribute("data-row"); }); }
+    function own(el) { return el && el.closest("[data-rows]") === box; }
+    function label(row) {
+      var out = "";
+      row.querySelectorAll("[name]").forEach(function (el) {
+        if (out || !el.name || el.name.indexOf("[" + titleKey + "]") < 0 || el.type === "hidden") return;
+        if (el.tagName === "SELECT") out = el.selectedIndex > 0 || el.value ? (el.options[el.selectedIndex] || {}).text || "" : "";
+        else if (el.type !== "checkbox") out = el.value || "";
+      });
+      return out.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim().slice(0, 80);
+    }
+    function refresh() {
+      var rs = rows();
+      rs.forEach(function (r, i) {
+        var n = r.querySelector("[data-row-num]"); if (n) n.textContent = (i + 1) + ".";
+        var t = r.querySelector("[data-row-label]"); if (t) t.textContent = label(r);
+      });
+      if (empty) empty.hidden = rs.length > 0;
+      if (addBtn) addBtn.disabled = max > 0 && rs.length >= max;
+    }
+    function changed() { refresh(); box.dispatchEvent(new Event("input", { bubbles: true })); var f = box.closest("form"); if (f) f.dispatchEvent(new CustomEvent("cms:changed", { bubbles: true })); }
+    function newKey() { return "n" + Date.now().toString(36) + (seq++); }
+    function rekey(row, key) {
+      var old = row.getAttribute("data-row-key"), name = box.getAttribute("data-rows");
+      row.setAttribute("data-row-key", key);
+      row.querySelectorAll("[name]").forEach(function (el) { el.name = el.name.split(name + "[" + old + "]").join(name + "[" + key + "]"); });
+    }
+    function make() {
+      var w = document.createElement("div");
+      w.innerHTML = tpl.innerHTML.replace(/__ROW__/g, newKey()).trim();
+      return w.firstElementChild;
+    }
+    box.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b || !own(b)) return;
+      var row = b.closest("[data-row]");
+      if (b.hasAttribute("data-row-add")) {
+        if (max > 0 && rows().length >= max) return;
+        var nr = make(); list.appendChild(nr); bindWidgets(nr); changed();
+        var f = nr.querySelector("input:not([type=hidden]), select, textarea"); if (f) f.focus();
+      } else if (row && row.parentNode === list) {
+        if (b.hasAttribute("data-row-up") && row.previousElementSibling) { list.insertBefore(row, row.previousElementSibling); changed(); }
+        else if (b.hasAttribute("data-row-down") && row.nextElementSibling) { list.insertBefore(row.nextElementSibling, row); changed(); }
+        else if (b.hasAttribute("data-row-dup")) {
+          if (max > 0 && rows().length >= max) return;
+          var c = row.cloneNode(true);
+          c.querySelectorAll("[data-bound]").forEach(function (el) { el.removeAttribute("data-bound"); });
+          rekey(c, newKey()); list.insertBefore(c, row.nextSibling); bindWidgets(c); changed();
+        } else if (b.hasAttribute("data-row-del")) {
+          if (!window.confirm("¿Quitar esta fila? Se pierde su contenido al guardar.")) return;
+          row.remove(); changed();
+        }
+      }
+    });
+    box.addEventListener("input", function (e) { if (own(e.target)) refresh(); });
+    box.addEventListener("change", function (e) { if (own(e.target)) refresh(); });
+    refresh();
+  });
   }
   window.cmsBindWidgets = bindWidgets;
+  // un campo obligatorio dentro de un grupo plegado ('fieldset', 1.55): se abre el grupo para que el navegador pueda señalarlo
+  document.addEventListener("invalid", function (e) {
+    var d = e.target && e.target.closest ? e.target.closest("details.ad-fieldset") : null;
+    if (d && !d.open) d.open = true;
+  }, true);
   bindWidgets(document);
 
   /* ---------------- slug automático ---------------- */

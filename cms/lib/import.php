@@ -33,6 +33,16 @@ function cms_import_field(string $name, array $f): array
             $prop = ['type' => 'array', 'items' => ['type' => 'string'], 'description' => $desc];
             $human = "lista de textos: $label";
             break;
+        case 'rows':   // 1.55: lista de objetos con los subcampos del campo
+            $props = []; $hum = [];
+            foreach ((array) ($f['fields'] ?? []) as $sk => $sf) {
+                if (!is_array($sf) || in_array($sf['type'] ?? 'text', ['sections', 'rows', 'category'], true)) continue;
+                [$sp, $sh] = cms_import_field((string) $sk, $sf);
+                $props[(string) $sk] = $sp; $hum[] = $sk . ' (' . $sh . ')';
+            }
+            $prop = ['type' => 'array', 'items' => ['type' => 'object', 'properties' => $props, 'required' => array_keys($props), 'additionalProperties' => false], 'description' => $desc];
+            $human = "lista de filas ($label), cada una con: " . implode('; ', $hum);
+            break;
         case 'checkbox':
             $prop = ['type' => 'boolean', 'description' => trim(($f['label'] ?? '') . ': ' . ($f['text'] ?? ''), ': ')];
             $human = 'sí/no: ' . trim((string) ($f['text'] ?? $label));

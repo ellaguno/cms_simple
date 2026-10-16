@@ -12,7 +12,7 @@ Nació para [katapolt.mx](https://katapolt.mx) y está pensado para reutilizarse
 
 - **Sin base de datos**: todo es JSON en `data/`. Respaldar el sitio es copiar la carpeta.
 - **Panel de administración** con login (contraseñas `password_hash`, CSRF, bloqueo tras 5 intentos, sesión con cookie HttpOnly), varios usuarios, contraseñas.
-- **Tipos de contenido por esquema**: declaras en `site/config.php` los tipos (entradas, proyectos, servicios…) y sus campos; el panel genera listados (con buscador, filtros por estado y por columna, y paginación de 50 en 50; `'admin_per_page'` en el tipo cambia el tamaño) y formularios. Tipos de campo: texto, área de texto, editor visual (Quill), fecha, número, URL, correo, selector, casilla, imagen, lista de imágenes, líneas, etiquetas.
+- **Tipos de contenido por esquema**: declaras en `site/config.php` los tipos (entradas, proyectos, servicios…) y sus campos; el panel genera listados (con buscador, filtros por estado y por columna, y paginación de 50 en 50; `'admin_per_page'` en el tipo cambia el tamaño) y formularios. Tipos de campo: texto, área de texto, editor visual (Quill), fecha, número, URL, correo, selector, casillas, casilla, imagen, lista de imágenes, líneas, etiquetas, filas repetibles (1.55) y secciones del constructor; los campos se pueden agrupar en bloques plegables.
 - **Multilingüe**: cualquier campo marcado `i18n` se edita por idioma con un conmutador (un idioma a la vez, con el texto del idioma base como referencia). URLs con prefijo por idioma (`/en/...`), `hreflang`, respaldo al idioma predeterminado cuando falta traducción.
 - **Medios**: subida por botón o arrastrando (imágenes, PDF, video), biblioteca para insertar en el editor o en campos de imagen, WebP automático, aviso de "en uso" antes de borrar.
 - **Menú, textos fijos, ajustes, redirecciones 301** editables desde el panel. Publicación programada y fecha de retiro (caducidad) por elemento, sin cron. **Categorías** por colección con registro propio (Diseño → Categorías) y subsecciones indexables `/coleccion/categoria/`.
@@ -341,6 +341,35 @@ páginas hijas de la página Portafolio; cuerpo gris oscuro; bloques propios `ad
 espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con icono, mosaico del portafolio, texto con
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
+
+## Filas repetibles, referencias entre colecciones, grupos de campos e índices con constructor (1.55)
+
+Para colecciones con esquema propio (una landing por sector o por servicio) sin escribir HTML ni convenciones
+«Texto | URL» en un área de texto:
+
+- **Campo `rows`** (filas repetibles): cada fila tiene sus propios subcampos (`fields`), con botones para agregar,
+  subir, bajar, duplicar y quitar. Los subcampos admiten los tipos normales (también `select`/`checks` con
+  `options_from`, imágenes y casillas) y cada uno es bilingüe si declara `i18n`; `sections`, `rows` y `category` no se
+  anidan y `html` se dibuja como área de texto. Opciones: `add` (texto del botón), `max`, `row_title` (subcampo que
+  se ve en la cabecera de la fila), `empty`. Se guarda como lista de objetos y las filas vacías se descartan. Funciona
+  en el editor, en los bloques del constructor, en la API y en la línea de comandos.
+  ```php
+  'capacidades' => ['type' => 'rows', 'label' => 'Capacidades', 'add' => 'Agregar', 'max' => 9, 'row_title' => 'title', 'fields' => [
+      'title' => ['type' => 'text', 'i18n' => true, 'label' => 'Título'],
+      'icon'  => ['type' => 'text', 'label' => 'Ícono', 'half' => true],
+      'modulo' => ['type' => 'select', 'options_from' => 'modulos', 'label' => 'Módulo', 'half' => true],
+  ]],
+  ```
+- **Referencias**: `cms_rows($item, 'campo')` da las filas (ya en el idioma de la página); `cms_refs('tipo', $slugs)`
+  los elementos publicados en ese orden (los borrados o en borrador se omiten); `cms_referencing('tipo', 'campo',
+  $slug, 'subcampo')` la relación inversa, para no guardarla dos veces: el sector dice qué módulos usa y la página del
+  módulo pregunta qué sectores lo usan. Sirve con `select`, `checks` y columnas de `rows`.
+- **Grupos de campos** (`'fieldset' => 'Portada'`): los campos seguidos con el mismo nombre van en un bloque plegable
+  del editor (el primero abierto). Un campo obligatorio dentro de un grupo cerrado lo abre al guardar.
+- **Índice con constructor** (`'list_page' => ['paginas', 'indice-modulos']` en un tipo): el listado `/modulos/` se
+  dibuja con esa página del constructor, que se edita por secciones; su propia dirección redirige al listado y no entra
+  al mapa del sitio. Con filtros (`?q=`, `?tag=`, `?cat=`) se usa la plantilla de listado de siempre.
+- Prueba: `php tools/rows-smoke.php`.
 
 ## Aula: cursos en línea con alumnos y avance (1.41)
 

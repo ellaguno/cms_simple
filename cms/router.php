@@ -127,6 +127,20 @@ if ($seg === []) {
             $label = $t($k . '_title', $d['label'] ?? $k);
             $page += ['title' => $t($k . '_meta_title', $label) . ' · ' . $site, 'desc' => $t($k . '_meta_desc'), 'alt' => $alt('list:' . $k), 'noindex' => $filtered];
             $page['route'] = 'list:' . $k;
+            // índice hecho con el constructor ('list_page' => [tipo, slug], 1.55): la página dibuja el listado
+            $lp = $d['list_page'] ?? null;
+            if (!$filtered && is_array($lp) && count($lp) >= 2 && ($lpd = cms_type((string) $lp[0]))) {
+                $lpi = cms_item((string) $lp[0], (string) $lp[1]) ?: cms_preview_item((string) $lp[0], (string) $lp[1]);
+                if ($lpi) {
+                    $item = $lpi; $type = (string) $lp[0]; $def = $lpd;
+                    $template = $lpd['template_single'] ?? rtrim($type, 's');
+                    $page['title'] = cms_f($lpi, 'seo_title', $lang) ?: ((string) cms_f($lpi, $lpd['title_field'] ?? 'title', $lang) ?: $label) . ' · ' . $site;
+                    $page['desc'] = cms_f($lpi, 'seo_desc', $lang) ?: ((string) cms_f($lpi, $lpd['excerpt_field'] ?? 'excerpt', $lang) ?: $page['desc']);
+                    if (!empty($lpi[$lpd['image_field'] ?? 'image'])) $page['og_image'] = $lpi[$lpd['image_field'] ?? 'image'];
+                    $page['list_page'] = $k;
+                    if (!cms_item_is_live($lpi)) { $page['noindex'] = true; $page['preview'] = true; }
+                }
+            }
             $page['jsonld'] = [cms_jsonld_graph(cms_jsonld_org(), cms_jsonld_breadcrumbs([$home_crumb, [$label, cms_url('list:' . $k, $lang)]]))];
         } elseif (count($seg) === 2 && (($item = cms_item($k, $seg[1])) || ($item = cms_preview_item($k, $seg[1])))) {
             $template = $d['template_single'] ?? rtrim($k, 's');
@@ -197,6 +211,7 @@ if ($template === null && $seg !== []) {
         if ($tseg !== '') { if (strpos($path, $tseg . '/') !== 0) continue; $rel = substr($path, strlen($tseg) + 1); }
         $item = cms_tree_item($k, $rel);
         if ($item && cms_is_home_item($k, $item['slug'])) { header('Location: ' . cms_url('home', $lang), true, 301); exit; }
+        if ($item && ($lt = cms_list_page_of($k, (string) $item['slug'])) !== '') { header('Location: ' . cms_url('list:' . $lt, $lang), true, 301); exit; }
         if (!$item && ($_GET['preview'] ?? '') !== '') { $cand = cms_tree_item($k, $rel, false); if ($cand && !cms_item_is_live($cand) && hash_equals(cms_preview_token($k, $cand['slug']), (string) $_GET['preview'])) $item = $cand; }
         if (!$item) continue;
         $template = $d['template_single'] ?? rtrim($k, 's');

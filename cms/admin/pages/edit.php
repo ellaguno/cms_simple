@@ -107,7 +107,7 @@ $titleInputName = !empty($fields[$titleField]['i18n']) ? $titleField . '[' . $dl
 <?php endif; ?>
   <div class="ad-grid-main">
     <div class="ad-form-main">
-<?php foreach ($main as $name => $fd) admin_field($name, $fd, $item[$name] ?? ''); ?>
+<?php admin_fields_grouped($main, $item); ?>
     </div>
 <?php if ($builder): ?>
     <div class="ad-builder-preview"><iframe name="cms-preview" class="ad-preview-frame" title="Vista previa" data-preview-frame src="about:blank"></iframe></div>

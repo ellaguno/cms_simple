@@ -133,7 +133,7 @@ admin_header($def['label'] ?? $type, 'content:' . $type);
     <tr>
       <td><a href="<?= admin_url('edit', ['type' => $type, 'slug' => $it['slug']]) ?>"><strong><?= cms_e(cms_f($it, $titleField, $dl) ?: $it['slug']) ?></strong></a><?php if (empty($def['internal'])): ?><small class="ad-help"><?= cms_e(preg_replace('#^https?://[^/]+#', '', cms_url('item:' . $type, $dl, $it['slug']))) ?></small><?php endif; ?></td>
 <?php foreach ($cols as $c): $v = cms_f($it, $c, $dl); if (is_scalar($v) && isset($def['fields'][$c]['options'][(string) $v])) $v = $def['fields'][$c]['options'][(string) $v]; ?>
-      <td><?= cms_e(is_array($v) ? implode(', ', $v) : (string) $v) ?></td>
+      <td><?= cms_e(($def['fields'][$c]['type'] ?? '') === 'rows' ? count((array) $v) . ' filas' : (is_array($v) ? implode(', ', array_filter($v, 'is_scalar')) : (string) $v)) ?></td>
 <?php endforeach; ?>
       <td><span class="ad-pill <?= $live ? 'on' : ($pub ? 'warn' : '') ?>"><?= $live ? 'Publicado' . (!empty($it['unpublish_at']) ? ' hasta ' . cms_e($it['unpublish_at']) : '') : (cms_item_is_expired($it) ? 'Caducado ' . cms_e($it['unpublish_at']) : ($pub ? 'Programado ' . cms_e($it['publish_at'] ?? '') : 'Borrador')) ?></span></td>
 <?php if ($multi): $missing = []; foreach (cms_langs() as $l) if ($l !== $dl && empty($it[$titleField][$l])) $missing[] = strtoupper($l); ?>

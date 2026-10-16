@@ -38,6 +38,7 @@ function cms_url_plain(string $route, string $lang, ?string $slug = null): strin
         if (!$def) return $base . '/';
         $seg = cms_segment($def, $lang);
         if ($kind === 'item' && cms_is_home_item($key, (string) $slug)) return $base . '/';
+        if ($kind === 'item' && ($lt = cms_list_page_of($key, (string) $slug)) !== '') return cms_url_plain('list:' . $lt, $lang);
         if ($kind === 'item' && !empty($def['tree'])) {
             $it = cms_items($key, false)[(string) $slug] ?? null;
             $path = $it ? ($it['path'] ?? $it['slug']) : (string) $slug;
@@ -59,6 +60,21 @@ function cms_url_plain(string $route, string $lang, ?string $slug = null): strin
 }
 
 /** URL de un enlace del menú: absoluto (http/mailto/tel/#) o relativo a la raíz del idioma ("/blog"). */
+/**
+ * Índice de colección hecho con el constructor (1.55): un tipo con 'list_page' => ['paginas', 'modulos-indice'] sirve
+ * su listado (/modulos/) con esa página, que se edita por secciones como cualquier otra. Devuelve la clave del tipo
+ * cuyo índice es ese elemento, o ''. Su propia dirección redirige al listado y no entra al mapa del sitio.
+ */
+function cms_list_page_of(string $type, string $slug): string
+{
+    if ($slug === '') return '';
+    foreach (cms_config('types') as $k => $d) {
+        $lp = $d['list_page'] ?? null;
+        if (is_array($lp) && count($lp) >= 2 && (string) $lp[0] === $type && (string) $lp[1] === $slug && empty($d['no_list'])) return (string) $k;
+    }
+    return '';
+}
+
 /** ¿Este elemento es la portada? (config 'home_item' => ['paginas', 'inicio']) */
 function cms_is_home_item(string $type, string $slug): bool
 {

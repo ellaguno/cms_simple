@@ -150,6 +150,14 @@ function api_form_control(array $fd, $v)
             return array_values(array_map('strval', array_filter((array) $v, 'is_scalar')));
         case 'checkbox':
             return !empty($v) && $v !== '0' && $v !== 'false' ? '1' : '';
+        case 'rows':   // 1.55: lista de objetos; cada subcampo pasa por su propia conversión
+            $out = [];
+            foreach (array_values(array_filter((array) $v, 'is_array')) as $i => $row) {
+                $r = [];
+                foreach (admin_rows_fields($fd) as $sk => $sd) if (array_key_exists($sk, $row)) $r[$sk] = api_form_value($sd, $row[$sk]);
+                $out['r' . $i] = $r;
+            }
+            return $out;
         case 'sections':
             $out = [];
             foreach ((array) $v as $sec) {

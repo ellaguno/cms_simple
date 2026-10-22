@@ -387,6 +387,9 @@ function cms_item_remove(string $type, string $slug): array
     if (cms_is_home_item($type, $slug)) return [false, 'La portada no se puede eliminar: cámbiala en site/config.php (home_item) si quieres otra.'];
     $it = cms_item($type, $slug, false);
     if (!$it) return [false, 'El elemento no existe.'];
+    // un paquete puede impedir el borrado (el aula: un curso que todavía tiene lecciones); devuelve el motivo
+    $why = (string) cms_apply('item.remove.block', '', $type, $slug, $it);
+    if ($why !== '') return [false, $why];
     $moved = 0;
     if (!empty($def['tree'])) {
         $parent = (string) ($it['parent'] ?? '');

@@ -11,6 +11,9 @@
  *                                        dibujarlo. $ctx = cms_current(): 'type', 'item', 'page', 'lang' de la petición.
  *   head       acción  ($page)           al final de cms_head(): para emitir <style>, <script> o <meta> propios.
  *   item.save  acción  ($type, $item)    tras guardar un elemento desde el panel (o con cms_item_save()).
+ *   item.remove.block  filtro ('', $type, $slug, $item)  en cms_item_remove() (1.56), antes de borrar: un texto
+ *                                        no vacío impide el borrado y es el motivo que ve el usuario (p. ej. el aula
+ *                                        no deja borrar un curso que todavía tiene lecciones).
  *   admin.item.sidebar  acción ($type, $item)  en la barra lateral del editor de un elemento ya guardado (1.28):
  *                                        para botones o información propios del paquete (echo HTML). Está dentro del
  *                                        <form> del editor: sin <form> propios (no se anidan); botones con form="id".

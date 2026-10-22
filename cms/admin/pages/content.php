@@ -27,6 +27,31 @@ if (admin_is_post()) {
     if (admin_post('action') === 'delete') {
         [$ok, $msg] = cms_item_remove($type, admin_post('slug'));
         admin_flash($msg, $ok ? 'ok' : 'err');
+    } elseif (admin_post('action') === 'bulk') {
+        // selección múltiple: publicar, pasar a borrador o eliminar varios a la vez
+        $do = (string) ($_POST['do'] ?? '');
+        $slugs = array_values(array_unique(array_filter(array_map(fn($s) => cms_slugify((string) $s), (array) ($_POST['slugs'] ?? [])))));
+        $done = 0; $skipped = []; $errs = []; $tree = !empty($def['tree']);
+        if (!$slugs) admin_flash('No seleccionaste ningún elemento.', 'err');
+        elseif ($do === 'delete') {
+            foreach ($slugs as $s) { [$ok, $msg] = cms_item_remove($type, $s); if ($ok) $done++; else $errs[] = str_contains($msg, '«') ? $msg : $s . ': ' . $msg; }
+            admin_flash(($done ? $done . ' eliminado(s).' : 'No se eliminó nada.') . ($errs ? ' ' . implode(' ', $errs) : ''), $errs && !$done ? 'err' : 'ok');
+        } elseif ($do === 'publish' || $do === 'draft') {
+            $to = $do === 'publish' ? 'published' : 'draft';
+            foreach ($slugs as $s) {
+                $it = cms_item($type, $s, false);
+                if (!$it) continue;
+                if (($it['status'] ?? '') === $to) continue;
+                // una copia hecha con Duplicar no se publica mientras conserve la URL «…-copia» (igual que en el editor)
+                if ($to === 'published' && !empty($it['duplicated_from']) && admin_is_copy_slug($s, (string) $it['duplicated_from'])) { $skipped[] = $s; continue; }
+                $it['status'] = $to; $it['updated'] = date('Y-m-d');
+                if (cms_item_save($type, $it)) $done++; else $errs[] = $s;
+            }
+            if ($tree && $done) cms_tree_rebuild($type);
+            admin_flash($done . ($to === 'published' ? ' publicado(s).' : ' pasado(s) a borrador.')
+                . ($skipped ? ' Sin publicar por tener aún la URL de copia (cámbiala en el editor): ' . implode(', ', $skipped) . '.' : '')
+                . ($errs ? ' No se pudieron guardar: ' . implode(', ', $errs) . '.' : ''), ($skipped || $errs) && !$done ? 'err' : 'ok');
+        }
     } elseif (admin_post('action') === 'duplicate') {
         $src = cms_item($type, admin_post('slug'), false);
         if ($src) {
@@ -126,11 +151,19 @@ admin_header($def['label'] ?? $type, 'content:' . $type);
 <?php if ($total > $perPage): ?>  <span class="ad-help">Mostrando <?= ($page - 1) * $perPage + 1 ?>–<?= min($total, $page * $perPage) ?> de <?= $total ?></span><?php endif; ?>
 </p>
 <?php if (!$items): ?><p class="ad-help">Nada coincide con la búsqueda. <a href="<?= admin_url('content', ['type' => $type]) ?>">Ver todos</a>.</p><?php else: ?>
+<form method="post" class="ad-media-bulk ad-content-bulk" id="content-bulk" data-content-bulk hidden>
+  <?= admin_csrf_field() ?><input type="hidden" name="action" value="bulk">
+  <span class="ad-help" data-bulk-count>0 seleccionados</span>
+  <button class="ad-btn ad-btn-sm" type="submit" name="do" value="publish" data-bulk-btn disabled>Publicar</button>
+  <button class="ad-btn ad-btn-sm ad-btn-light" type="submit" name="do" value="draft" data-bulk-btn disabled>Pasar a borrador</button>
+  <button class="ad-btn ad-btn-sm ad-btn-danger" type="submit" name="do" value="delete" data-bulk-btn disabled>Eliminar</button>
+</form>
 <table class="ad-table">
-  <thead><tr><th><?= cms_e(admin_field_label($titleField, $def['fields'][$titleField] ?? [])) ?></th><?php foreach ($cols as $c): ?><th><?= cms_e(admin_field_label($c, $def['fields'][$c] ?? [])) ?></th><?php endforeach; ?><th>Estado</th><?php if ($multi): ?><th>Traducción</th><?php endif; ?><th></th></tr></thead>
+  <thead><tr><th class="ad-col-check"><input type="checkbox" data-bulk-all aria-label="Seleccionar todos los de esta página" hidden></th><th><?= cms_e(admin_field_label($titleField, $def['fields'][$titleField] ?? [])) ?></th><?php foreach ($cols as $c): ?><th><?= cms_e(admin_field_label($c, $def['fields'][$c] ?? [])) ?></th><?php endforeach; ?><th>Estado</th><?php if ($multi): ?><th>Traducción</th><?php endif; ?><th></th></tr></thead>
   <tbody>
 <?php foreach ($items as $it): $pub = ($it['status'] ?? '') === 'published'; $live = cms_item_is_live($it); ?>
     <tr>
+      <td class="ad-col-check"><input type="checkbox" form="content-bulk" name="slugs[]" value="<?= cms_e($it['slug']) ?>" data-bulk-item aria-label="Seleccionar <?= cms_e(cms_f($it, $titleField, $dl) ?: $it['slug']) ?>" hidden></td>
       <td><a href="<?= admin_url('edit', ['type' => $type, 'slug' => $it['slug']]) ?>"><strong><?= cms_e(cms_f($it, $titleField, $dl) ?: $it['slug']) ?></strong></a><?php if (empty($def['internal'])): ?><small class="ad-help"><?= cms_e(preg_replace('#^https?://[^/]+#', '', cms_url('item:' . $type, $dl, $it['slug']))) ?></small><?php endif; ?></td>
 <?php foreach ($cols as $c): $v = cms_f($it, $c, $dl); if (is_scalar($v) && isset($def['fields'][$c]['options'][(string) $v])) $v = $def['fields'][$c]['options'][(string) $v]; ?>
       <td><?= cms_e(($def['fields'][$c]['type'] ?? '') === 'rows' ? count((array) $v) . ' filas' : (is_array($v) ? implode(', ', array_filter($v, 'is_scalar')) : (string) $v)) ?></td>
@@ -165,4 +198,32 @@ admin_header($def['label'] ?? $type, 'content:' . $type);
   <?php if ($page < $pages): ?><a href="<?= $listUrl(['page' => (string) ($page + 1)]) ?>">Siguiente ›</a><?php endif; ?>
 </nav>
 <?php endif; ?>
+<script>
+(function () {
+  var bulk = document.querySelector("[data-content-bulk]"), items = document.querySelectorAll("[data-bulk-item]"), all = document.querySelector("[data-bulk-all]");
+  var btns = document.querySelectorAll("[data-bulk-btn]"), count = document.querySelector("[data-bulk-count]");
+  if (!bulk || !items.length) return;
+  bulk.hidden = false; all.hidden = false; items.forEach(function (c) { c.hidden = false; });
+  function sel() { return Array.prototype.filter.call(items, function (c) { return c.checked; }); }
+  function sync() {
+    var n = sel().length;
+    btns.forEach(function (b) { b.disabled = !n; });
+    count.textContent = n + " seleccionado" + (n === 1 ? "" : "s");
+    all.checked = n === items.length; all.indeterminate = n > 0 && n < items.length;
+  }
+  items.forEach(function (c) { c.addEventListener("change", sync); });
+  all.addEventListener("change", function () { items.forEach(function (c) { c.checked = all.checked; }); sync(); });
+  // Mayús + clic marca el tramo desde la última casilla tocada
+  var last = null;
+  items.forEach(function (c, i) { c.addEventListener("click", function (e) {
+    if (e.shiftKey && last !== null) { var a = Math.min(last, i), b = Math.max(last, i); for (var k = a; k <= b; k++) items[k].checked = c.checked; sync(); }
+    last = i;
+  }); });
+  bulk.addEventListener("submit", function (e) {
+    var b = e.submitter, n = sel().length;
+    if (b && b.value === "delete" && !window.confirm("¿Eliminar " + n + " elemento(s)? No se puede deshacer.")) e.preventDefault();
+  });
+  sync();
+})();
+</script>
 <?php endif; endif; admin_footer();

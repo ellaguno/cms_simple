@@ -342,6 +342,16 @@ espaciada, tarjetas de noticias, galería de proyectos con visor, servicios con 
 imagen circular y contacto con cuadros de Facebook y X); colecciones páginas, proyectos con categorías, equipo y
 noticias. El sitio real, con su contenido migrado, vive fuera del repositorio.
 
+## Selección múltiple en los listados (1.56)
+
+En el listado de cualquier colección del panel (entradas, páginas, cursos, lecciones, evaluaciones…) cada fila tiene una
+casilla, y la del encabezado marca todas las de la página (Mayús + clic marca un tramo). La barra de arriba **publica**,
+**pasa a borrador** o **elimina** los seleccionados de una vez. Publicar y pasar a borrador guardan como el editor
+(versión anterior en el historial, gancho `item.save`); una copia de «Duplicar» que aún tiene la URL «…-copia» no se
+publica. Eliminar pide confirmación y usa `cms_item_remove()`, que ahora consulta el filtro `item.remove.block`: un
+paquete puede impedir un borrado y dar el motivo. El aula lo usa para no dejar borrar un curso que todavía tiene
+lecciones o evaluaciones (en la fila, en la selección múltiple, en el editor, en la API y en la línea de comandos).
+
 ## Filas repetibles, referencias entre colecciones, grupos de campos e índices con constructor (1.55)
 
 Para colecciones con esquema propio (una landing por sector o por servicio) sin escribir HTML ni convenciones

@@ -1582,6 +1582,17 @@ if (!function_exists('lms_settings')) {
         foreach (lms_file_list($item) as [, $path]) lms_protect_dir($path);
     });
 
+    // un curso con lecciones o evaluaciones no se borra (quedarían colgando de un curso que ya no existe)
+    cms_on('item.remove.block', function (string $why, string $type, string $slug, array $item) {
+        if ($why !== '' || $type !== lms_course_type()) return $why;
+        $f = lms_settings()['lesson_field'];
+        $nl = cms_type(lms_lesson_type()) ? count(array_filter(cms_items(lms_lesson_type(), false), fn($l) => (string) ($l[$f] ?? '') === $slug)) : 0;
+        $nq = cms_type(lms_quiz_type()) ? count(array_filter(cms_items(lms_quiz_type(), false), fn($q) => (string) ($q[$f] ?? $q['course'] ?? '') === $slug)) : 0;
+        if (!$nl && !$nq) return '';
+        $parts = array_filter([$nl ? $nl . ($nl === 1 ? ' lección' : ' lecciones') : '', $nq ? $nq . ($nq === 1 ? ' evaluación' : ' evaluaciones') : '']);
+        return 'El curso «' . ((string) cms_f($item, 'title', cms_default_lang()) ?: $slug) . '» todavía tiene ' . implode(' y ', $parts) . '. Bórralas o pásalas a otro curso antes de eliminarlo.';
+    });
+
     // plantillas de cursos y lecciones cuando el tema no trae las suyas
     cms_on('template', function ($file, string $template, string $type, string $route) {
         $ours = $type !== '' && ($type === lms_course_type() || $type === lms_lesson_type() || $type === lms_quiz_type());

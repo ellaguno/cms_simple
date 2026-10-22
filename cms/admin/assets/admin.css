@@ -405,6 +405,9 @@ a.ad-map-url:hover { color: var(--ink); text-decoration: underline; }
 .ad-media-check { position: absolute; top: 8px; left: 8px; z-index: 2; background: rgba(255,255,255,.92); border-radius: 6px; padding: 4px 5px; display: flex; cursor: pointer; }
 .ad-media-check input { margin: 0; width: 16px; height: 16px; cursor: pointer; }
 .ad-media-bulk { display: flex; align-items: center; gap: 14px; margin: -6px 0 16px; }
+.ad-content-bulk { flex-wrap: wrap; gap: 8px 10px; margin: 0 0 10px; }
+.ad-table .ad-col-check { width: 28px; padding-right: 0; }
+.ad-table .ad-col-check input { margin: 0; width: 16px; height: 16px; cursor: pointer; }
 .ad-media-badge-theme { background: #4f46e5; }
 .ad-media-theme .ad-media-thumb { background: repeating-conic-gradient(#f3f4f6 0 25%, #fff 0 50%) 0 0 / 16px 16px; }
 .ad-media-badge { left: auto; right: 8px; }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Paquete lms — /aula: el tablero del alumno. Sus cursos con el avance y el botón para seguir, y los demás cursos
- * a los que puede entrar (los primeros seis, con las industrias y el enlace al listado completo cuando hay más).
+ * a los que puede entrar (los primeros seis; arriba, con más de seis cursos, el buscador con sugerencias, con las industrias y el enlace al listado completo cuando hay más).
  * El tema puede reemplazarlo con templates/lms/aula.php.
  */
 $user = lms_user();
@@ -19,6 +19,9 @@ foreach (lms_visible_courses($user) as $c) {
     <h1><?= cms_e(lms_tx('hello', (string) strtok((string) $user['name'], ' '))) ?></h1>
     <p class="lead"><?= cms_e(lms_tx('dash_lead')) ?></p>
     <?= lms_notice() ?>
+<?php if (count($mine) + count($others) > 6): ?>
+    <?= lms_search_box(array_merge($mine, $others), $lang ?? cms_render_lang(), cms_url('list:' . lms_course_type(), $lang ?? cms_render_lang())) ?>
+<?php endif; ?>
     <div class="btnrow lms-userbar">
       <a class="btn btn-ghost btn-sm" href="<?= cms_e(lms_url('cuenta')) ?>"><?= lms_icon('user') ?> <?= cms_e(lms_tx('account')) ?></a>
       <form method="post" action="<?= cms_e(lms_url('salir')) ?>" class="lms-inline"><?= lms_csrf_field() ?><button class="btn btn-ghost btn-sm" type="submit"><?= cms_e(lms_tx('logout')) ?></button></form>

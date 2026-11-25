@@ -291,3 +291,25 @@ textarea.lms-q-input{min-height:7rem;resize:vertical}
 .lms-chips-label{align-self:center;margin-right:.3rem;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--lms-muted)}
 .lms-chips-sub{padding-left:1rem;border-left:2px solid var(--lms-line)}
 .lms-chips-sub .lms-chip{font-size:.85rem}
+
+/* buscador de cursos con sugerencias (lms_search_box) */
+.lms-find{position:relative;max-width:40rem;margin:1.2rem 0 0}
+.lms-find-box{display:flex;align-items:center;gap:.5rem;padding:.35rem .4rem .35rem .85rem;border:1px solid var(--lms-line);border-radius:99px;background:var(--lms-surface)}
+.lms-find-box:focus-within{border-color:var(--lms-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--lms-accent) 22%,transparent)}
+.lms-find-box .lms-ico{color:var(--lms-muted)}
+.lms-find-box input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:1rem;color:inherit;padding:.35rem 0;outline:0;box-shadow:none}
+.lms-find-box input::-webkit-search-cancel-button{cursor:pointer}
+.lms-find-key{font:600 .75rem/1 ui-monospace,monospace;padding:.2rem .45rem;border:1px solid var(--lms-line);border-radius:5px;color:var(--lms-muted)}
+.lms-find-box:focus-within .lms-find-key{display:none}
+.lms-find-list{position:absolute;z-index:40;left:0;right:0;top:calc(100% + .35rem);margin:0;padding:.35rem;list-style:none;max-height:min(70vh,28rem);overflow:auto;border:1px solid var(--lms-line);border-radius:var(--lms-radius);background:var(--bg,var(--cms-bg,#fff));box-shadow:0 12px 32px rgba(0,0,0,.18)}
+.lms-find-list li>a,.lms-find-list li>span{display:block;padding:.55rem .7rem;border-radius:8px;color:inherit;text-decoration:none}
+.lms-find-list li>span{opacity:.6}
+.lms-find-list li.is-sel>a,.lms-find-list li>a:hover{background:var(--lms-surface)}
+.lms-find-list strong{display:block;font-weight:600}
+.lms-find-list em{font-style:normal;font-size:.75rem;color:var(--lms-muted)}
+.lms-find-list small{display:block;font-size:.8rem;color:var(--lms-muted);margin-top:.1rem}
+.lms-find-list mark{background:color-mix(in srgb,var(--lms-accent) 28%,transparent);color:inherit;border-radius:3px;padding:0 .05em}
+.lms-find-none{padding:.6rem .7rem;color:var(--lms-muted)}
+.lms-find-all button{width:100%;text-align:left;padding:.55rem .7rem;border:0;border-top:1px solid var(--lms-line);background:transparent;color:var(--lms-accent);font:inherit;font-size:.9rem;cursor:pointer}
+.lms-filters .lms-find{margin:0;max-width:none;flex:1}
+@media (max-width:560px){.lms-find-key{display:none}.lms-find-box .btn{padding-inline:.7rem}}

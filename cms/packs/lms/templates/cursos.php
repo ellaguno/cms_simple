@@ -81,7 +81,10 @@ foreach (cms_lines(lms_setting_text('lms_features')) as $line) {
 <?php if ($hiddenForGuest): ?>
     <p class="lms-results"><?= cms_e(lms_tx('login_more')) ?> <a href="<?= cms_e(lms_url('entrar', null, ['r' => lms_here()])) ?>"><?= cms_e(lms_tx('login')) ?></a></p>
 <?php endif; ?>
-<?php if ($showTracks || $showInds || $showLevels || $showSearch): ?>
+<?php if ($showSearch): ?>
+    <?= lms_search_box($courses, $lang, $base, $f['q'], ['track' => $f['track'], 'industria' => $f['industria'], 'nivel' => $f['nivel']], 'lms-find-page') ?>
+<?php endif; ?>
+<?php if ($showTracks || $showInds || $showLevels): ?>
     <form class="lms-filters" method="get" action="<?= cms_e($base) ?>" role="search">
 <?php if ($showTracks): ?>
       <div class="lms-chips lms-chips-tracks" aria-label="<?= cms_e($tracksLabel) ?>">
@@ -109,17 +112,16 @@ foreach (cms_lines(lms_setting_text('lms_features')) as $line) {
       </div>
       <?php if ($f['industria'] !== ''): ?><input type="hidden" name="industria" value="<?= cms_e($f['industria']) ?>"><?php endif; ?>
 <?php endif; ?>
-<?php if ($showSearch || $showLevels): ?>
-      <div class="lms-filter-row">
-<?php if ($showSearch): ?>        <input type="search" name="q" value="<?= cms_e($f['q']) ?>" placeholder="<?= cms_e(lms_tx('search_courses')) ?>" aria-label="<?= cms_e(lms_tx('search_courses')) ?>">
+<?php if ($f['q'] !== ''): ?>      <input type="hidden" name="q" value="<?= cms_e($f['q']) ?>">
 <?php endif; ?>
+<?php if ($showLevels): ?>
+      <div class="lms-filter-row">
 <?php if ($showLevels): ?>        <select name="nivel" aria-label="<?= cms_e(lms_tx('all_levels')) ?>" onchange="this.form.submit()">
           <option value=""><?= cms_e(lms_tx('all_levels')) ?></option>
 <?php foreach ($levels as $lk => $lv): ?>          <option value="<?= cms_e($lv) ?>"<?= lms_fold($f['nivel']) === $lk ? ' selected' : '' ?>><?= cms_e($lv) ?></option>
 <?php endforeach; ?>
         </select>
 <?php endif; ?>
-        <button class="btn btn-primary btn-sm" type="submit"><?= cms_e(lms_tx('search')) ?></button>
       </div>
 <?php endif; ?>
     </form>

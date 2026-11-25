@@ -95,6 +95,11 @@ if (!function_exists('lms_settings')) {
             'all_levels'     => ['es' => 'Todos los niveles', 'en' => 'All levels'],
             'search_courses' => ['es' => 'Buscar cursos', 'en' => 'Search courses'],
             'search'         => ['es' => 'Buscar', 'en' => 'Search'],
+            'find_ph'        => ['es' => 'Busca un curso o un tema: ventas, tickets, Gantt…', 'en' => 'Find a course or a topic: sales, tickets, Gantt…'],
+            'find_none'      => ['es' => 'Ningún curso coincide. Prueba con otra palabra.', 'en' => 'No course matches. Try another word.'],
+            'find_lesson'    => ['es' => 'Lección:', 'en' => 'Lesson:'],
+            'find_all'       => ['es' => 'Ver todos los resultados', 'en' => 'See all results'],
+            'find_key'       => ['es' => 'Pulsa / para buscar', 'en' => 'Press / to search'],
             'n_found_1'      => ['es' => '1 curso', 'en' => '1 course'],
             'n_found'        => ['es' => '%d cursos', 'en' => '%d courses'],
             'no_match'       => ['es' => 'Ningún curso coincide con lo que elegiste.', 'en' => 'No course matches your selection.'],
@@ -893,6 +898,7 @@ if (!function_exists('lms_settings')) {
             'quiz'   => '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 11l1.5 1.5 3-3M8.5 16.5h7"/>',
             'clock'  => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
             'x'      => '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
+            'search' => '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
         ][$k] ?? '';
         return '<svg class="lms-ico lms-ico-' . $k . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' . $p . '</svg>';
     }
@@ -1534,8 +1540,60 @@ if (!function_exists('lms_settings')) {
     }
 
     /**
+     * Todo el texto en que se busca un curso, en minúsculas y sin acentos: nombre, nombre corto, resumen, "para quién",
+     * nivel, temas, industrias, tracks, la dirección del curso (lleva su clave, p. ej. iu-c4) y los títulos y módulos
+     * de sus lecciones (así "embudo" encuentra el curso que lo enseña aunque su nombre no lo diga).
+     */
+    function lms_search_haystack(array $c, string $lang): string
+    {
+        static $cache = [];
+        $key = (string) ($c['slug'] ?? '') . '|' . $lang;
+        if (isset($cache[$key])) return $cache[$key];
+        $parts = [(string) cms_f($c, 'title', $lang), (string) cms_f($c, 'short', $lang), (string) cms_f($c, 'excerpt', $lang),
+            (string) cms_f($c, 'audience', $lang), (string) cms_f($c, 'level', $lang), str_replace('-', ' ', (string) ($c['slug'] ?? ''))];
+        $parts = array_merge($parts, array_map('strval', (array) cms_f($c, 'topics', $lang, [])), array_values(lms_course_industries($c, $lang)), array_values(lms_course_tracks($c, $lang)));
+        foreach (lms_lessons((string) ($c['slug'] ?? '')) as $l) { $parts[] = (string) cms_f($l, 'title', $lang); $parts[] = (string) cms_f($l, 'module', $lang); }
+        return $cache[$key] = lms_fold(implode(' ', $parts));
+    }
+
+    /**
+     * Buscador de cursos con sugerencias mientras se escribe: la lista de cursos va en el propio HTML (sin pedir nada
+     * al servidor) y lms-search.js la filtra; Enter o "Buscar" llevan al listado con ?q= para ver todas las tarjetas.
+     * La tecla / lo enfoca desde cualquier parte de la página. Sin JavaScript queda un formulario normal.
+     * $extra: campos ocultos que conserva el formulario (los filtros elegidos en el listado).
+     */
+    function lms_search_box(array $courses, string $lang, string $action, string $q = '', array $extra = [], string $class = ''): string
+    {
+        $idx = [];
+        foreach ($courses as $c) {
+            $title = (string) cms_f($c, 'title', $lang);
+            $idx[] = [
+                't' => $title,
+                'k' => implode(' · ', array_values(lms_course_tracks($c, $lang))),
+                'u' => !empty($c['soon']) ? '' : cms_url('item:' . lms_course_type(), $lang, (string) $c['slug']),
+                's' => !empty($c['soon']) ? 1 : 0,
+                'h' => lms_search_haystack($c, $lang),
+                'l' => array_values(array_filter(array_map(fn($l) => (string) cms_f($l, 'title', $lang), lms_lessons((string) $c['slug'])))),
+            ];
+        }
+        $id = 'lms-find-' . substr(md5($action . count($idx)), 0, 6);
+        $h = '<form class="lms-find' . ($class !== '' ? ' ' . cms_e($class) : '') . '" method="get" action="' . cms_e($action) . '" role="search" data-lms-find="' . $id . '"'
+            . ' data-none="' . cms_e(lms_tx('find_none')) . '" data-lesson="' . cms_e(lms_tx('find_lesson')) . '" data-all="' . cms_e(lms_tx('find_all')) . '" data-soon="' . cms_e(lms_tx('soon')) . '">';
+        foreach ($extra as $k => $v) if ((string) $v !== '') $h .= '<input type="hidden" name="' . cms_e((string) $k) . '" value="' . cms_e((string) $v) . '">';
+        $h .= '<span class="lms-find-box">' . lms_icon('search') . '<input type="search" name="q" value="' . cms_e($q) . '" placeholder="' . cms_e(lms_tx('find_ph')) . '" aria-label="' . cms_e(lms_tx('search_courses')) . '" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="' . $id . '-list">'
+            . '<kbd class="lms-find-key" title="' . cms_e(lms_tx('find_key')) . '">/</kbd>'
+            . '<button class="btn btn-primary btn-sm" type="submit">' . cms_e(lms_tx('search')) . '</button></span>'
+            . '<ul class="lms-find-list" id="' . $id . '-list" role="listbox" hidden></ul>'
+            . '<script type="application/json" id="' . $id . '">' . json_encode($idx, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) . '</script>'
+            . '</form>';
+        static $js = false;
+        if (!$js && ($p = lms_pack())) { $js = true; $h .= '<script src="' . cms_e(cms_pack_asset($p, 'assets/lms-search.js')) . '" defer></script>'; }
+        return $h . "\n";
+    }
+
+    /**
      * Filtros del listado de cursos: ?track= (track o track/subtrack), ?industria=, ?nivel= y ?q= (busca en nombre,
-     * resumen, temas, "para quién", industrias y tracks). Devuelve [cursos que quedan, filtros elegidos].
+     * resumen, temas, "para quién", industrias, tracks, títulos de las lecciones y la dirección del curso). Devuelve [cursos que quedan, filtros elegidos].
      */
     function lms_catalog_filter(array $courses, string $lang): array
     {
@@ -1551,9 +1609,7 @@ if (!function_exists('lms_settings')) {
         if ($f['q'] !== '') {
             $words = array_filter(preg_split('/\s+/', lms_fold($f['q'])));
             $courses = array_filter($courses, function ($c) use ($words, $lang) {
-                $hay = lms_fold(implode(' ', array_merge(
-                    [(string) cms_f($c, 'title', $lang), (string) cms_f($c, 'short', $lang), (string) cms_f($c, 'excerpt', $lang), (string) cms_f($c, 'audience', $lang), (string) cms_f($c, 'level', $lang)],
-                    array_map('strval', (array) cms_f($c, 'topics', $lang, [])), array_values(lms_course_industries($c, $lang)), array_values(lms_course_tracks($c, $lang)))));
+                $hay = lms_search_haystack($c, $lang);
                 foreach ($words as $w) if (strpos($hay, $w) === false) return false;
                 return true;
             });
